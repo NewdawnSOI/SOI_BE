@@ -27,10 +27,9 @@ public class UserController {
         UserRespDto userRespDto = userService.createUser(UserCreateReqDto);
         if (userRespDto != null) {
             return ResponseEntity.ok(userRespDto);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("사용자 생성 실패");
         }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("사용자 생성 실패");
     }
 
     @Operation(summary = "사용자 로그인(전화번호로)", description = "인증이 완료된 전화번호로 로그인을 합니다.")
@@ -39,10 +38,9 @@ public class UserController {
         UserRespDto userRespDto = userService.loginByPhone(phone);
         if (userRespDto != null) {
             return ResponseEntity.ok(userRespDto);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("로그인 실패");
         }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("로그인 실패");
     }
 
     @Operation(summary = "전화번호 인증", description = "사용자가 입력한 전화번호로 인증을 발송합니다.")
@@ -60,5 +58,16 @@ public class UserController {
                     .body(userId + " id가 중복입니다.");
         }
         return ResponseEntity.ok(false);
+    }
+
+    @Operation(summary = "유저 Id로 사용자 삭제", description = "id 로 사용자를 삭제합니다.")
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteUser(@RequestParam String userId) {
+        UserRespDto userRespDto = userService.deleteUser(userId);
+        if (userRespDto != null) {
+            return ResponseEntity.ok(userRespDto);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("유저 삭제 실패");
     }
 }

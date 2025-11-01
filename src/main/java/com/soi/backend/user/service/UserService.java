@@ -74,6 +74,16 @@ public class UserService {
         }
     }
 
+    public UserRespDto deleteUser(String userId) {
+        if (userRepository.findByUserId(userId).isPresent()) {
+            User user = userRepository.findByUserId(userId).get();
+            userRepository.delete(user);
+            return toDto(user);
+        } else {
+            return null;
+        }
+    }
+
     private UserRespDto toDto(User user) {
         return new UserRespDto(user.getId(), user.getUserId());
     }
