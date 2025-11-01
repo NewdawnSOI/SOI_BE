@@ -50,7 +50,7 @@ public class UserService {
         }
     }
 
-    // 전화번호 중복 체크
+    // 전화번호 중복 체크 중복 : false, 가능 : true
     public Boolean isDuplicatePhone(String phone) {
         log.info("{} 전화번호 중복 체크", phone);
         if (userRepository.findByPhone(phone).isPresent()) {

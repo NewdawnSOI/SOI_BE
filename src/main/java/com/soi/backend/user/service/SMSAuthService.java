@@ -7,7 +7,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -20,19 +20,14 @@ public class SMSAuthService {
     // 전화번호 인증 메시지 보내기
     @Transactional
     public Boolean sendSMStoAuth(String phone) {
-        if (userService.isDuplicatePhone(phone)) {
+        if (!userService.isDuplicatePhone(phone)) {
             return false;
         }
 
-        StringBuilder verificationCode = new StringBuilder();
-        Random random = new Random();
+        String verificationCode = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
 
-        for(int i=0; i<10; i++) {
-            verificationCode.append(random);
-        }
-
-        messageService.sendMessage(verificationCode.toString(), phone);
-        smsAuthRepository.save(new SMSAuth(phone, verificationCode.toString()));
+        messageService.sendMessage(verificationCode, phone);
+        smsAuthRepository.save(new SMSAuth(phone, verificationCode));
         return true;
     }
 }
