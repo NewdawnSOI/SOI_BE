@@ -1,6 +1,7 @@
 package com.soi.backend.user.service;
 
 import com.soi.backend.external.sms.MessageService;
+import com.soi.backend.friend.dto.FriendReqDto;
 import com.soi.backend.global.exception.CustomException;
 import com.soi.backend.user.dto.UserCreateReqDto;
 import com.soi.backend.user.dto.UserFindRespDto;
@@ -106,5 +107,10 @@ public class UserService {
 
     private UserRespDto toDto(User user) {
         return new UserRespDto(user.getId(), user.getUserId());
+    }
+
+    public Boolean checkUserExists(FriendReqDto friendReqDto) {
+        return userRepository.findByIdAndIsActive(friendReqDto.getRequesterId()).isPresent()
+                && userRepository.findByIdAndIsActive(friendReqDto.getReceiverId()).isPresent();
     }
 }
