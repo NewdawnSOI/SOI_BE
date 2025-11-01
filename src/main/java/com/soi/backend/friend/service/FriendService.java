@@ -9,6 +9,7 @@ import com.soi.backend.friend.repository.FriendRepository;
 import com.soi.backend.global.exception.CustomException;
 import com.soi.backend.notification.entity.NotificationType;
 import com.soi.backend.notification.service.NotificationService;
+import com.soi.backend.user.dto.UserFindRespDto;
 import com.soi.backend.user.entity.User;
 import com.soi.backend.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -18,7 +19,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -94,6 +98,59 @@ public class FriendService {
         return toDto(savedFriend, notificationId);
     }
 
+    // 친구 리스트 조회 기능
+    public List<UserFindRespDto> getAllFriends(Long userId) {
+        List<Friend> friends = friendRepository.findAllAcceptedFriends(userId);
+
+        List<Long> friendIds = friends.stream()
+                .map(friend ->
+                        friend.getRequesterId().equals(userId)
+                        ? friend.getReceiverId() : friend.getRequesterId()
+                )
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<User> users = userRepository.findAllById(friendIds);
+
+        return users.stream()
+                .map(user -> new UserFindRespDto(
+                        user.getId(),
+                        user.getName(),
+                        user.getUserId(),
+                        user.getProfileImage(),
+                        user.isActive()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    // 친구 삭제 기능
+    // friendReqDto에서 삭제 요청을 한 사람이 RequesterId에 들어가고, 삭제를 당하는 사람이 Receiver에 들어감
+    public Boolean deleteFriend(FriendReqDto friendReqDto) {
+        Optional<Friend> friend = friendRepository.findAcceptedFriend(friendReqDto.getRequesterId(), friendReqDto.getReceiverId());
+
+        if(friend.isPresent()) {
+            Friend friendToDelete = friend.get();
+
+            // 만약 삭제를 요청한 사람이 Friend 관계에서 Requester라면 -> RequesterDeleted를 삭제해야함
+            if (friendToDelete.getRequesterId().equals(friendReqDto.getRequesterId())) {
+                friendToDelete.SetRequesterDeleted(true);
+            }
+            // 그리고 만약 삭제를 요청한 사람이 Friend 관계에서 Receiver라면 -> ReceiverDeleted를 삭제해야함
+            else if(friendToDelete.getReceiverId().equals(friendReqDto.getRequesterId())) {
+                friendToDelete.SetReceiverDeleted(true);
+            }
+
+            // 만약 쌍방 삭제가 이루어졌으면 그냥 컬럼 삭제시키고, 그게 아니면 업데이트된 관계 저장해야함
+            if (friendToDelete.getRequesterDeleted() && friendToDelete.getReceiverDeleted()) {
+                friendRepository.deleteById(friendToDelete.getId());
+            } else {
+                friendRepository.save(friendToDelete);
+            }
+            return true;
+        } else {
+            throw new CustomException("친구관계를 찾을 수 없음", HttpStatus.NOT_FOUND);
+        }
+    }
     private FriendRespDto toDto(Friend friend, Long notificationId) {
         return new FriendRespDto(friend.getId(), friend.getRequesterId(),
                 friend.getReceiverId(), notificationId, friend.getStatus(), LocalDateTime.now());
