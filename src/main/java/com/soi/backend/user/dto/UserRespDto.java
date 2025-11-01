@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class UserCreateRespDto {
+public class UserRespDto {
     private Long id;
     private String userId;
 }
