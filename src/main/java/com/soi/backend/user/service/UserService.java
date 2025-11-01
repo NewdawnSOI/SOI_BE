@@ -95,14 +95,28 @@ public class UserService {
     }
 
     @Transactional
-    public UserRespDto deleteUser(String userId) {
-        if (userRepository.findByUserId(userId).isPresent()) {
-            User user = userRepository.findByUserId(userId).get();
+    public UserRespDto deleteUser(Long id) {
+        if (userRepository.findById(id).isPresent()) {
+            User user = userRepository.findById(id).get();
             userRepository.delete(user);
             return toDto(user);
         } else {
             throw new CustomException("삭제 하려는 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
         }
+    }
+
+    public List<UserRespDto> findByUserId(String userId) {
+        return userRepository.searchAllByUserId(escapeLikeKeyword(userId))
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    private String escapeLikeKeyword(String keyword) {
+        return keyword
+                .replace("\\", "\\\\")
+                .replace("_", "\\_")
+                .replace("%", "\\%");
     }
 
     private UserRespDto toDto(User user) {
@@ -113,4 +127,5 @@ public class UserService {
         return userRepository.findByIdAndIsActive(friendReqDto.getRequesterId()).isPresent()
                 && userRepository.findByIdAndIsActive(friendReqDto.getReceiverId()).isPresent();
     }
+
 }
