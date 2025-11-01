@@ -3,6 +3,7 @@ package com.soi.backend.user.controller;
 import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.global.exception.BaseController;
 import com.soi.backend.user.dto.UserCreateReqDto;
+import com.soi.backend.user.dto.UserFindRespDto;
 import com.soi.backend.user.dto.UserRespDto;
 import com.soi.backend.user.entity.User;
 import com.soi.backend.user.service.SMSAuthService;
@@ -39,8 +40,8 @@ public class UserController extends BaseController {
 
     @Operation(summary = "모든유저 조회", description = "모든유저를 조회합니다.")
     @GetMapping("/get-all")
-    public ResponseEntity<ApiResponseDto<List<User>>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
+    public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllUsers() {
+        List<UserFindRespDto> users = userService.getAllUsers();
         return ResponseEntity.ok(ApiResponseDto.success(users, "모든 사용자 조회 완료"));
     }
 

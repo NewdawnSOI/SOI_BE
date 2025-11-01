@@ -3,6 +3,7 @@ package com.soi.backend.user.service;
 import com.soi.backend.external.sms.MessageService;
 import com.soi.backend.global.exception.CustomException;
 import com.soi.backend.user.dto.UserCreateReqDto;
+import com.soi.backend.user.dto.UserFindRespDto;
 import com.soi.backend.user.dto.UserRespDto;
 import com.soi.backend.user.entity.User;
 import com.soi.backend.user.repository.UserRepository;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -47,8 +49,17 @@ public class UserService {
     }
 
     @Transactional
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserFindRespDto> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(user -> new UserFindRespDto(
+                        user.getId(),
+                        user.getName(),
+                        user.getUserId(),
+                        user.getProfileImage(),
+                        user.isActive()
+                ))
+                .collect(Collectors.toList());
     }
 
     // 계정 중복 체크
