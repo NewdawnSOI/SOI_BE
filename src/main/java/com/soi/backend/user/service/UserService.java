@@ -21,6 +21,7 @@ public class UserService {
     private final MessageService messageService;
 
     // 계정 생성
+    @Transactional
     public UserRespDto createUser(UserCreateReqDto userCreateReqDto) {
         if (!isDuplicateUserId(userCreateReqDto.getUserId())
             || !isDuplicatePhone(userCreateReqDto.getPhone())) {
@@ -74,6 +75,7 @@ public class UserService {
         }
     }
 
+    @Transactional
     public UserRespDto deleteUser(String userId) {
         if (userRepository.findByUserId(userId).isPresent()) {
             User user = userRepository.findByUserId(userId).get();
