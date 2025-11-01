@@ -99,3 +99,8 @@ Temporary Items
 application.yml
 application.properties
 docker-compose.yml
+.env.local
+.env.prod
+*.env
+env.local
+env.prod
