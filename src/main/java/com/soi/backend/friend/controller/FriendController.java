@@ -67,4 +67,29 @@ public class FriendController extends BaseController {
             return handleExecption(e);
         }
     }
+
+    @Operation(summary = "친구 차단", description = "차단 요청을 한 사용자의 id : requesterId에\n" +
+            "차단을 당하는 사용자의 id : receiverId에 담아서 요청")
+    @PostMapping("/block")
+    public ResponseEntity<ApiResponseDto<Boolean>> blockFriend(@RequestBody FriendReqDto friendReqDto) {
+        try {
+            Boolean deleteStatus = friendService.blockFriend(friendReqDto);
+            return ResponseEntity.ok(ApiResponseDto.success(deleteStatus, "친구 차단 성공"));
+        } catch (Exception e) {
+            return handleExecption(e);
+        }
+    }
+
+    @Operation(summary = "친구 차단 해제", description = "차단 해제 요청을 한 사용자의 id : requesterId에\n" +
+            "차단 해제를 당하는 사용자의 id : receiverId에 담아서 요청" +
+            "차단 해제후에는 친구 관계가 완전 초기화 (삭제) 됩니다.")
+    @PostMapping("/unblock")
+    public ResponseEntity<ApiResponseDto<Boolean>> unBlockFriend(@RequestBody FriendReqDto friendReqDto) {
+        try {
+            Boolean deleteStatus = friendService.unBlockFriend(friendReqDto);
+            return ResponseEntity.ok(ApiResponseDto.success(deleteStatus, "친구 차단 해제 성공"));
+        } catch (Exception e) {
+            return handleExecption(e);
+        }
+    }
 }

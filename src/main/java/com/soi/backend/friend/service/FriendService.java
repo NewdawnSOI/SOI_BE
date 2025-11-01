@@ -13,6 +13,7 @@ import com.soi.backend.notification.service.NotificationService;
 import com.soi.backend.user.dto.UserFindRespDto;
 import com.soi.backend.user.entity.User;
 import com.soi.backend.user.repository.UserRepository;
+import com.soi.backend.user.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,16 +33,14 @@ import java.util.stream.Collectors;
 public class FriendService {
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
 
     @Transactional
     public FriendRespDto createFriendRequest(FriendReqDto friendReqDto) {
-        if (userRepository.findById(friendReqDto.getRequesterId()).isEmpty()) {
-                throw new CustomException("요청 유저를 찾을 수 없습니다.");
-        }
-        if (userRepository.findById(friendReqDto.getReceiverId()).isEmpty()) {
-            throw new CustomException("수신 유저를 찾을 수 없습니다.");
+        if (!userService.checkUserExists(friendReqDto)) {
+            throw new CustomException("유저 정보를 찾을 수 없습니다.");
         }
 
         Long receiverId = null;
@@ -192,7 +191,7 @@ public class FriendService {
             if (friendToDelete.getRequesterId().equals(friendReqDto.getRequesterId())) {
                 friendToDelete.SetRequesterDeleted(true);
             }
-            // 그리고 만약 삭제를 요청한 사람이 Friend 관계에서 Receiver라면 -> ReceiverDeleted를 삭제해야함
+            // 만약 삭제를 요청한 사람이 Friend 관계에서 Receiver라면 -> ReceiverDeleted를 삭제해야함
             else if(friendToDelete.getReceiverId().equals(friendReqDto.getRequesterId())) {
                 friendToDelete.SetReceiverDeleted(true);
             }
@@ -208,6 +207,57 @@ public class FriendService {
             throw new CustomException("친구관계를 찾을 수 없음", HttpStatus.NOT_FOUND);
         }
     }
+
+    // 친구 차단 기능
+    @Transactional
+    public Boolean blockFriend(FriendReqDto friendReqDto) {
+        if (!userService.checkUserExists(friendReqDto)) {
+            throw new CustomException("유저 정보를 찾을 수 없습니다.");
+        }
+
+        Optional<Friend> existing = friendRepository
+                .findByRequesterIdAndReceiverId(friendReqDto.getRequesterId(), friendReqDto.getReceiverId());
+
+        Friend friend;
+
+        if (existing.isPresent()) {
+            friend = existing.get();
+
+            if (friend.getStatus().equals(FriendStatus.BLOCKED)) {
+                throw new CustomException("이미 치단된 유저입니다.", HttpStatus.CONFLICT);
+            }
+            friend.SetFriendStatus(FriendStatus.BLOCKED);
+            friendRepository.save(friend);
+        } else {
+            friend = new Friend(friendReqDto.getRequesterId(), friendReqDto.getReceiverId(), FriendStatus.BLOCKED);
+            friendRepository.save(friend);
+        }
+        return true;
+    }
+
+    // 친구 차단 해제 기능
+    // 차단을 한 사람만 차단을 풀 수 있도록 설정
+    // 즉, 차단당시 requester == 차단 풀릴때 requester
+    @Transactional
+    public Boolean unBlockFriend(FriendReqDto friendReqDto) {
+        if (!userService.checkUserExists(friendReqDto)) {
+            throw new CustomException("유저 정보를 찾을 수 없습니다.");
+        }
+
+        Optional<Friend> existing = friendRepository
+                .findFriendByRequesterIdAndReceiverId(friendReqDto.getRequesterId(), friendReqDto.getReceiverId());
+
+        Friend friend;
+
+        if (existing.isPresent()) {
+            friend = existing.get();
+            friendRepository.delete(friend);
+        } else {
+            throw new CustomException("차단된 친구관계를 찾을 수 없습니다.");
+        }
+        return true;
+    }
+
     private FriendRespDto toDto(Friend friend, Long notificationId) {
         return new FriendRespDto(friend.getId(), friend.getRequesterId(),
                 friend.getReceiverId(), notificationId, friend.getStatus(), LocalDateTime.now());

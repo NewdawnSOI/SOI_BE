@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FriendRepository extends JpaRepository<Friend, Long> {
+
+    Optional<Friend> findFriendByRequesterIdAndReceiverId(Long requesterId, Long receiverId);
+
     @Query("""
     SELECT f FROM Friend f
     WHERE 
@@ -27,9 +30,11 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
     @Query("""
     SELECT f FROM Friend f
     WHERE 
-        ( f.requesterId = :userId AND f.requesterDeleted = false )
-        OR
-        ( f.receiverId = :userId AND f.receiverDeleted = false )
+        (
+            ( f.requesterId = :userId AND f.requesterDeleted = false)
+            OR
+            (f.receiverId = :userId AND f.receiverDeleted = false)
+        )
         AND f.status = 'ACCEPTED'
         """)
     List<Friend> findAllAcceptedFriends(@Param("userId") Long userId);
@@ -37,9 +42,13 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
     @Query("""
     SELECT f FROM Friend f
     WHERE 
-        ( (f.requesterId = :userId AND f.requesterDeleted = false) AND f.receiverId = :targetId 
+        (
+            (f.requesterId = :userId AND f.requesterDeleted = false) AND f.receiverId = :targetId
+        )
         OR
-        (f.receiverId = :userId AND f.receiverDeleted = false) AND f.requesterId = :targetId )
-        """)
+        (
+            (f.receiverId = :userId AND f.receiverDeleted = false) AND f.requesterId = :targetId
+        )
+    """)
     Optional<Friend> findAcceptedFriend(@Param("userId") Long userId, @Param("targetId") Long targetId);
 }
