@@ -1,5 +1,6 @@
 package com.soi.backend.user.service;
 
+import com.soi.backend.external.sms.MessageService;
 import com.soi.backend.user.dto.UserCreateReqDto;
 import com.soi.backend.user.dto.UserCreateRespDto;
 import com.soi.backend.user.entity.User;
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Random;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -17,6 +20,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final MessageService messageService;
 
     // 계정 생성
     public UserCreateRespDto createUser(UserCreateReqDto userCreateReqDto) {
