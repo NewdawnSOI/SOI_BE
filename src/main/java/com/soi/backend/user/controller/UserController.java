@@ -3,7 +3,9 @@ package com.soi.backend.user.controller;
 import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.global.exception.BaseController;
 import com.soi.backend.user.dto.UserCreateReqDto;
+import com.soi.backend.user.dto.UserFindRespDto;
 import com.soi.backend.user.dto.UserRespDto;
+import com.soi.backend.user.entity.User;
 import com.soi.backend.user.service.SMSAuthService;
 import com.soi.backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,6 +36,13 @@ public class UserController extends BaseController {
         } catch (Exception e) {
             return handleExecption(e);
         }
+    }
+
+    @Operation(summary = "모든유저 조회", description = "모든유저를 조회합니다.")
+    @GetMapping("/get-all")
+    public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllUsers() {
+        List<UserFindRespDto> users = userService.getAllUsers();
+        return ResponseEntity.ok(ApiResponseDto.success(users, "모든 사용자 조회 완료"));
     }
 
     @Operation(summary = "사용자 로그인(전화번호로)", description = "인증이 완료된 전화번호로 로그인을 합니다.")
@@ -63,14 +74,21 @@ public class UserController extends BaseController {
         return ResponseEntity.ok(ApiResponseDto.success(true, "사용가능한 id입니다."));
     }
 
-    @Operation(summary = "유저 Id로 사용자 삭제", description = "id 로 사용자를 삭제합니다.")
+    @Operation(summary = "Id로 사용자 삭제", description = "Id 로 사용자를 삭제합니다.")
     @DeleteMapping("/delete")
-    public ResponseEntity<ApiResponseDto<UserRespDto>> deleteUser(@RequestParam String userId) {
+    public ResponseEntity<ApiResponseDto<UserRespDto>> deleteUser(@RequestParam Long id) {
         try {
-            UserRespDto userRespDto = userService.deleteUser(userId);
+            UserRespDto userRespDto = userService.deleteUser(id);
             return ResponseEntity.ok(ApiResponseDto.success(userRespDto,"유저 삭제 성공"));
         } catch (Exception e) {
             return handleExecption(e);
         }
+    }
+
+    @Operation(summary = "키워드로 사용자 검색", description = "키워드가 포함된 userId를 갖고있는 사용자를 전부 검색합니다.")
+    @GetMapping("/find-by-keyword")
+    public ResponseEntity<ApiResponseDto<List<UserRespDto>>> findUser(@RequestParam String userId) {
+        List<UserRespDto> userRespDtos = userService.findByUserId(userId);
+        return ResponseEntity.ok(ApiResponseDto.success(userRespDtos, "키워드가 포함된 사용자 검색 성공"));
     }
 }

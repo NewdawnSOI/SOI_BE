@@ -1,8 +1,10 @@
 package com.soi.backend.user.service;
 
 import com.soi.backend.external.sms.MessageService;
+import com.soi.backend.friend.dto.FriendReqDto;
 import com.soi.backend.global.exception.CustomException;
 import com.soi.backend.user.dto.UserCreateReqDto;
+import com.soi.backend.user.dto.UserFindRespDto;
 import com.soi.backend.user.dto.UserRespDto;
 import com.soi.backend.user.entity.User;
 import com.soi.backend.user.repository.UserRepository;
@@ -11,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -42,6 +47,20 @@ public class UserService {
                 );
 
         return toDto(userRepository.save(user));
+    }
+
+    @Transactional
+    public List<UserFindRespDto> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(user -> new UserFindRespDto(
+                        user.getId(),
+                        user.getName(),
+                        user.getUserId(),
+                        user.getProfileImage(),
+                        user.isActive()
+                ))
+                .collect(Collectors.toList());
     }
 
     // 계정 중복 체크
@@ -76,9 +95,9 @@ public class UserService {
     }
 
     @Transactional
-    public UserRespDto deleteUser(String userId) {
-        if (userRepository.findByUserId(userId).isPresent()) {
-            User user = userRepository.findByUserId(userId).get();
+    public UserRespDto deleteUser(Long id) {
+        if (userRepository.findById(id).isPresent()) {
+            User user = userRepository.findById(id).get();
             userRepository.delete(user);
             return toDto(user);
         } else {
@@ -86,7 +105,27 @@ public class UserService {
         }
     }
 
+    public List<UserRespDto> findByUserId(String userId) {
+        return userRepository.searchAllByUserId(escapeLikeKeyword(userId))
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    private String escapeLikeKeyword(String keyword) {
+        return keyword
+                .replace("\\", "\\\\")
+                .replace("_", "\\_")
+                .replace("%", "\\%");
+    }
+
     private UserRespDto toDto(User user) {
         return new UserRespDto(user.getId(), user.getUserId());
     }
+
+    public Boolean checkUserExists(FriendReqDto friendReqDto) {
+        return userRepository.findByIdAndIsActive(friendReqDto.getRequesterId()).isPresent()
+                && userRepository.findByIdAndIsActive(friendReqDto.getReceiverId()).isPresent();
+    }
+
 }

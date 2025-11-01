@@ -53,4 +53,10 @@ public class Friend {
     public void SetFriendStatus(FriendStatus status) {
         this.status = status;
     }
+    public void SetRequesterDeleted(Boolean requesterDeleted) {
+        this.requesterDeleted = requesterDeleted;
+    }
+    public void SetReceiverDeleted(Boolean receiverDeleted) {
+        this.receiverDeleted = receiverDeleted;
+    }
 }
