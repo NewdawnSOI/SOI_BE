@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 
 public class FriendUpdateRespDto {
     private Long id;
-    FriendStatus status;
+    private FriendStatus status;
 }

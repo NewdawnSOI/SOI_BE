@@ -8,6 +8,7 @@ import com.soi.backend.friend.entity.FriendStatus;
 import com.soi.backend.friend.repository.FriendRepository;
 import com.soi.backend.global.exception.CustomException;
 import com.soi.backend.notification.entity.NotificationType;
+import com.soi.backend.notification.repository.NotificationRepository;
 import com.soi.backend.notification.service.NotificationService;
 import com.soi.backend.user.dto.UserFindRespDto;
 import com.soi.backend.user.entity.User;
@@ -32,6 +33,7 @@ public class FriendService {
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
 
     @Transactional
     public FriendRespDto createFriendRequest(FriendReqDto friendReqDto) {
@@ -42,32 +44,58 @@ public class FriendService {
             throw new CustomException("수신 유저를 찾을 수 없습니다.");
         }
 
+        Long receiverId = null;
+        Long requesterId = null;
         Optional<Friend> existing = friendRepository
                 .findByRequesterIdAndReceiverId(friendReqDto.getRequesterId(), friendReqDto.getReceiverId());
+
+        Friend friend;
+
         if (existing.isPresent()) {
-            Friend friend = existing.get();
+            friend = existing.get();
             if (friend.getStatus().equals(FriendStatus.BLOCKED)) {
                 throw new CustomException("차단된 친구 관계입니다.", HttpStatus.FORBIDDEN);
             }
-            throw new CustomException("이미 친구관계가 존재합니다.", HttpStatus.CONFLICT);
-        }
+            if (!friend.getRequesterDeleted() && !friend.getReceiverDeleted()) {
+                throw new CustomException("이미 친구관계가 존재합니다.", HttpStatus.CONFLICT);
+            }
 
-        Friend friend = new Friend(friendReqDto.getRequesterId(), friendReqDto.getReceiverId(), FriendStatus.PENDING);
-        Friend savedFriend = friendRepository.save(friend);
+            // 친구 관계에서 requester가 친구를 삭제하고, 다시 친구 요청을 보냈을때
+            // 친구 수락 알림이 requester -> receiver가 되어야함
+            if (friend.getRequesterDeleted()) {
+                requesterId = friend.getRequesterId();
+                receiverId = friend.getReceiverId();
+            }
+            // 친구 관계에서 receiver가 친구를 삭제하고, 다시 친구 요청을 보냈을때
+            // 친구 수락 알림이 receiver -> requester가 되어야함
+            else if (friend.getReceiverDeleted()) {
+                requesterId = friend.getReceiverId();
+                receiverId = friend.getRequesterId();
+            }
+            friendRepository.save(friend);
+        } else {
+            friend = new Friend(friendReqDto.getRequesterId(), friendReqDto.getReceiverId(), FriendStatus.PENDING);
+            requesterId = friend.getRequesterId();
+            receiverId = friend.getReceiverId();
+            friendRepository.save(friend);
+        }
 
         // 알림 생성
         Long notificationId = notificationService.createNofication(
-                savedFriend.getId(),
-                savedFriend.getRequesterId(),
-                friendReqDto.getReceiverId(),
-                NotificationType.FRIEND_REQUEST, "친구추가 요청을 보냈습니다.");
+                friend.getId(),
+                requesterId,
+                receiverId,
+                NotificationType.FRIEND_REQUEST,
+                "친구추가 요청을 보냈습니다.");
 
-        return toDto(savedFriend, notificationId);
+        return toDto(friend, notificationId);
     }
 
     @Transactional
     public FriendRespDto updateFriendRequest(FriendUpdateRespDto friendUpdateRespDto) {
         Optional<Friend> optionalFriend = friendRepository.findById(friendUpdateRespDto.getId());
+        Long receiverId = null;
+        Long requesterId = null;
         if (optionalFriend.isEmpty()) {
             throw new CustomException("삭제되거나 없는 친구 관계입니다.", HttpStatus.FORBIDDEN);
         }
@@ -75,14 +103,40 @@ public class FriendService {
         // 친구 정보 업데이트
         Friend friend = optionalFriend.get();
 
-        // 만약 요청이 취소거나 차단이면 기존에 있던 친구 관계를 삭제해야함
-        if (friendUpdateRespDto.getStatus().equals(FriendStatus.CANCELLED)
-        ||  friendUpdateRespDto.getStatus().equals(FriendStatus.BLOCKED)) {
-            friendRepository.deleteById(friend.getId());
-            return new FriendRespDto(friend.getId(), friend.getRequesterId(),
+        // 요청이
+        switch (friendUpdateRespDto.getStatus()) {
+            case BLOCKED:
+                friend.SetFriendStatus(friendUpdateRespDto.getStatus());
+                Friend savedFriend = friendRepository.save(friend);
+                return toDto(savedFriend, null);
+            case ACCEPTED:
+                // 친구 관계에서 requester가 친구를 삭제하고, 다시 친구 요청을 보낸게 수락이 되었을때
+                // 친구 수락 알림이 receiver -> requester가 되어야함
+                if (friend.getRequesterDeleted()) {
+                    friend.SetRequesterDeleted(false);
+                    requesterId = friend.getReceiverId();
+                    receiverId = friend.getRequesterId();
+                }
+                // 친구 관계에서 receiver가 친구를 삭제하고, 다시 친구 요청을 보낸게 수락이 되었을때
+                // 친구 수락 알림이 requester -> receiver가 되어야함
+                else if (friend.getReceiverDeleted()) {
+                    friend.SetReceiverDeleted(false);
+                    requesterId = friend.getRequesterId();
+                    receiverId = friend.getReceiverId();
+                }
+                // 최초 친구 관계 요청이 수락이 되었을 때
+                // 친구 수락 알림이 receiver -> requester가 되어야함
+                else {
+                    requesterId = friend.getReceiverId();
+                    receiverId = friend.getRequesterId();
+                }
+                friend.SetFriendStatus(friendUpdateRespDto.getStatus());
+                break;
+            case CANCELLED:
+                friendRepository.deleteById(friend.getId());
+                notificationRepository.deleteById(notificationRepository.findByFriendId(friend.getId()).get().getFriendId());
+                return new FriendRespDto(friend.getId(), friend.getRequesterId(),
                     friend.getReceiverId(), null, friendUpdateRespDto.getStatus(), LocalDateTime.now());
-        } else {
-            friend.SetFriendStatus(friendUpdateRespDto.getStatus());
         }
 
         Friend savedFriend = friendRepository.save(friend);
@@ -90,8 +144,8 @@ public class FriendService {
         // 알림 생성
         Long notificationId = notificationService.createNofication(
                 savedFriend.getId(),
-                savedFriend.getRequesterId(),
-                savedFriend.getReceiverId(),
+                requesterId,
+                receiverId,
                 NotificationType.FRIEND_REQUEST,
                 "친구 수락하였습니다.");
 
@@ -129,6 +183,9 @@ public class FriendService {
         Optional<Friend> friend = friendRepository.findAcceptedFriend(friendReqDto.getRequesterId(), friendReqDto.getReceiverId());
 
         if(friend.isPresent()) {
+            if (friend.get().getStatus().equals(FriendStatus.PENDING)) {
+                throw new CustomException("아직 친구 관계가 맺어지지 않았습니다.", HttpStatus.FORBIDDEN);
+            }
             Friend friendToDelete = friend.get();
 
             // 만약 삭제를 요청한 사람이 Friend 관계에서 Requester라면 -> RequesterDeleted를 삭제해야함
