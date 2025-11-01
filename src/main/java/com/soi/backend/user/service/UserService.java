@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -42,6 +44,11 @@ public class UserService {
                 );
 
         return toDto(userRepository.save(user));
+    }
+
+    @Transactional
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
     // 계정 중복 체크
