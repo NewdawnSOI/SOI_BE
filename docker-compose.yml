@@ -24,9 +24,7 @@ services:
       start_period: 30s
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: soi-backend:latest
     container_name: soi-backend
     depends_on:
       mysql:
@@ -45,6 +43,11 @@ services:
       SPRING_JPA_SHOW_SQL: false
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: ${MYSQL_DIALECT}
       SWAGGER_SERVER_URL: ${SWAGGER_SERVER_URL}
+
+      SMS_SERVICE_KEY: ${SMS_SERVICE_KEY}
+      SMS_SERVICE_SECRET: ${SMS_SERVICE_SECRET}
+      SMS_SERVICE_PHONE: ${SMS_SERVICE_PHONE}
+
     restart: unless-stopped
 
 volumes:
