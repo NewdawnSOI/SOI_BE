@@ -35,8 +35,14 @@ public class UserController {
 
     @Operation(summary = "사용자 로그인(전화번호로)", description = "인증이 완료된 전화번호로 로그인을 합니다.")
     @PostMapping("/login")
-    public ResponseEntity<UserRespDto> login(@RequestParam String phone) {
-        return ResponseEntity.ok(userService.loginByPhone(phone));
+    public ResponseEntity<?> login(@RequestParam String phone) {
+        UserRespDto userRespDto = userService.loginByPhone(phone);
+        if (userRespDto != null) {
+            return ResponseEntity.ok(userRespDto);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("로그인 실패");
+        }
     }
 
     @Operation(summary = "전화번호 인증", description = "사용자가 입력한 전화번호로 인증을 발송합니다.")
@@ -47,7 +53,12 @@ public class UserController {
 
     @Operation(summary = "사용자 id 중복 체크", description = "사용자 id 중복 체크합니다. 리턴값 : 중복 : false, 중복아님 : true")
     @PostMapping("/id-check")
-    public ResponseEntity<Boolean> idCheck(@RequestParam String userId) {
-        return ResponseEntity.ok(userService.isDuplicateUserId(userId));
+    public ResponseEntity<?> idCheck(@RequestParam String userId) {
+        Boolean isDup = userService.isDuplicateUserId(userId);
+        if (isDup) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(userId + " id가 중복입니다.");
+        }
+        return ResponseEntity.ok(false);
     }
 }
