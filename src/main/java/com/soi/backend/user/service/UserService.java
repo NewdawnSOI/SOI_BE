@@ -1,6 +1,7 @@
 package com.soi.backend.user.service;
 
 import com.soi.backend.external.sms.MessageService;
+import com.soi.backend.global.exception.CustomException;
 import com.soi.backend.user.dto.UserCreateReqDto;
 import com.soi.backend.user.dto.UserRespDto;
 import com.soi.backend.user.entity.User;
@@ -8,6 +9,7 @@ import com.soi.backend.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -25,8 +27,7 @@ public class UserService {
     public UserRespDto createUser(UserCreateReqDto userCreateReqDto) {
         if (!isDuplicateUserId(userCreateReqDto.getUserId())
             || !isDuplicatePhone(userCreateReqDto.getPhone())) {
-            log.error("사용자 생성 실패");
-            return null;
+            throw new CustomException("이미 존재하는 사용자입니다.", HttpStatus.CONFLICT);
         }
 
         User user = new User(
@@ -82,7 +83,7 @@ public class UserService {
             userRepository.delete(user);
             return toDto(user);
         } else {
-            return null;
+            throw new CustomException("삭제 하려는 사용자를 찾을 수 없습니다.", HttpStatus.FORBIDDEN);
         }
     }
 
