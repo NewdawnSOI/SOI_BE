@@ -98,7 +98,6 @@ Temporary Items
 .env
 application.yml
 application.properties
-docker-compose.yml
 .env.local
 .env.prod
 *.env
