@@ -3,7 +3,9 @@ package com.soi.backend.user.controller;
 import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.global.exception.BaseController;
 import com.soi.backend.user.dto.UserCreateReqDto;
+import com.soi.backend.user.dto.UserFindRespDto;
 import com.soi.backend.user.dto.UserRespDto;
+import com.soi.backend.user.entity.User;
 import com.soi.backend.user.service.SMSAuthService;
 import com.soi.backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,6 +36,13 @@ public class UserController extends BaseController {
         } catch (Exception e) {
             return handleExecption(e);
         }
+    }
+
+    @Operation(summary = "모든유저 조회", description = "모든유저를 조회합니다.")
+    @GetMapping("/get-all")
+    public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllUsers() {
+        List<UserFindRespDto> users = userService.getAllUsers();
+        return ResponseEntity.ok(ApiResponseDto.success(users, "모든 사용자 조회 완료"));
     }
 
     @Operation(summary = "사용자 로그인(전화번호로)", description = "인증이 완료된 전화번호로 로그인을 합니다.")
