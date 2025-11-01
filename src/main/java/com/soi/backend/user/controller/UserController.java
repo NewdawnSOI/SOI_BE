@@ -1,5 +1,6 @@
 package com.soi.backend.user.controller;
 
+import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.user.dto.UserCreateReqDto;
 import com.soi.backend.user.dto.UserRespDto;
 import com.soi.backend.user.service.SMSAuthService;
@@ -23,26 +24,27 @@ public class UserController {
 
     @Operation(summary = "사용자 생성", description = "새로운 사용자를 등록합니다.")
     @PostMapping("/create")
-    public ResponseEntity<?> createUser(@RequestBody UserCreateReqDto UserCreateReqDto) {
+    public ResponseEntity<ApiResponseDto<UserRespDto>> createUser(@RequestBody UserCreateReqDto UserCreateReqDto) {
         UserRespDto userRespDto = userService.createUser(UserCreateReqDto);
         if (userRespDto != null) {
-            return ResponseEntity.ok(userRespDto);
+            return ResponseEntity.ok(ApiResponseDto.success(userRespDto,"사용자 생성 성공"));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("사용자 생성 실패");
+                    .body(ApiResponseDto.fail("유저 생성 실패"));
     }
 
     @Operation(summary = "사용자 로그인(전화번호로)", description = "인증이 완료된 전화번호로 로그인을 합니다.")
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String phone) {
+    public ResponseEntity<ApiResponseDto<UserRespDto>> login(@RequestParam String phone) {
         UserRespDto userRespDto = userService.loginByPhone(phone);
         if (userRespDto != null) {
-            return ResponseEntity.ok(userRespDto);
+            return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "로그인 성공"));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("로그인 실패");
+                    .body(ApiResponseDto.fail("로그인 실패"));
     }
 
+    // SMS 전송 서비스 찾을때까지 사용 X
     @Operation(summary = "전화번호 인증", description = "사용자가 입력한 전화번호로 인증을 발송합니다.")
     @PostMapping("/auth")
     public ResponseEntity<Boolean> authSMS(@RequestParam String phone) {
@@ -51,23 +53,23 @@ public class UserController {
 
     @Operation(summary = "사용자 id 중복 체크", description = "사용자 id 중복 체크합니다. 리턴값 : 중복 : false, 중복아님 : true")
     @PostMapping("/id-check")
-    public ResponseEntity<?> idCheck(@RequestParam String userId) {
+    public ResponseEntity<ApiResponseDto<Boolean>> idCheck(@RequestParam String userId) {
         Boolean isDup = userService.isDuplicateUserId(userId);
         if (isDup) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(userId + " id가 중복입니다.");
+                    .body(ApiResponseDto.fail(userId + " id가 중복입니다."));
         }
-        return ResponseEntity.ok(false);
+        return ResponseEntity.ok(ApiResponseDto.success(false, "id가 중복이 아닙니다."));
     }
 
     @Operation(summary = "유저 Id로 사용자 삭제", description = "id 로 사용자를 삭제합니다.")
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteUser(@RequestParam String userId) {
+    public ResponseEntity<ApiResponseDto<UserRespDto>> deleteUser(@RequestParam String userId) {
         UserRespDto userRespDto = userService.deleteUser(userId);
         if (userRespDto != null) {
-            return ResponseEntity.ok(userRespDto);
+            return ResponseEntity.ok(ApiResponseDto.success(userRespDto,"유저 삭제 성공"));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("유저 삭제 실패");
+                .body(ApiResponseDto.fail("유저 삭제 실패"));
     }
 }
