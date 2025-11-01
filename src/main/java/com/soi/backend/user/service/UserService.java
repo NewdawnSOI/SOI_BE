@@ -71,8 +71,7 @@ public class UserService {
             User user = userRepository.findByPhone(phone).get();
             return toDto(user);
         } else {
-            log.error("로그인 에러 : 해당 번호로 등록된 유저가 없습니다. : {}", phone);
-            return null;
+            throw new CustomException("로그인 에러 : 로그인 에러 : 해당 번호로 등록된 유저가 없습니다.", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -83,7 +82,7 @@ public class UserService {
             userRepository.delete(user);
             return toDto(user);
         } else {
-            throw new CustomException("삭제 하려는 사용자를 찾을 수 없습니다.", HttpStatus.FORBIDDEN);
+            throw new CustomException("삭제 하려는 사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
         }
     }
 

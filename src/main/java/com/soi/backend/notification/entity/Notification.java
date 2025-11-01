@@ -1,4 +1,71 @@
 package com.soi.backend.notification.entity;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+
 public class Notification {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "send_user_id")
+    private Long sendUserId;
+
+    @Column(name = "receiver_user_id")
+    private Long receiverUserId;
+
+    @Column(name = "type")
+    private NotificationType type;
+
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "friend_id")
+    private Long friendId; // 친구 관계 목록 테이블 아이디
+
+    @Column(name = "category_id")
+    private Long categoryId; // 카테고리 관련된 알람일 때 카테고리 아이디
+
+    @Column(name = "requires_acceptance")
+    private Boolean requiresAcceptance; // 초대 수락 대기 여부
+
+    @Column(name = "category_invite_id")
+    private Long categoryInviteId; // 초대 ID, category_invite 테이블의 아이디임
+
+    @Column(name = "comment_id")
+    private Long commentId; // 댓글 알람일떄 댓글 ID
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "is_read")
+    private Boolean isRead;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public Notification(Long friendId, Long senderId, Long receiverId, NotificationType type, String title) {
+        this.friendId = friendId;
+        this.sendUserId = senderId;
+        this.receiverUserId = receiverId;
+        this.type = type;
+        this.title = title;
+        this.categoryId = null;
+        this.requiresAcceptance = false;
+        this.categoryInviteId = null;
+        this.commentId = null;
+        this.createdAt = LocalDateTime.now();
+        this.isRead = false;
+    }
 }
