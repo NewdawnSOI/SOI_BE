@@ -1,0 +1,81 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main   # main 브랜치에 push될 때 자동 배포
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ 리포지토리 체크아웃
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ JDK 설정
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # 3️⃣ Spring Boot 빌드
+      - name: Build Spring Boot App
+        run: ./gradlew clean build -x test
+
+      # 4️⃣ Docker 이미지 빌드
+      - name: Build Docker image
+        run: docker build -t soi-backend:latest .
+
+      # 5️⃣ GitHub Secrets에 저장된 ENV_FILE 기반 .env 생성
+      - name: Create .env file from GitHub Secrets
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+          echo "✅ .env file generated from GitHub Secrets"
+          cat .env
+
+      # 6️⃣ Docker 이미지 저장 + 압축
+      - name: Save Docker image & compress with env and compose
+        run: |
+          docker save soi-backend:latest -o soi-backend.tar
+          tar -czvf soi-deploy.tar.gz soi-backend.tar .env docker-compose.yml
+
+      # 7️⃣ EC2 서버로 업로드 (/home/ec2-user/soi)
+      - name: Upload to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "soi-deploy.tar.gz"
+          target: "/home/ec2-user/soi/"
+
+      # 8️⃣ EC2에서 자동 배포 실행
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            mkdir -p /home/ec2-user/soi
+            cd /home/ec2-user/soi
+
+            echo "🧹 기존 컨테이너 중지 및 정리"
+            docker compose down || true
+
+            echo "📦 압축 해제"
+            tar -xzvf soi-deploy.tar.gz
+
+            echo "🐳 Docker 이미지 로드"
+            docker load -i soi-backend.tar
+
+            echo "🚀 컨테이너 실행"
+            docker compose up -d --build
+
+            echo "✅ 배포 완료"
