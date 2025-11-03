@@ -17,14 +17,18 @@ import org.springframework.stereotype.Component;
 public class MessageService {
     @Value("${sms.service.key}")
     private String api_key;
+
     @Value("${sms.service.secret}")
     private String api_secret;
+
+    @Value("${sms.service.phone}")
+    private String api_phone;
 
     public void sendMessage(String verificationCode, String phone) {
 
         DefaultMessageService messageService =  SolapiClient.INSTANCE.createInstance(api_key, api_secret);
         Message message = new Message();
-        message.setFrom("010-6651-5709");
+        message.setFrom(api_phone);
         message.setTo(phone);
         message.setText("[SOI] 본인확인 인증번호 " + verificationCode + "을 입력해주세요");
 
