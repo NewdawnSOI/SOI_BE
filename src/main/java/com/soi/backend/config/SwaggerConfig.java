@@ -71,7 +71,8 @@ public class SwaggerConfig {
                             .anyRequest().authenticated() // Swagger는 인증 필요
                     )
                     .httpBasic(Customizer.withDefaults()) // 브라우저 팝업 로그인
-                    .csrf(csrf -> csrf.disable());
+                    .csrf(csrf -> csrf.disable())
+                    .cors(cors -> cors.disable());
             return http.build();
         }
 
