@@ -55,20 +55,22 @@ public class SwaggerConfig {
     @Configuration
     @EnableWebSecurity
     public static class SwaggerSecurityConfig {
+
         @Value("${swagger.user}")
         private String swaggerUser;
 
         @Value("${swagger.pass}")
         private String swaggerPassword;
 
-        @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        @Bean(name = "swaggerSecurityFilterChain")
+        public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity http) throws Exception {
             http
+                    // Swagger 경로만 이 필터체인으로 처리
+                    .securityMatcher("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**")
                     .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").authenticated()
-                            .anyRequest().permitAll()
+                            .anyRequest().authenticated() // Swagger는 인증 필요
                     )
-                    .httpBasic(Customizer.withDefaults())
+                    .httpBasic(Customizer.withDefaults()) // 브라우저 팝업 로그인
                     .csrf(csrf -> csrf.disable());
             return http.build();
         }
@@ -77,7 +79,7 @@ public class SwaggerConfig {
         public UserDetailsService users() {
             UserDetails user = User.builder()
                     .username(swaggerUser)
-                    .password(swaggerPassword)
+                    .password("{noop}" + swaggerPassword) // 임시 비암호화
                     .roles("ADMIN")
                     .build();
             return new InMemoryUserDetailsManager(user);
