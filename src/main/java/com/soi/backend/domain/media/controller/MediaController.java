@@ -38,9 +38,9 @@ public class MediaController extends BaseController {
 
     @Operation(summary = "Presigned URL 요청", description = "DB에 저장된 S3 key를 입력하면 1시간 유효한 접근 URL을 반환합니다.")
     @GetMapping("/get-url")
-    public ResponseEntity<ApiResponseDto<String>> getPresignedUrl(@RequestParam String key) {
+    public ResponseEntity<ApiResponseDto<List<String>>> getPresignedUrl(@RequestParam List<String> key) {
         try {
-            String url = mediaService.getPresignedUrlByKey(key);
+            List<String> url = mediaService.getPresignedUrlByKey(key);
             return ResponseEntity.ok(ApiResponseDto.success(url, "Presigned URL 생성 성공"));
         } catch (Exception e) {
             return handleExecption(e);

@@ -43,7 +43,11 @@ public class MediaService {
         return urls;
     }
 
-    public String getPresignedUrlByKey(String key) {
-        return s3Uploader.getPressigneUrl(key);
+    public List<String> getPresignedUrlByKey(List<String> key) {
+        List<String> urls = new ArrayList<>();
+        for (String url : key) {
+            urls.add(s3Uploader.getPressigneUrl(url));
+        }
+        return urls;
     }
 }
