@@ -18,17 +18,16 @@ public class MediaService {
 
     private final S3Uploader s3Uploader;
 
-    public List<String> uploadMedia(String types, Long id, List<MultipartFile> files) throws IOException {
+    public List<String> uploadMedia(List<String> types, Long id, List<MultipartFile> files) throws IOException {
         List<String> urls = new ArrayList<>();
-        List<String> typeList = List.of(types.split(","));
 
-        if (typeList.size() != files.size()) {
+        if (types.size() != files.size()) {
             throw new CustomException("파일 수와 타입 수가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
         }
         
         for (int i=0; i<files.size(); i++) {
             MultipartFile file = files.get(i);
-            String fileType = typeList.get(i);
+            String fileType = types.get(i);
 
             switch (fileType) {
                 case "image" :

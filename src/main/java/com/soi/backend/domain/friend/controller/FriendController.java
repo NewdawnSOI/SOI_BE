@@ -48,8 +48,8 @@ public class FriendController extends BaseController {
 
     @Operation(summary = "모든 친구 조회", description = "유저의 id (user_id 말고 그냥 id)를 통해 모든 친구를 조회합니다.")
     @GetMapping("/get-all")
-    public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllFriend(@RequestParam Long userId) {
-        List<UserFindRespDto> friends = friendService.getAllFriends(userId);
+    public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllFriend(@RequestParam Long id) {
+        List<UserFindRespDto> friends = friendService.getAllFriends(id);
         return ResponseEntity.ok(ApiResponseDto.success(friends, "모든 친구 조회 완료"));
     }
 
