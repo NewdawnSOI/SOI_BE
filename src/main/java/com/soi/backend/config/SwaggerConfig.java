@@ -74,7 +74,7 @@ public class SwaggerConfig {
                             // 실제 UI 화면만 Basic 인증 요구
                             .requestMatchers("/swagger-ui/**", "/swagger-ui.html").authenticated()
                             // 혹시 남는 것들 있으면 막기
-                            .anyRequest().denyAll()// Swagger는 인증 필요
+                            .anyRequest().permitAll()// Swagger는 인증 필요
                     )
                     .httpBasic(Customizer.withDefaults()) // 브라우저 팝업 로그인
                     .csrf(csrf -> csrf.disable())
