@@ -29,12 +29,11 @@ public class SecurityConfig {
         
         // 허용할 오리진 설정 (HTTPS 포함)
         configuration.setAllowedOriginPatterns(Arrays.asList(
-                "/swagger-ui/**",
+                "https://newdawnsoi.site",
+                "http://newdawnsoi.site",
                 "http://localhost:8080",
                 "http://localhost:3000",
-                "http://localhost:3001",
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:3001"
+                "http://127.0.0.1:3000"
         ));
         
         // 허용할 HTTP 메서드
