@@ -25,7 +25,7 @@ public class MediaController extends BaseController {
     @Operation(summary = "미디어 업로드", description = "단일, 여러개의 파일을 올릴 수 있습니다. 여러개의 파일 업로드시 , 로 구분해서 type을 명시합니다.")
     @PostMapping(path = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<ApiResponseDto<List<String>>> uploadMedia(
-            @RequestParam("types") String types,
+            @RequestParam("types") List<String> types,
             @RequestParam("id") Long id,
             @RequestPart("files") List<MultipartFile> files) {
         try {
