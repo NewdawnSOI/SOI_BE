@@ -66,7 +66,7 @@ public class UserController extends BaseController {
     @GetMapping("/id-check")
     public ResponseEntity<ApiResponseDto<Boolean>> idCheck(@RequestParam String userId) {
         Boolean isDup = userService.isDuplicateUserId(userId);
-        if (isDup) {
+        if (!isDup) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(ApiResponseDto.fail(userId + " id가 중복입니다."));
         }
