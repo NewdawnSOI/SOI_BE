@@ -49,4 +49,8 @@ public class MediaService {
         }
         return urls;
     }
+
+    public String getPresignedUrlByKey(String key) {
+        return s3Uploader.getPressigneUrl(key);
+    }
 }

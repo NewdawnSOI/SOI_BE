@@ -18,10 +18,10 @@ public class Notification {
     private Long id;
 
     @Column(name = "send_user_id")
-    private Long sendUserId;
+    private Long requesterId;
 
     @Column(name = "receiver_user_id")
-    private Long receiverUserId;
+    private Long receiverId;
 
     @Column(name = "type")
     private NotificationType type;
@@ -55,17 +55,21 @@ public class Notification {
         this.createdAt = LocalDateTime.now();
     }
 
-    public Notification(Long friendId, Long senderId, Long receiverId, NotificationType type, String title) {
+    // 친구요청 알림
+    public Notification(Long requesterId, Long receiverId, NotificationType type, String title,
+                        Long friendId, Long categoryId, Long categoryInviteId, Long commentId) {
+        this.requesterId = requesterId;
+        this.receiverId = receiverId;
         this.friendId = friendId;
-        this.sendUserId = senderId;
-        this.receiverUserId = receiverId;
         this.type = type;
         this.title = title;
-        this.categoryId = null;
+        this.categoryId = categoryId;
         this.requiresAcceptance = false;
-        this.categoryInviteId = null;
-        this.commentId = null;
+        this.categoryInviteId = categoryInviteId;
+        this.commentId = commentId;
         this.createdAt = LocalDateTime.now();
         this.isRead = false;
     }
+
+    // 카테고리 초대 알림
 }

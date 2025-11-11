@@ -1,4 +1,7 @@
 package com.soi.backend.domain.category.repository;
 
-public class CategoryRepository {
+import com.soi.backend.domain.category.entity.Category;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CategoryRepository extends JpaRepository<Category, Long> {
 }

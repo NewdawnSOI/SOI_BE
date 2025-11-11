@@ -1,4 +1,4 @@
-package com.soi.backend.security;
+package com.soi.backend.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
