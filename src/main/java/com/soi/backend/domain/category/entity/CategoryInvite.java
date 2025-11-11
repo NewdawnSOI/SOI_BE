@@ -50,4 +50,10 @@ public class CategoryInvite {
         this.updatedAt = LocalDateTime.now();
         this.respondedAt = null;
     }
+
+    public void setStatus (CategoryInviteStatus status) {
+        this.status = status;
+        this.updatedAt = LocalDateTime.now();
+        this.respondedAt = LocalDateTime.now();
+    }
 }

@@ -3,6 +3,7 @@ package com.soi.backend.domain.category.controller;
 import com.amazonaws.Response;
 import com.soi.backend.domain.category.dto.CategoryCreateReqDto;
 import com.soi.backend.domain.category.dto.CategoryInviteReqDto;
+import com.soi.backend.domain.category.dto.CategoryInviteResponseReqDto;
 import com.soi.backend.domain.category.service.CategoryService;
 import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.global.exception.BaseController;
@@ -42,7 +43,18 @@ public class CategoryController extends BaseController {
             Boolean check = categoryService.inviteUserToCategory(categoryInviteReqDto.getCategoryId(),
                     categoryInviteReqDto.getRequesterId(),
                     categoryInviteReqDto.getReceiverId());
-            return ResponseEntity.ok(ApiResponseDto.success(check, "유저 카테고리에 저장 완료"));
+            return ResponseEntity.ok(ApiResponseDto.success(check, "유저 카테고리에 초대 완료"));
+        } catch (Exception e) {
+            return handleExecption(e);
+        }
+    }
+
+    @Operation(summary = "카테고리에 초대된 유저가 초대 승낙여부를 결정하는 API", description = "status에 넣을 수 있는 상태 : PENDING, ACCEPTED, DECLINED, EXPIRED")
+    @PostMapping("/invite/response")
+    public ResponseEntity<ApiResponseDto<Boolean>> inviteReponse(@RequestBody CategoryInviteResponseReqDto categoryInviteResponseReqDto) {
+        try {
+            Boolean check = categoryService.responseInvite(categoryInviteResponseReqDto);
+            return ResponseEntity.ok(ApiResponseDto.success(check, "초대 상태 변경 완료"));
         } catch (Exception e) {
             return handleExecption(e);
         }

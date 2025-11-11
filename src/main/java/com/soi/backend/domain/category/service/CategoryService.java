@@ -1,8 +1,10 @@
 package com.soi.backend.domain.category.service;
 
 import com.soi.backend.domain.category.dto.CategoryCreateReqDto;
+import com.soi.backend.domain.category.dto.CategoryInviteResponseReqDto;
 import com.soi.backend.domain.category.entity.Category;
 import com.soi.backend.domain.category.entity.CategoryInvite;
+import com.soi.backend.domain.category.entity.CategoryInviteStatus;
 import com.soi.backend.domain.category.entity.CategoryUser;
 import com.soi.backend.domain.category.repository.CategoryInviteRepository;
 import com.soi.backend.domain.category.repository.CategoryRepository;
@@ -35,15 +37,14 @@ public class CategoryService {
     public Long initializeCategory(CategoryCreateReqDto dto) {
         Long categoryId = createCategory(dto);
 //        createCategoryUser(categoryId, dto.getUsers());
-
-        inviteUserToCategory(categoryId, dto.getId(), dto.getReceiverId());
+        inviteUserToCategory(categoryId, dto.getRequesterId(), dto.getReceiverIds());
         return categoryId;
     }
 
     @Transactional
     public Long createCategory(CategoryCreateReqDto categoryCreateReqDto) {
 
-        String userId = userRepository.findById(categoryCreateReqDto.getId())
+        String userId = userRepository.findById(categoryCreateReqDto.getRequesterId())
                 .orElseThrow(() -> new CustomException("카테고리 생성한 유저 id를 찾을 수 없음", HttpStatus.NOT_FOUND))
                 .getUserId();
 
@@ -67,61 +68,86 @@ public class CategoryService {
         categoryRepository.save(category);
 
         // 초대유저는 무조건 카테고리-유저 테이블에 생성, 초대 받은 멤버들은 수락하면 생성
-        categoryUserRepository.save(new CategoryUser(category.getId(), categoryCreateReqDto.getId()));
+        categoryUserRepository.save(new CategoryUser(category.getId(), categoryCreateReqDto.getRequesterId()));
 
         return category.getId();
     }
 
     @Transactional
-    public void createCategoryUser(Long categoryId, List<Long> users) {
-        List<CategoryUser> categoryUsers = users.stream()
-                .map(u -> new CategoryUser(categoryId, u))
-                .toList();
-        categoryUserRepository.saveAll(categoryUsers);
+    public void createCategoryUser(Long categoryId, Long id) {
+        categoryUserRepository.save(new CategoryUser(categoryId, id));
     }
 
     @Transactional
-    public Boolean inviteUserToCategory(Long categoryId, Long inviterId, List<Long> users) {
+    public Boolean inviteUserToCategory(Long categoryId, Long requesterId, List<Long> receiverIds) {
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomException("존재하지 않는 카테고리입니다.", HttpStatus.NOT_FOUND));
-        userRepository.findById(inviterId)
+        userRepository.findById(requesterId)
                 .orElseThrow(() -> new CustomException("초대한 유저가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
 
-        userRepository.findAllById(users).forEach(u -> {});
-
-        // 이미 멤버인 유저는 제외 시키기
-        List<Long> existingMembers = categoryUserRepository.findUserIdsByCategoryId(categoryId);
-        List<Long> filteredUsers = users.stream()
-                .filter(u -> !existingMembers.contains(u))
+        List<Long> exists = userRepository.findAllById(receiverIds)
+                .stream()
+                .map(u -> u.getId())
                 .toList();
-        createCategoryInvite(categoryId, inviterId, filteredUsers);
-        sendCategoryNotification(categoryId, inviterId, filteredUsers);
+
+        if (receiverIds.size() != exists.size()) {
+            throw new CustomException("존재하지 않는 유저가 포함되어 있습니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        createCategoryInvite(categoryId, requesterId, receiverIds);
+        sendCategoryNotification(categoryId, requesterId, receiverIds);
 
         return true;
     }
 
     @Transactional
-    public Boolean createCategoryInvite(Long categoryId, Long inviterId, List<Long> users) {
-        List<CategoryInvite> categoryInvites = users.stream()
-                .map(u -> new CategoryInvite(categoryId, inviterId, u))
+    public Boolean createCategoryInvite(Long categoryId, Long requesterId, List<Long> receiverIds) {
+        List<CategoryInvite> categoryInvites = receiverIds.stream()
+                .map(u -> new CategoryInvite(categoryId, requesterId, u))
                 .toList();
         categoryInviteRepository.saveAll(categoryInvites);
         return true;
     }
 
     @Transactional
-    public void sendCategoryNotification(Long categoryId, Long inviterId, List<Long> ids) {
-        String userId = userRepository.findById(inviterId).get().getUserId();
+    public void sendCategoryNotification(Long categoryId, Long requesterId, List<Long> receiverIds) {
+        String userId = userRepository.findById(requesterId).get().getUserId();
         String categoryName = categoryRepository.findById(categoryId).get().getName();
-        for (Long id : ids) {
+        for (Long receiverId : receiverIds) {
+            Long categoryInviteId = categoryInviteRepository.findByCategoryIdAndInvitedUserId(categoryId, receiverId).get().getId();
             notificationService.createCategoryNotification(
-                    inviterId,
-                    id,
+                    requesterId,
+                    receiverId,
                     NotificationType.CATEGORY_INVITE,
                     userId + "님이 " + categoryName + " 카테고리에 초대했습니다.",
                     categoryId,
-                    categoryInviteRepository.findByCategoryIdAndInvitedUserId(categoryId, id).get().getCategoryId()
+                    categoryInviteId
             );
         }
+    }
+
+    @Transactional
+    public Boolean responseInvite(CategoryInviteResponseReqDto inviteResponseDto) {
+        categoryRepository.findById(inviteResponseDto.getCategoryId())
+                .orElseThrow(() -> new CustomException("존재하지 않는 카테고리입니다.", HttpStatus.NOT_FOUND));
+
+        CategoryInvite categoryInvite = categoryInviteRepository
+                .findByCategoryIdAndInvitedUserId(inviteResponseDto.getCategoryId(), inviteResponseDto.getResponserId())
+                .orElseThrow(() -> new CustomException("초대된 이력이 없습니다.", HttpStatus.NOT_FOUND));
+
+        switch (inviteResponseDto.getStatus()) {
+            case ACCEPTED:
+                createCategoryUser(inviteResponseDto.getCategoryId(), inviteResponseDto.getResponserId());
+                categoryInvite.setStatus(CategoryInviteStatus.ACCEPTED);
+                break;
+            case DECLINED:
+                categoryInvite.setStatus(CategoryInviteStatus.DECLINED);
+                break;
+            case EXPIRED:
+                categoryInvite.setStatus(CategoryInviteStatus.EXPIRED);
+                break;
+        }
+//        categoryInviteRepository.deleteById(categoryInvite.getId());
+        return true;
     }
 }
