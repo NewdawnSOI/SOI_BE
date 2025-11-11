@@ -22,14 +22,15 @@ public class MediaController extends BaseController {
 
     private final MediaService mediaService;
 
-    @Operation(summary = "미디어 업로드", description = "단일, 여러개의 파일을 올릴 수 있습니다. 여러개의 파일 업로드시 , 로 구분해서 type을 명시합니다.")
+    @Operation(summary = "미디어 업로드", description = "단일, 여러개의 파일을 올릴 수 있습니다. 여러개의 파일 업로드시 , 로 구분해서 type을 명시합니다." +
+            "id값은 고유 id를 받습니다.")
     @PostMapping(path = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<ApiResponseDto<List<String>>> uploadMedia(
-            @RequestParam("types") List<String> types,
-            @RequestParam("id") Long id,
+            @RequestParam("tpes") List<String> types,
+            @RequestParam("userId") Long userId,
             @RequestPart("files") List<MultipartFile> files) {
         try {
-            List<String> urls = mediaService.uploadMedia(types,id,files);
+            List<String> urls = mediaService.uploadMedia(types,userId,files);
             return ResponseEntity.ok(ApiResponseDto.success(urls, "파일 저장성공"));
         } catch (Exception e) {
             return handleExecption(e);
