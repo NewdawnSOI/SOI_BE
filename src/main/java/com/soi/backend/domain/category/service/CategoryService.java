@@ -35,9 +35,9 @@ public class CategoryService {
     @Transactional
     public Long initializeCategory(CategoryCreateReqDto dto) {
         Long categoryId = createCategory(dto);
-        createCategoryUser(categoryId, dto.getUsers());
-        createCategoryInvite(categoryId, dto.getUserId(), dto.getUsers());
-        sendCategoryNotification(categoryId, dto.getUserId(), dto.getUsers());
+//        createCategoryUser(categoryId, dto.getUsers());
+
+        inviteUserToCategory(categoryId, dto.getUserId(), dto.getUsers());
         return categoryId;
     }
 
@@ -64,7 +64,12 @@ public class CategoryService {
             category.setLastPhotoUploadedBy(userId);
         }
 
+        // 카테고리 우선 저장하고
         categoryRepository.save(category);
+
+        // 초대유저는 무조건 카테고리-유저 테이블에 생성, 초대 받은 멤버들은 수락하면 생성
+        categoryUserRepository.save(new CategoryUser(category.getId(), categoryCreateReqDto.getUserId()));
+
         return category.getId();
     }
 
@@ -77,11 +82,32 @@ public class CategoryService {
     }
 
     @Transactional
-    public void createCategoryInvite(Long categoryId, Long inviter, List<Long> users) {
+    public Boolean inviteUserToCategory(Long categoryId, Long inviterId, List<Long> users) {
+        categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CustomException("존재하지 않는 카테고리입니다.", HttpStatus.NOT_FOUND));
+        userRepository.findById(inviterId)
+                .orElseThrow(() -> new CustomException("초대한 유저가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
+
+        userRepository.findAllById(users).forEach(u -> {});
+
+        // 이미 멤버인 유저는 제외 시키기
+        List<Long> existingMembers = categoryUserRepository.findUserIdsByCategoryId(categoryId);
+        List<Long> filteredUsers = users.stream()
+                .filter(u -> !existingMembers.contains(u))
+                .toList();
+        createCategoryInvite(categoryId, inviterId, filteredUsers);
+        sendCategoryNotification(categoryId, inviterId, filteredUsers);
+
+        return true;
+    }
+
+    @Transactional
+    public Boolean createCategoryInvite(Long categoryId, Long inviterId, List<Long> users) {
         List<CategoryInvite> categoryInvites = users.stream()
-                .map(u -> new CategoryInvite(categoryId, inviter, u))
+                .map(u -> new CategoryInvite(categoryId, inviterId, u))
                 .toList();
         categoryInviteRepository.saveAll(categoryInvites);
+        return true;
     }
 
     @Transactional
