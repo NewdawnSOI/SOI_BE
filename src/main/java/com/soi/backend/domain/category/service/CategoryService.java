@@ -1,7 +1,6 @@
 package com.soi.backend.domain.category.service;
 
 import com.soi.backend.domain.category.dto.CategoryCreateReqDto;
-import com.soi.backend.domain.category.dto.CategoryCreateRespDto;
 import com.soi.backend.domain.category.entity.Category;
 import com.soi.backend.domain.category.entity.CategoryInvite;
 import com.soi.backend.domain.category.entity.CategoryUser;
@@ -37,14 +36,14 @@ public class CategoryService {
         Long categoryId = createCategory(dto);
 //        createCategoryUser(categoryId, dto.getUsers());
 
-        inviteUserToCategory(categoryId, dto.getUserId(), dto.getUsers());
+        inviteUserToCategory(categoryId, dto.getId(), dto.getReceiverId());
         return categoryId;
     }
 
     @Transactional
     public Long createCategory(CategoryCreateReqDto categoryCreateReqDto) {
 
-        String userId = userRepository.findById(categoryCreateReqDto.getUserId())
+        String userId = userRepository.findById(categoryCreateReqDto.getId())
                 .orElseThrow(() -> new CustomException("카테고리 생성한 유저 id를 찾을 수 없음", HttpStatus.NOT_FOUND))
                 .getUserId();
 
@@ -68,7 +67,7 @@ public class CategoryService {
         categoryRepository.save(category);
 
         // 초대유저는 무조건 카테고리-유저 테이블에 생성, 초대 받은 멤버들은 수락하면 생성
-        categoryUserRepository.save(new CategoryUser(category.getId(), categoryCreateReqDto.getUserId()));
+        categoryUserRepository.save(new CategoryUser(category.getId(), categoryCreateReqDto.getId()));
 
         return category.getId();
     }
