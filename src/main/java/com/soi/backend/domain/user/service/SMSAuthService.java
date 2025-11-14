@@ -1,10 +1,13 @@
 package com.soi.backend.domain.user.service;
 
+import com.soi.backend.domain.user.dto.AuthCheckReqDto;
 import com.soi.backend.external.sms.MessageService;
 import com.soi.backend.domain.user.entity.SMSAuth;
 import com.soi.backend.domain.user.repository.SMSAuthRepository;
+import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -29,5 +32,16 @@ public class SMSAuthService {
         messageService.sendMessage(verificationCode, phone);
         smsAuthRepository.save(new SMSAuth(phone, verificationCode));
         return true;
+    }
+
+    @Transactional
+    public Boolean checkCode(AuthCheckReqDto authCheckReqDto) {
+        final String phoneNumber = authCheckReqDto.getPhoneNumber();
+        final String code = authCheckReqDto.getCode();
+        String authCode = smsAuthRepository.findByPhoneId(phoneNumber)
+                .orElseThrow(() -> new CustomException("인증 요청을 보내지 않은 전화번호입니다.", HttpStatus.NOT_FOUND))
+                .getVerificationCode();
+        smsAuthRepository.deleteByPhoneId(phoneNumber);
+        return authCode.equals(code);
     }
 }
