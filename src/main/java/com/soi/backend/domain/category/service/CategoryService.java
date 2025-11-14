@@ -50,21 +50,10 @@ public class CategoryService {
                 .orElseThrow(() -> new CustomException("카테고리 생성한 유저 id를 찾을 수 없음", HttpStatus.NOT_FOUND))
                 .getUserId();
 
-        String imageUrl = null;
-        if (categoryCreateReqDto.getCategoryPhotoKey() != null) { // 사진을찍은 상태에서, 새롭게 카테고리를 만들면 이미지 주소 저장
-            imageUrl = categoryCreateReqDto.getCategoryPhotoKey();
-        }
-
-        System.out.println(imageUrl);
         Category category = new Category(
                     categoryCreateReqDto.getName(),
-                    imageUrl,
                     categoryCreateReqDto.getIsPublic()
             );
-
-        if (imageUrl != null) {
-            category.setLastPhotoUploadedBy(userId);
-        }
 
         // 카테고리 우선 저장하고
         categoryRepository.save(category);
