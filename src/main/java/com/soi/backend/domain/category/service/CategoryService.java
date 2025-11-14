@@ -9,6 +9,7 @@ import com.soi.backend.domain.category.entity.CategoryUser;
 import com.soi.backend.domain.category.repository.CategoryInviteRepository;
 import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
+import com.soi.backend.domain.friend.service.FriendService;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.service.NotificationService;
@@ -32,6 +33,7 @@ public class CategoryService {
     private final CategoryUserRepository categoryUserRepository;
     private final CategoryInviteRepository categoryInviteRepository;
     private final NotificationService notificationService;
+    private final FriendService friendService;
 
     @Transactional
     public Long initializeCategory(CategoryCreateReqDto dto) {
@@ -94,6 +96,30 @@ public class CategoryService {
             throw new CustomException("존재하지 않는 유저가 포함되어 있습니다.", HttpStatus.BAD_REQUEST);
         }
 
+        // 서로가 다 친구인지 확인
+        Boolean allFriends = friendService.isAllFriend(requesterId, receiverIds);
+
+        if (allFriends) {
+            receiverIds.forEach(id -> {createCategoryUser(categoryId, id);});
+
+            String requesterUserId = userRepository.findById(requesterId).get().getUserId();
+            String categoryName = categoryRepository.findById(categoryId).get().getName();
+
+            // receiver들에게도 알림
+            receiverIds.forEach(receiverId ->
+                    notificationService.createCategoryNotification(
+                            requesterId,
+                            receiverId,
+                            NotificationType.CATEGORY_INVITE,
+                            requesterUserId + "님의 " + categoryName + " 카테고리에 추가되었습니다.",
+                            categoryId,
+                            null
+                    )
+            );
+
+            return true;
+        }
+
         createCategoryInvite(categoryId, requesterId, receiverIds);
         sendCategoryNotification(categoryId, requesterId, receiverIds);
 
@@ -119,7 +145,7 @@ public class CategoryService {
                     requesterId,
                     receiverId,
                     NotificationType.CATEGORY_INVITE,
-                    userId + "님이 " + categoryName + " 카테고리에 초대했습니다.",
+                    userId + "님이 " + categoryName + " 카테고리에 초대를 보냈습니다.",
                     categoryId,
                     categoryInviteId
             );

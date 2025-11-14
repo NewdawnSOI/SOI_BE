@@ -50,4 +50,20 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
         )
     """)
     Optional<Friend> findAcceptedFriend(@Param("userId") Long userId, @Param("targetId") Long targetId);
+
+    @Query("""
+        SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END
+        FROM Friend f
+        WHERE
+            (
+                (f.requesterId = :userId AND f.receiverId = :targetId AND f.requesterDeleted = false)
+                OR
+                (f.receiverId = :userId AND f.requesterId = :targetId AND f.receiverDeleted = false)
+            )
+            AND f.status = 'ACCEPTED'
+    """)
+    boolean isFriend(
+            @Param("userId") Long userId,
+            @Param("targetId") Long targetId
+    );
 }

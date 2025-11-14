@@ -38,10 +38,10 @@ public class SMSAuthService {
     public Boolean checkCode(AuthCheckReqDto authCheckReqDto) {
         final String phoneNumber = authCheckReqDto.getPhoneNumber();
         final String code = authCheckReqDto.getCode();
-        String authCode = smsAuthRepository.findByPhoneId(phoneNumber)
+        String authCode = smsAuthRepository.findByPhone(phoneNumber)
                 .orElseThrow(() -> new CustomException("인증 요청을 보내지 않은 전화번호입니다.", HttpStatus.NOT_FOUND))
                 .getVerificationCode();
-        smsAuthRepository.deleteByPhoneId(phoneNumber);
+        smsAuthRepository.deleteByPhone(phoneNumber);
         return authCode.equals(code);
     }
 }

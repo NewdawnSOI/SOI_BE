@@ -262,4 +262,22 @@ public class FriendService {
                 friend.getReceiverId(), notificationId, friend.getStatus(), LocalDateTime.now());
     }
 
+    public Boolean isAllFriend(Long requsterId, List<Long> receiverIds) {
+        for (Long receiverId : receiverIds) {
+            if (!friendRepository.isFriend(requsterId, receiverId)) {
+                return false;
+            }
+        }
+
+        for (int i=0; i<receiverIds.size(); i++) {
+            for (int j=i+1; j<receiverIds.size(); j++) {
+                if (!friendRepository.isFriend(receiverIds.get(i), receiverIds.get(j))) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
 }
