@@ -1,5 +1,6 @@
 package com.soi.backend.domain.user.controller;
 
+import com.soi.backend.domain.user.dto.AuthCheckReqDto;
 import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.global.exception.BaseController;
 import com.soi.backend.domain.user.dto.UserCreateReqDto;
@@ -60,6 +61,12 @@ public class UserController extends BaseController {
     @PostMapping("/auth")
     public ResponseEntity<Boolean> authSMS(@RequestParam String phone) {
         return ResponseEntity.ok(smsAuthService.sendSMStoAuth(phone));
+    }
+
+    @Operation(summary = "전화번호 인증확인", description = "사용자 전화번호와 사용자가 입력한 인증코드를 보내서 인증확인을 진행합니다.")
+    @PostMapping("/auth/check")
+    public ResponseEntity<Boolean> checkAuthSMS(@RequestBody AuthCheckReqDto authCheckReqDto) {
+        return ResponseEntity.ok(smsAuthService.checkCode(authCheckReqDto));
     }
 
     @Operation(summary = "사용자 id 중복 체크", description = "사용자 id 중복 체크합니다. 사용가능 : true, 사용불가(중복) : false")
