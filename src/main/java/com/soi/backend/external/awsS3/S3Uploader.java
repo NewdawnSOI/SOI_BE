@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.soi.backend.domain.media.entity.FileType;
 import com.soi.backend.global.exception.CustomException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -36,7 +37,7 @@ public class S3Uploader {
     private String bucket;
 
     // MultipartFile을 전달받아 File로 전환한 후 S3에 업로드
-    public String upload(MultipartFile multipartFile, String dirName, Long id) throws IOException {
+    public String upload(MultipartFile multipartFile, FileType fileType, Long id) throws IOException {
         File uploadFile = convert(multipartFile)
                 .orElseThrow(() -> new CustomException("MultipartFile -> File 전환 실패", HttpStatus.INTERNAL_SERVER_ERROR));
 
@@ -44,7 +45,7 @@ public class S3Uploader {
 //        String filePath = buildPath(dirName, id, multipartFile.getOriginalFilename());
 
         // key 발급
-        String key = buildKey(dirName, id, multipartFile.getOriginalFilename());
+        String key = buildKey(fileType.toString(), id, multipartFile.getOriginalFilename());
 
         // S3 업로드 (private로)
         amazonS3Client.putObject(new PutObjectRequest(bucket, key, uploadFile));

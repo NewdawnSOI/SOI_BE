@@ -1,5 +1,6 @@
 package com.soi.backend.domain.media.service;
 
+import com.soi.backend.domain.media.entity.FileType;
 import com.soi.backend.external.awsS3.S3Uploader;
 import com.soi.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class MediaService {
 
     private final S3Uploader s3Uploader;
 
-    public List<String> uploadMedia(List<String> types, Long id, List<MultipartFile> files) throws IOException {
+    public List<String> uploadMedia(List<FileType> types, Long id, List<MultipartFile> files) throws IOException {
         List<String> urls = new ArrayList<>();
 
         if (types.size() != files.size()) {
@@ -27,12 +28,12 @@ public class MediaService {
         
         for (int i=0; i<files.size(); i++) {
             MultipartFile file = files.get(i);
-            String fileType = types.get(i);
+            FileType fileType = types.get(i);
 
             switch (fileType) {
-                case "image" :
-                case "video" :
-                case "audio" :
+                case IMAGE:
+                case VIDEO:
+                case AUDIO:
                     urls.add(s3Uploader.upload(file, fileType, id));
                     break;
                 default :

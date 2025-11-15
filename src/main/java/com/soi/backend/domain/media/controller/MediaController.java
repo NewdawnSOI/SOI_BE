@@ -1,5 +1,6 @@
 package com.soi.backend.domain.media.controller;
 
+import com.soi.backend.domain.media.entity.FileType;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.global.exception.BaseController;
@@ -26,7 +27,7 @@ public class MediaController extends BaseController {
             "id값은 고유 id를 받습니다.")
     @PostMapping(path = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<ApiResponseDto<List<String>>> uploadMedia(
-            @RequestParam("tpes") List<String> types,
+            @RequestParam("types") List<FileType> types,
             @RequestParam("userId") Long userId,
             @RequestPart("files") List<MultipartFile> files) {
         try {
