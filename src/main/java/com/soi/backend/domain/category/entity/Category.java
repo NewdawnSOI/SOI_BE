@@ -46,4 +46,8 @@ public class Category {
         this.lastPhotoUploadedBy = lastPhotoUploadedBy;
         this.lastPhotoUploadedAt = LocalDateTime.now();
     }
+
+    public void setCategoryPhotoUrl(String categoryPhotoUrl) {
+        this.categoryPhotoUrl = categoryPhotoUrl;
+    }
 }
