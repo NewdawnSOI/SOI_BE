@@ -34,9 +34,9 @@ public class Category {
     @Column(name = "is_public")
     private Boolean isPublic;
 
-    public Category(String name, String categoryPhotoUrl, Boolean isPublic) {
+    public Category(String name, Boolean isPublic) {
         this.name = name;
-        this.categoryPhotoUrl = categoryPhotoUrl;
+        this.categoryPhotoUrl = "";
         this.lastPhotoUploadedBy = null;
         this.isPublic = isPublic;
         this.lastPhotoUploadedAt = LocalDateTime.now();
@@ -45,5 +45,9 @@ public class Category {
     public void setLastPhotoUploadedBy(String lastPhotoUploadedBy) {
         this.lastPhotoUploadedBy = lastPhotoUploadedBy;
         this.lastPhotoUploadedAt = LocalDateTime.now();
+    }
+
+    public void setCategoryPhotoUrl(String categoryPhotoUrl) {
+        this.categoryPhotoUrl = categoryPhotoUrl;
     }
 }
