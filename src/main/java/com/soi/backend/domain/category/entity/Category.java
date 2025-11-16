@@ -19,14 +19,14 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "category_photo_url")
+    @Column(name = "category_photo_url", nullable = false)
     private String categoryPhotoUrl;
 
-    @Column(name = "last_photo_uploaded_by")
-    private String lastPhotoUploadedBy;
+    @Column(name = "last_photo_uploaded_by", nullable = false)
+    private Long lastPhotoUploadedBy;
 
     @Column(name = "last_photo_uploaded_at")
     private LocalDateTime lastPhotoUploadedAt;
@@ -42,7 +42,7 @@ public class Category {
         this.lastPhotoUploadedAt = LocalDateTime.now();
     }
 
-    public void setLastPhotoUploadedBy(String lastPhotoUploadedBy) {
+    public void setLastPhotoUploadedBy(Long lastPhotoUploadedBy) {
         this.lastPhotoUploadedBy = lastPhotoUploadedBy;
         this.lastPhotoUploadedAt = LocalDateTime.now();
     }

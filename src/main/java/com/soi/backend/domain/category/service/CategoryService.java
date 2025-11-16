@@ -2,10 +2,8 @@ package com.soi.backend.domain.category.service;
 
 import com.soi.backend.domain.category.dto.CategoryCreateReqDto;
 import com.soi.backend.domain.category.dto.CategoryInviteResponseReqDto;
-import com.soi.backend.domain.category.entity.Category;
-import com.soi.backend.domain.category.entity.CategoryInvite;
-import com.soi.backend.domain.category.entity.CategoryInviteStatus;
-import com.soi.backend.domain.category.entity.CategoryUser;
+import com.soi.backend.domain.category.dto.CategoryRespDto;
+import com.soi.backend.domain.category.entity.*;
 import com.soi.backend.domain.category.repository.CategoryInviteRepository;
 import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
@@ -13,6 +11,7 @@ import com.soi.backend.domain.friend.service.FriendService;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.service.NotificationService;
+import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
@@ -20,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -88,29 +88,29 @@ public class CategoryService {
         // 서로가 다 친구인지 확인
         Boolean allFriends = friendService.isAllFriend(requesterId, receiverIds);
 
-        if (allFriends) {
+        if (allFriends) { // 서로가 다 친구일경우 -> 바로 카테고리에 추가 및 추가됐다는 알림
             receiverIds.forEach(id -> {createCategoryUser(categoryId, id);});
 
             String requesterUserId = userRepository.findById(requesterId).get().getUserId();
             String categoryName = categoryRepository.findById(categoryId).get().getName();
 
+            sendCategoryNotification(categoryId, requesterId, receiverIds, NotificationType.CATEGORY_ADDED);
             // receiver들에게도 알림
-            receiverIds.forEach(receiverId ->
-                    notificationService.createCategoryNotification(
-                            requesterId,
-                            receiverId,
-                            NotificationType.CATEGORY_INVITE,
-                            requesterUserId + "님의 " + categoryName + " 카테고리에 추가되었습니다.",
-                            categoryId,
-                            null
-                    )
-            );
-
+//            receiverIds.forEach(receiverId ->
+//                    notificationService.createCategoryNotification(
+//                            requesterId,
+//                            receiverId,
+//                            NotificationType.CATEGORY_ADDED,
+//                            notificationService.makeMessage(requesterId, categoryName, NotificationType.CATEGORY_ADDED),
+//                            categoryId,
+//                            null
+//                    )
+//            );
             return true;
         }
 
         createCategoryInvite(categoryId, requesterId, receiverIds);
-        sendCategoryNotification(categoryId, requesterId, receiverIds);
+        sendCategoryNotification(categoryId, requesterId, receiverIds, NotificationType.CATEGORY_INVITE);
 
         return true;
     }
@@ -125,7 +125,7 @@ public class CategoryService {
     }
 
     @Transactional
-    public void sendCategoryNotification(Long categoryId, Long requesterId, List<Long> receiverIds) {
+    public void sendCategoryNotification(Long categoryId, Long requesterId, List<Long> receiverIds,  NotificationType type) {
         String userId = userRepository.findById(requesterId).get().getUserId();
         String categoryName = categoryRepository.findById(categoryId).get().getName();
         for (Long receiverId : receiverIds) {
@@ -133,8 +133,8 @@ public class CategoryService {
             notificationService.createCategoryNotification(
                     requesterId,
                     receiverId,
-                    NotificationType.CATEGORY_INVITE,
-                    userId + "님이 " + categoryName + " 카테고리에 초대를 보냈습니다.",
+                    type,
+                    notificationService.makeMessage(requesterId, categoryName, type),
                     categoryId,
                     categoryInviteId
             );
@@ -164,5 +164,49 @@ public class CategoryService {
         }
 //        categoryInviteRepository.deleteById(categoryInvite.getId());
         return true;
+    }
+
+    public List<CategoryRespDto> findCategories(CategoryFilter filter, Long userId) {
+
+        List<CategoryRespDto> categories = new ArrayList<>();
+
+        // 1차 : 필터 옵션에 따라서 유저가 속한 모든 카테고리의 id를 가져옴
+        List<Long> categoryIds = switch (filter) {
+            case ALL -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,null);
+            case PUBLIC -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,true);
+            case PRIVATE ->  categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,false);
+        };
+
+        // 2차 : 카테고리 아이디랑 유저 아이디로 커스텀 내용 반영해서 Dto 만들기
+        for (Long categoryId : categoryIds) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new CustomException(categoryId + "번 카테고리를 찾을 수 없음",  HttpStatus.NOT_FOUND));
+            CategoryUser categoryUser = categoryUserRepository.findByCategoryIdAndUserId(categoryId, userId)
+                    .orElseThrow(() -> new CustomException(categoryId + "번 카테고리에 " + userId + " 유저가 속해있지 않음",  HttpStatus.NOT_FOUND));
+            List<User> users = categoryUserRepository.findAllUsersByCategoryIdExceptUser(categoryId, userId);
+
+            categories.add(toDto(category, categoryUser, users));
+        }
+        return categories;
+    }
+
+    public CategoryRespDto toDto(Category category, CategoryUser categoryUser, List<User> users) {
+        List<String> userProfiles = users.stream()
+                .map(user -> {
+                    System.out.println(user.getName() + "의 프로필 이미지 : [" + user.getProfileImage()+ "]");
+                    String image = user.getProfileImage();
+                    return image.isEmpty() ? "" : mediaService.getPresignedUrlByKey(image);
+                })
+                .toList();
+
+        String key = !categoryUser.getCustomProfile().isEmpty()
+                ? categoryUser.getCustomProfile()
+                : category.getCategoryPhotoUrl();
+
+        String categoryPhotoKey = key.isEmpty()
+                ? ""
+                : mediaService.getPresignedUrlByKey(key);
+
+        return new CategoryRespDto(category, categoryUser, userProfiles, categoryPhotoKey);
     }
 }

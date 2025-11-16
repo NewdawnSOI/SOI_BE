@@ -18,16 +18,19 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "phone", nullable = false)
     private String phone;
 
-    @Column(name = "user_id",  nullable = false)
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(name = "profile_image")
+    @Column(name = "profile_image", nullable = false)
     private String profileImage;
 
-    @Column(name = "birth_date")
+    @Column(name = "birth_date", nullable = false)
     private String birthDate;
 
     @Column(name = "is_active")

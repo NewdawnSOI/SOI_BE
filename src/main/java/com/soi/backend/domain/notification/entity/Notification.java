@@ -17,16 +17,17 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "send_user_id")
+    @Column(name = "send_user_id", nullable = false)
     private Long requesterId;
 
-    @Column(name = "receiver_user_id")
+    @Column(name = "receiver_user_id", nullable = false)
     private Long receiverId;
 
-    @Column(name = "type")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
     private NotificationType type;
 
-    @Column(name = "title")
+    @Column(name = "title", nullable = false)
     private String title;
 
     @Column(name = "friend_id")
@@ -34,9 +35,6 @@ public class Notification {
 
     @Column(name = "category_id")
     private Long categoryId; // 카테고리 관련된 알람일 때 카테고리 아이디
-
-    @Column(name = "requires_acceptance")
-    private Boolean requiresAcceptance; // 초대 수락 대기 여부
 
     @Column(name = "category_invite_id")
     private Long categoryInviteId; // 초대 ID, category_invite 테이블의 아이디임
@@ -64,7 +62,6 @@ public class Notification {
         this.type = type;
         this.title = title;
         this.categoryId = categoryId;
-        this.requiresAcceptance = false;
         this.categoryInviteId = categoryInviteId;
         this.commentId = commentId;
         this.createdAt = LocalDateTime.now();

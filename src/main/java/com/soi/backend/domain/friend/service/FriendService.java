@@ -79,12 +79,13 @@ public class FriendService {
         }
 
         // 알림 생성
-        Long notificationId = notificationService.createFriendNotification(
+        Long notificationId = notificationService.sendFriendRequestNotification(
                 requesterId,
                 receiverId,
-                NotificationType.FRIEND_REQUEST,
-                "친구추가 요청을 보냈습니다.",
-                friend.getId());
+                friend.getId(),
+                notificationService.makeMessage(requesterId,"", NotificationType.FRIEND_REQUEST
+                )
+        );
 
         return toDto(friend, notificationId);
     }
@@ -140,12 +141,13 @@ public class FriendService {
         Friend savedFriend = friendRepository.save(friend);
 
         // 알림 생성
-        Long notificationId = notificationService.createFriendNotification(
+        Long notificationId = notificationService.sendFriendRequestNotification(
                 requesterId,
                 receiverId,
-                NotificationType.FRIEND_REQUEST,
-                "친구 수락하였습니다.",
-                savedFriend.getId());
+                savedFriend.getId(),
+                notificationService.makeMessage(requesterId, "", NotificationType.FRIEND_RESPOND
+                )
+        );
 
         return toDto(savedFriend, notificationId);
     }

@@ -19,27 +19,27 @@ public class Media {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "media_key")
+    @Column(name = "media_key", nullable = false)
     private String mediaKey;
 
-    @Column(name = "uploader_id")
+    @Column(name = "uploader_id", nullable = false)
     private Long uploaderId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "media_type")
+    @Column(name = "media_type", nullable = false)
     private FileType mediaType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "media_usage_type")
+    @Column(name = "media_usage_type", nullable = false)
     private UsageType mediaUsageType;
 
-    @Column(name = "usage_ref_id")
+    @Column(name = "usage_ref_id", nullable = false)
     private Long usageRefId;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     public Media (String mediaKey, Long uploaderId, FileType mediaType, UsageType mediaUsageType, Long usageRefId) {
