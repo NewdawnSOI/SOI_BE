@@ -21,8 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -90,29 +88,29 @@ public class CategoryService {
         // 서로가 다 친구인지 확인
         Boolean allFriends = friendService.isAllFriend(requesterId, receiverIds);
 
-        if (allFriends) {
+        if (allFriends) { // 서로가 다 친구일경우 -> 바로 카테고리에 추가 및 추가됐다는 알림
             receiverIds.forEach(id -> {createCategoryUser(categoryId, id);});
 
             String requesterUserId = userRepository.findById(requesterId).get().getUserId();
             String categoryName = categoryRepository.findById(categoryId).get().getName();
 
+            sendCategoryNotification(categoryId, requesterId, receiverIds, NotificationType.CATEGORY_ADDED);
             // receiver들에게도 알림
-            receiverIds.forEach(receiverId ->
-                    notificationService.createCategoryNotification(
-                            requesterId,
-                            receiverId,
-                            NotificationType.CATEGORY_INVITE,
-                            requesterUserId + "님의 " + categoryName + " 카테고리에 추가되었습니다.",
-                            categoryId,
-                            null
-                    )
-            );
-
+//            receiverIds.forEach(receiverId ->
+//                    notificationService.createCategoryNotification(
+//                            requesterId,
+//                            receiverId,
+//                            NotificationType.CATEGORY_ADDED,
+//                            notificationService.makeMessage(requesterId, categoryName, NotificationType.CATEGORY_ADDED),
+//                            categoryId,
+//                            null
+//                    )
+//            );
             return true;
         }
 
         createCategoryInvite(categoryId, requesterId, receiverIds);
-        sendCategoryNotification(categoryId, requesterId, receiverIds);
+        sendCategoryNotification(categoryId, requesterId, receiverIds, NotificationType.CATEGORY_INVITE);
 
         return true;
     }
@@ -127,7 +125,7 @@ public class CategoryService {
     }
 
     @Transactional
-    public void sendCategoryNotification(Long categoryId, Long requesterId, List<Long> receiverIds) {
+    public void sendCategoryNotification(Long categoryId, Long requesterId, List<Long> receiverIds,  NotificationType type) {
         String userId = userRepository.findById(requesterId).get().getUserId();
         String categoryName = categoryRepository.findById(categoryId).get().getName();
         for (Long receiverId : receiverIds) {
@@ -135,8 +133,8 @@ public class CategoryService {
             notificationService.createCategoryNotification(
                     requesterId,
                     receiverId,
-                    NotificationType.CATEGORY_INVITE,
-                    userId + "님이 " + categoryName + " 카테고리에 초대를 보냈습니다.",
+                    type,
+                    notificationService.makeMessage(requesterId, categoryName, type),
                     categoryId,
                     categoryInviteId
             );
