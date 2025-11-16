@@ -1,8 +1,12 @@
 package com.soi.backend.domain.media.service;
 
 import com.soi.backend.domain.media.entity.FileType;
+import com.soi.backend.domain.media.entity.Media;
+import com.soi.backend.domain.media.entity.UsageType;
+import com.soi.backend.domain.media.repository.MediaRepository;
 import com.soi.backend.external.awsS3.S3Uploader;
 import com.soi.backend.global.exception.CustomException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,8 +22,10 @@ import java.util.List;
 public class MediaService {
 
     private final S3Uploader s3Uploader;
+    private final MediaRepository mediaRepository;
 
-    public List<String> uploadMedia(List<FileType> types, Long id, List<MultipartFile> files) throws IOException {
+    @Transactional
+    public List<String> uploadMedia(List<FileType> types, List<UsageType> usageTypes, Long id, Long refId, List<MultipartFile> files) throws IOException {
         List<String> urls = new ArrayList<>();
 
         if (types.size() != files.size()) {
@@ -29,18 +35,26 @@ public class MediaService {
         for (int i=0; i<files.size(); i++) {
             MultipartFile file = files.get(i);
             FileType fileType = types.get(i);
+            UsageType usageType = usageTypes.get(i);
 
             switch (fileType) {
                 case IMAGE:
                 case VIDEO:
                 case AUDIO:
-                    urls.add(s3Uploader.upload(file, fileType, id));
+                    String url = s3Uploader.upload(file, fileType, id);
+                    urls.add(url);
+                    saveMedia(new Media(url, id,fileType, usageType, refId));
                     break;
                 default :
                     throw new CustomException("지원하지 않는 미디어 타입", HttpStatus.BAD_REQUEST);
             }
         }
         return urls;
+    }
+
+    @Transactional
+    public void saveMedia(Media media) {
+        mediaRepository.save(media);
     }
 
     public List<String> getPresignedUrlByKey(List<String> key) {
