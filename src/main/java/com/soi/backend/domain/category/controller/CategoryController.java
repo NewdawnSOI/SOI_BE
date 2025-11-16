@@ -4,6 +4,8 @@ import com.amazonaws.Response;
 import com.soi.backend.domain.category.dto.CategoryCreateReqDto;
 import com.soi.backend.domain.category.dto.CategoryInviteReqDto;
 import com.soi.backend.domain.category.dto.CategoryInviteResponseReqDto;
+import com.soi.backend.domain.category.dto.CategoryRespDto;
+import com.soi.backend.domain.category.entity.CategoryFilter;
 import com.soi.backend.domain.category.service.CategoryService;
 import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.global.exception.BaseController;
@@ -11,10 +13,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -55,6 +56,18 @@ public class CategoryController extends BaseController {
         try {
             Boolean check = categoryService.responseInvite(categoryInviteResponseReqDto);
             return ResponseEntity.ok(ApiResponseDto.success(check, "초대 상태 변경 완료"));
+        } catch (Exception e) {
+            return handleExecption(e);
+        }
+    }
+
+    @Operation(summary = "유저가 속한 카테고리 리스트를 가져오는 API", description = "CategoryFilter : ALL, PUBLIC, PRIVATE -> 옵션에 따라서 전체, 그룹, 개인으로 가져올 수 있음")
+    @PostMapping("/find")
+    public ResponseEntity<ApiResponseDto<List<CategoryRespDto>>> getCategories(@RequestParam CategoryFilter categoryFilter,
+                                                                               @RequestParam Long userId) {
+        try {
+            List<CategoryRespDto> categories = categoryService.findCategories(categoryFilter, userId);
+            return ResponseEntity.ok(ApiResponseDto.success(categories, "카테고리 조회 완료"));
         } catch (Exception e) {
             return handleExecption(e);
         }

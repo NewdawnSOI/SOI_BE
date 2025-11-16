@@ -23,4 +23,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
         WHERE u.userId LIKE %:keyword% ESCAPE '\\'
     """)
     List<User> searchAllByUserId(@Param("keyword") String keyword);
+
+    @Query("""
+        SELECT u.profileImage FROM User u
+        WHERE u.userId = :Id
+    """)
+    List<User> findAllProfileImage(@Param("Id") Long userId);
 }

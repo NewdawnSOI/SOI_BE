@@ -2,10 +2,8 @@ package com.soi.backend.domain.category.service;
 
 import com.soi.backend.domain.category.dto.CategoryCreateReqDto;
 import com.soi.backend.domain.category.dto.CategoryInviteResponseReqDto;
-import com.soi.backend.domain.category.entity.Category;
-import com.soi.backend.domain.category.entity.CategoryInvite;
-import com.soi.backend.domain.category.entity.CategoryInviteStatus;
-import com.soi.backend.domain.category.entity.CategoryUser;
+import com.soi.backend.domain.category.dto.CategoryRespDto;
+import com.soi.backend.domain.category.entity.*;
 import com.soi.backend.domain.category.repository.CategoryInviteRepository;
 import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
@@ -13,6 +11,7 @@ import com.soi.backend.domain.friend.service.FriendService;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.service.NotificationService;
+import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
@@ -20,7 +19,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -164,5 +166,49 @@ public class CategoryService {
         }
 //        categoryInviteRepository.deleteById(categoryInvite.getId());
         return true;
+    }
+
+    public List<CategoryRespDto> findCategories(CategoryFilter filter, Long userId) {
+
+        List<CategoryRespDto> categories = new ArrayList<>();
+
+        // 1차 : 필터 옵션에 따라서 유저가 속한 모든 카테고리의 id를 가져옴
+        List<Long> categoryIds = switch (filter) {
+            case ALL -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,null);
+            case PUBLIC -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,true);
+            case PRIVATE ->  categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,false);
+        };
+
+        // 2차 : 카테고리 아이디랑 유저 아이디로 커스텀 내용 반영해서 Dto 만들기
+        for (Long categoryId : categoryIds) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new CustomException(categoryId + "번 카테고리를 찾을 수 없음",  HttpStatus.NOT_FOUND));
+            CategoryUser categoryUser = categoryUserRepository.findByCategoryIdAndUserId(categoryId, userId)
+                    .orElseThrow(() -> new CustomException(categoryId + "번 카테고리에 " + userId + " 유저가 속해있지 않음",  HttpStatus.NOT_FOUND));
+            List<User> users = categoryUserRepository.findAllUsersByCategoryIdExceptUser(categoryId, userId);
+
+            categories.add(toDto(category, categoryUser, users));
+        }
+        return categories;
+    }
+
+    public CategoryRespDto toDto(Category category, CategoryUser categoryUser, List<User> users) {
+        List<String> userProfiles = users.stream()
+                .map(user -> {
+                    System.out.println(user.getName() + "의 프로필 이미지 : [" + user.getProfileImage()+ "]");
+                    String image = user.getProfileImage();
+                    return image.isEmpty() ? "" : mediaService.getPresignedUrlByKey(image);
+                })
+                .toList();
+
+        String key = !categoryUser.getCustomProfile().isEmpty()
+                ? categoryUser.getCustomProfile()
+                : category.getCategoryPhotoUrl();
+
+        String categoryPhotoKey = key.isEmpty()
+                ? ""
+                : mediaService.getPresignedUrlByKey(key);
+
+        return new CategoryRespDto(category, categoryUser, userProfiles, categoryPhotoKey);
     }
 }
