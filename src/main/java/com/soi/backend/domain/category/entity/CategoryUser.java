@@ -18,14 +18,17 @@ public class CategoryUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "category_id")
+    @Column(name = "category_id", nullable = false)
     private Long categoryId;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "custom_name")
+    @Column(name = "custom_name", nullable = false)
     private String customName;
+
+    @Column(name = "custom_profile", nullable = false)
+    private String customProfile;
 
     @Column(name = "is_pinned")
     private Boolean isPinned;
@@ -40,6 +43,7 @@ public class CategoryUser {
         this.categoryId = categoryId;
         this.userId = inviterUserId;
         this.customName = "";
+        this.customProfile = "";
         this.isPinned = false;
         this.isRead = false;
         this.lastViewedAt = null;

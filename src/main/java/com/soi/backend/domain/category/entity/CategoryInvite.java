@@ -19,13 +19,13 @@ public class CategoryInvite {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "category_id")
+    @Column(name = "category_id", nullable = false)
     private Long categoryId;
 
-    @Column(name = "inviter_user_id")
+    @Column(name = "inviter_user_id", nullable = false)
     private Long inviterUserId;
 
-    @Column(name = "invited_user_id")
+    @Column(name = "invited_user_id", nullable = false)
     private Long invitedUserId;
 
     @Enumerated(EnumType.STRING)

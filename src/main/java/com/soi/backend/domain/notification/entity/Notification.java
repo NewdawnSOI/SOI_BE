@@ -17,16 +17,16 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "send_user_id")
+    @Column(name = "send_user_id", nullable = false)
     private Long requesterId;
 
-    @Column(name = "receiver_user_id")
+    @Column(name = "receiver_user_id", nullable = false)
     private Long receiverId;
 
-    @Column(name = "type")
+    @Column(name = "type", nullable = false)
     private NotificationType type;
 
-    @Column(name = "title")
+    @Column(name = "title", nullable = false)
     private String title;
 
     @Column(name = "friend_id")

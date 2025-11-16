@@ -18,25 +18,25 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(name = "content")
+    @Column(name = "content", nullable = false)
     private String content;
 
-    @Column(name = "file_url")
+    @Column(name = "file_url", nullable = false)
     private String fileUrl;
 
-    @Column(name = "audio_url")
+    @Column(name = "audio_url", nullable = false)
     private String audioUrl;
 
-    @Column(name = "category_id")
+    @Column(name = "category_id", nullable = false)
     private Long categoryId;
 
     @Column(name = "is_active")
     private Boolean isActive;
 
-    @Column(name = "waveform_data")
+    @Column(name = "waveform_data", nullable = false)
     private String waveformData;
 
     @Column(name = "duration")
@@ -48,7 +48,7 @@ public class Post {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private PostStatus status;
 

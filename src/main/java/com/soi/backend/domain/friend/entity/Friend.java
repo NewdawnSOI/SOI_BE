@@ -17,14 +17,14 @@ public class Friend {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "requester_id")
+    @Column(name = "requester_id", nullable = false)
     private Long requesterId;
 
-    @Column(name = "receiver_id")
+    @Column(name = "receiver_id", nullable = false)
     private Long receiverId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private FriendStatus status;
 
     @Column(name = "requester_deleted")
