@@ -3,7 +3,10 @@ package com.soi.backend.domain.post.service;
 import com.soi.backend.domain.category.entity.Category;
 import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
+import com.soi.backend.domain.category.service.CategoryService;
 import com.soi.backend.domain.media.service.MediaService;
+import com.soi.backend.domain.notification.entity.NotificationType;
+import com.soi.backend.domain.notification.service.NotificationService;
 import com.soi.backend.domain.post.dto.PostCreateReqDto;
 import com.soi.backend.domain.post.dto.PostRespDto;
 import com.soi.backend.domain.post.dto.PostUpdateReqDto;
@@ -31,17 +34,32 @@ public class PostService {
 
     private final MediaService mediaService;
     private final PostRepository postRepository;
+    private final CategoryService categoryService;
     private final CategoryRepository categoryRepository;
     private final CategoryUserRepository categoryUserRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public Boolean addPostToCategory(PostCreateReqDto postCreateReqDto) {
 
-        for(Long categoryId : postCreateReqDto.getCategoryId()) {
+        for (Long categoryId : postCreateReqDto.getCategoryId()) {
             createPost(postCreateReqDto, categoryId);
+            List<Long> receivers =
+                    categoryUserRepository.findAllUserIdsByCategoryIdExceptUser(categoryId, postCreateReqDto.getId());
+            String categoryName = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없음",HttpStatus.NOT_FOUND))
+                    .getName();
+            for (Long receiverId : receivers) {
+                notificationService.sendCategoryPostNotification(
+                        postCreateReqDto.getId(),
+                        receiverId,
+                        categoryId,
+                        notificationService.makeMessage(postCreateReqDto.getId(), categoryName, NotificationType.PHOTO_ADDED
+                        )
+                );
+            }
         }
-
         return true;
     }
 
