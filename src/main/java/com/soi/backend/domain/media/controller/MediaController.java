@@ -1,6 +1,7 @@
 package com.soi.backend.domain.media.controller;
 
 import com.soi.backend.domain.media.entity.FileType;
+import com.soi.backend.domain.media.entity.UsageType;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.global.exception.BaseController;
@@ -28,10 +29,12 @@ public class MediaController extends BaseController {
     @PostMapping(path = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<ApiResponseDto<List<String>>> uploadMedia(
             @RequestParam("types") List<FileType> types,
+            @RequestParam("usageTypes") List<UsageType> useageTypes,
             @RequestParam("userId") Long userId,
+            @RequestParam("refId") Long refId,
             @RequestPart("files") List<MultipartFile> files) {
         try {
-            List<String> urls = mediaService.uploadMedia(types,userId,files);
+            List<String> urls = mediaService.uploadMedia(types,useageTypes,userId,refId,files);
             return ResponseEntity.ok(ApiResponseDto.success(urls, "파일 저장성공"));
         } catch (Exception e) {
             return handleExecption(e);
