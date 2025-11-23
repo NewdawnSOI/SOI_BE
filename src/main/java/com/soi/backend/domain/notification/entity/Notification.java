@@ -42,6 +42,9 @@ public class Notification {
     @Column(name = "comment_id")
     private Long commentId; // 댓글 알람일떄 댓글 ID
 
+    @Column(name = "post_id")
+    private Long postId; // 댓글달린 게시물의 ID
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

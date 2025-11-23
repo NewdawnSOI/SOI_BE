@@ -19,7 +19,7 @@ public class Post {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private String userId;
+    private Long userId;
 
     @Column(name = "content", nullable = false)
     private String content;
@@ -52,7 +52,7 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private PostStatus status;
 
-    public Post (String userId, String content, String fileUrl, String audioUrl, Long categoryId, String waveformData, int duration) {
+    public Post (Long userId, String content, String fileUrl, String audioUrl, Long categoryId, String waveformData, int duration) {
         this.userId = userId;
         this.content = content;
         this.fileUrl = fileUrl;

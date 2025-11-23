@@ -18,4 +18,5 @@ public class NotificationReqDto {
     private Long categoryId;
     private Long categoryInviteId;
     private Long commentId;
+    private Long postId;
 }
