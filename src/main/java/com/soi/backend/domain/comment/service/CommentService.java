@@ -1,8 +1,10 @@
 package com.soi.backend.domain.comment.service;
 
 import com.soi.backend.domain.comment.dto.CommentReqDto;
+import com.soi.backend.domain.comment.dto.CommentRespDto;
 import com.soi.backend.domain.comment.entity.Comment;
 import com.soi.backend.domain.comment.repository.CommentRepository;
+import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.service.NotificationService;
 import com.soi.backend.domain.post.entity.Post;
@@ -15,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 
@@ -24,15 +28,16 @@ public class CommentService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final PostRepository postRepository;
+    private final MediaService mediaService;
 
     @Transactional
     public void addComment(CommentReqDto commentReqDto) {
         User user = userRepository.findById(commentReqDto.getUserId())
-                .orElseThrow(() -> new CustomException("유저를 찾을 수 없음", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         Long commentId = createComment(commentReqDto);
         Post post = postRepository.findById(commentReqDto.getPostId())
-                        .orElseThrow(() -> new CustomException("게시물을 찾을 수 없음", HttpStatus.NOT_FOUND));
+                        .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         notificationService.sendPostCommentNotification(
                 commentReqDto.getUserId(),
@@ -60,5 +65,34 @@ public class CommentService {
 
         commentRepository.save(comment);
         return comment.getId();
+    }
+
+    public List<CommentRespDto> getComments(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+        List<Comment> comments = commentRepository.findAllByPostId(postId);
+        return toDto(comments, post.getUserId());
+    }
+
+    private List<CommentRespDto> toDto(List<Comment> comments, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.",  HttpStatus.NOT_FOUND));
+
+        String userProfile = user.getProfileImage().isEmpty()
+                ? ""
+                : mediaService.getPresignedUrlByKey(user.getProfileImage());
+
+        return comments.stream()
+                .map(comment -> new CommentRespDto(
+                        userProfile,
+                        comment.getText(),
+                        comment.getEmojiId(),
+                        comment.getAudioUrl(),
+                        comment.getWaveformData(),
+                        comment.getDuration(),
+                        comment.getLocationX(),
+                        comment.getLocationY(),
+                        comment.getCommentType()
+                )).toList();
     }
 }
