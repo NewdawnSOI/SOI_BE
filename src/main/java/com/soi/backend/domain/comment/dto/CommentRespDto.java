@@ -1,10 +1,11 @@
 package com.soi.backend.domain.comment.dto;
 
 import com.soi.backend.domain.comment.entity.CommentType;
-import com.soi.backend.domain.notification.entity.NotificationType;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor
+@Getter
 
 public class CommentRespDto {
     private String userProfile;

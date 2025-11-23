@@ -105,7 +105,7 @@ public class NotificationService {
             case CATEGORY_INVITE -> requesterName + " 님이 " + targetName + " 카테고리에 초대하였습니다.";
             case CATEGORY_ADDED -> requesterName + " 님의 " + targetName + " 카테고리에 추가되었습니다.";
             case PHOTO_ADDED -> requesterName + " 님이 " + targetName + " 카테고리에 게시물을 추가하였습니다.";
-            case COMMENT_ADDED -> requesterName + " 님이" + targetName + "게시물에 댓글을 남겼습니다.";
+            case COMMENT_ADDED -> requesterName + " 님이" + targetName + " 게시물에 댓글을 남겼습니다.";
             default -> "";
         };
     }

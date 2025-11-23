@@ -70,29 +70,35 @@ public class CommentService {
     public List<CommentRespDto> getComments(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
         List<Comment> comments = commentRepository.findAllByPostId(postId);
-        return toDto(comments, post.getUserId());
+        return toDto(comments);
     }
 
-    private List<CommentRespDto> toDto(List<Comment> comments, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.",  HttpStatus.NOT_FOUND));
-
-        String userProfile = user.getProfileImage().isEmpty()
-                ? ""
-                : mediaService.getPresignedUrlByKey(user.getProfileImage());
+    private List<CommentRespDto> toDto(List<Comment> comments) {
 
         return comments.stream()
-                .map(comment -> new CommentRespDto(
-                        userProfile,
-                        comment.getText(),
-                        comment.getEmojiId(),
-                        comment.getAudioUrl(),
-                        comment.getWaveformData(),
-                        comment.getDuration(),
-                        comment.getLocationX(),
-                        comment.getLocationY(),
-                        comment.getCommentType()
-                )).toList();
+                .map(comment -> {
+
+                    User user = userRepository.findById(comment.getUserId())
+                            .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.",  HttpStatus.NOT_FOUND));
+
+                    String userProfile = user.getProfileImage().isEmpty()
+                            ? ""
+                            : mediaService.getPresignedUrlByKey(user.getProfileImage());
+
+                    return new CommentRespDto(
+                            userProfile,
+                            comment.getText(),
+                            comment.getEmojiId(),
+                            comment.getAudioUrl(),
+                            comment.getWaveformData(),
+                            comment.getDuration(),
+                            comment.getLocationX(),
+                            comment.getLocationY(),
+                            comment.getCommentType()
+                    );
+                })
+                .toList();
     }
 }
