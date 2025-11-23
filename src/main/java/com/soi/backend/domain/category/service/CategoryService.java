@@ -193,7 +193,6 @@ public class CategoryService {
     public CategoryRespDto toDto(Category category, CategoryUser categoryUser, List<User> users) {
         List<String> userProfiles = users.stream()
                 .map(user -> {
-                    System.out.println(user.getName() + "의 프로필 이미지 : [" + user.getProfileImage()+ "]");
                     String image = user.getProfileImage();
                     return image.isEmpty() ? "" : mediaService.getPresignedUrlByKey(image);
                 })
