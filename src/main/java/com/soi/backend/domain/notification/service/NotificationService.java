@@ -80,6 +80,21 @@ public class NotificationService {
         return createNotification(dto);
     }
 
+    public Long sendPostCommentNotification(
+            Long requesterId, Long receiverId, Long commentId, Long postId, String title) {
+
+        NotificationReqDto dto = NotificationReqDto.builder()
+                .requesterId(requesterId)
+                .receiverId(receiverId)
+                .type(NotificationType.COMMENT_ADDED)
+                .title(title)
+                .postId(postId)
+                .commentId(commentId)
+                .build();
+
+        return createNotification(dto);
+    }
+
     public String makeMessage(Long requesterId, String targetName, NotificationType type ) {
         String requesterName = userRepository.findById(requesterId)
                 .orElseThrow(() -> new CustomException("요청 유저 없음", HttpStatus.NOT_FOUND))
@@ -90,7 +105,7 @@ public class NotificationService {
             case CATEGORY_INVITE -> requesterName + " 님이 " + targetName + " 카테고리에 초대하였습니다.";
             case CATEGORY_ADDED -> requesterName + " 님의 " + targetName + " 카테고리에 추가되었습니다.";
             case PHOTO_ADDED -> requesterName + " 님이 " + targetName + " 카테고리에 게시물을 추가하였습니다.";
-            case COMMENT_ADDED -> requesterName + " 님이 댓글을 남겼습니다.";
+            case COMMENT_ADDED -> requesterName + " 님이" + targetName + " 게시물에 댓글을 남겼습니다.";
             default -> "";
         };
     }

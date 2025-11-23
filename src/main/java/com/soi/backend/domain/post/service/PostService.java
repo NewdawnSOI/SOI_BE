@@ -1,6 +1,5 @@
 package com.soi.backend.domain.post.service;
 
-import com.soi.backend.domain.category.entity.Category;
 import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
 import com.soi.backend.domain.category.service.CategoryService;
@@ -16,14 +15,12 @@ import com.soi.backend.domain.post.repository.PostRepository;
 import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -145,8 +142,11 @@ public class PostService {
     }
 
     private PostRespDto toDto(Post post) {
+        User user = userRepository.findById(post.getUserId())
+                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
         return new PostRespDto(
-                post.getUserId(),
+                user.getUserId(),
                 post.getContent(),
                 post.getFileUrl().isEmpty() ? "" : mediaService.getPresignedUrlByKey(post.getFileUrl()),
                 post.getAudioUrl().isEmpty() ? "" : mediaService.getPresignedUrlByKey(post.getAudioUrl()),
