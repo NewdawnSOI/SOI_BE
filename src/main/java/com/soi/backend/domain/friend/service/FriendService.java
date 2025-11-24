@@ -92,15 +92,10 @@ public class FriendService {
 
     @Transactional
     public FriendRespDto updateFriendRequest(FriendUpdateRespDto friendUpdateRespDto) {
-        Optional<Friend> optionalFriend = friendRepository.findById(friendUpdateRespDto.getId());
+        Friend friend = friendRepository.findById(friendUpdateRespDto.getId())
+                .orElseThrow(() -> new CustomException("유저 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
         Long receiverId = null;
         Long requesterId = null;
-        if (optionalFriend.isEmpty()) {
-            throw new CustomException("삭제되거나 없는 친구 관계입니다.", HttpStatus.FORBIDDEN);
-        }
-
-        // 친구 정보 업데이트
-        Friend friend = optionalFriend.get();
 
         // 요청이
         switch (friendUpdateRespDto.getStatus()) {
@@ -264,11 +259,15 @@ public class FriendService {
                 friend.getReceiverId(), notificationId, friend.getStatus(), LocalDateTime.now());
     }
 
-    public Boolean isAllFriend(Long requsterId, List<Long> receiverIds) {
+    public Boolean isAllFriend(Long requesterId, List<Long> receiverIds) {
         for (Long receiverId : receiverIds) {
-            if (!friendRepository.isFriend(requsterId, receiverId)) {
+            if (!friendRepository.isFriend(requesterId, receiverId)) {
                 return false;
             }
+        }
+
+        if (receiverIds.size() < 2) {
+            return true;
         }
 
         for (int i=0; i<receiverIds.size(); i++) {
@@ -278,7 +277,6 @@ public class FriendService {
                 }
             }
         }
-
         return true;
     }
 
