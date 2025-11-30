@@ -1,9 +1,6 @@
 package com.soi.backend.domain.friend.controller;
 
-import com.soi.backend.domain.friend.dto.FriendCreateReqDto;
-import com.soi.backend.domain.friend.dto.FriendReqDto;
-import com.soi.backend.domain.friend.dto.FriendRespDto;
-import com.soi.backend.domain.friend.dto.FriendUpdateRespDto;
+import com.soi.backend.domain.friend.dto.*;
 import com.soi.backend.domain.friend.service.FriendService;
 import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.domain.user.dto.UserFindRespDto;
@@ -38,6 +35,15 @@ public class FriendController {
         return ResponseEntity.ok(ApiResponseDto.success(friendRespDto, "친구 상태 업데이트 성공"));
     }
 
+    @Operation(summary = "친구 삭제", description = "삭제 요청을 한 사용자의 id : requesterId에\n" +
+            "삭제를 당하는 사용자의 id : receiverId에 담아서 요청\n" +
+            "만약 삭제후, 서로가 삭제된 관계면 친구 관계 컬럼을 삭제함" )
+    @PostMapping("/delete")
+    public ResponseEntity<ApiResponseDto<Boolean>> deleteFriend(@RequestBody FriendReqDto friendReqDto) {
+        Boolean deleteStatus = friendService.deleteFriend(friendReqDto);
+        return ResponseEntity.ok(ApiResponseDto.success(deleteStatus, "친구 삭제 성공"));
+    }
+
     @Operation(summary = "모든 친구 조회", description = "유저의 id (user_id 말고 그냥 id)를 통해 모든 친구를 조회합니다.")
     @GetMapping("/get-all")
     public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllFriend(@RequestParam Long id) {
@@ -45,13 +51,11 @@ public class FriendController {
         return ResponseEntity.ok(ApiResponseDto.success(friends, "모든 친구 조회 완료"));
     }
 
-    @Operation(summary = "친구 삭제", description = "삭제 요청을 한 사용자의 id : requesterId에\n" +
-            "삭제를 당하는 사용자의 id : receiverId에 담아서 요청\n" +
-            "만약 삭제후, 서로가 삭제된 관계면 친구 관계 컬럼을 삭제함" )
-    @PostMapping("/get-all")
-    public ResponseEntity<ApiResponseDto<Boolean>> deleteFriend(@RequestBody FriendReqDto friendReqDto) {
-        Boolean deleteStatus = friendService.deleteFriend(friendReqDto);
-        return ResponseEntity.ok(ApiResponseDto.success(deleteStatus, "친구 삭제 성공"));
+    @Operation(summary = "연락처에 있는 친구들 관계확인", description = "유저의 id와 연락처에 있는 친구들 전화번호를 List로 받아서 관계를 리턴합니다.")
+    @GetMapping("/check-friend-relation")
+    public ResponseEntity<ApiResponseDto<List<FriendCheckRespDto>>> getAllFriend(@RequestParam Long id, @RequestParam List<String> friendPhoneNums) {
+        List<FriendCheckRespDto> friends = friendService.checkIsFriend(id,friendPhoneNums);
+        return ResponseEntity.ok(ApiResponseDto.success(friends, "모든 친구 조회 완료"));
     }
 
     @Operation(summary = "친구 차단", description = "차단 요청을 한 사용자의 id : requesterId에\n" +
