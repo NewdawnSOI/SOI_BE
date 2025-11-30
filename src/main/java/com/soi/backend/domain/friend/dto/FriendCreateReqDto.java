@@ -4,8 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 
-public class FriendReqDto {
+public class FriendCreateReqDto {
     private Long requesterId;
-    private Long receiverId;
+    private String receiverPhoneNum;
 }
