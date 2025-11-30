@@ -1,5 +1,7 @@
 package com.soi.backend.domain.user.service;
 
+import com.soi.backend.domain.friend.repository.FriendRepository;
+import com.soi.backend.domain.friend.service.FriendService;
 import com.soi.backend.domain.user.dto.UserUpdateReqDto;
 import com.soi.backend.external.sms.MessageService;
 import com.soi.backend.domain.friend.dto.FriendReqDto;
@@ -26,7 +28,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final MessageService messageService;
+    private final FriendService  friendService;
 
     // 계정 생성
     @Transactional
@@ -47,7 +49,10 @@ public class UserService {
                 userCreateReqDto.getMarketingAgreed()
                 );
 
-        return toDto(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+        friendService.checkIsUserInQueue(savedUser.getPhone());
+
+        return toDto(savedUser);
     }
 
     public List<UserFindRespDto> getAllUsers() {
@@ -135,10 +140,6 @@ public class UserService {
                 user.getPhone());
     }
 
-    public Boolean checkUserExists(FriendReqDto friendReqDto) {
-        return userRepository.findByIdAndIsActive(friendReqDto.getRequesterId()).isPresent()
-                && userRepository.findByIdAndIsActive(friendReqDto.getReceiverId()).isPresent();
-    }
 
     @Transactional
     public UserRespDto update(UserUpdateReqDto userUpdateReqDto) {

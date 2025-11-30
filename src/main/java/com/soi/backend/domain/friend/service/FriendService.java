@@ -1,11 +1,14 @@
 package com.soi.backend.domain.friend.service;
 
+import com.soi.backend.domain.friend.dto.FriendCreateReqDto;
 import com.soi.backend.domain.friend.dto.FriendReqDto;
 import com.soi.backend.domain.friend.dto.FriendRespDto;
 import com.soi.backend.domain.friend.dto.FriendUpdateRespDto;
 import com.soi.backend.domain.friend.entity.Friend;
+import com.soi.backend.domain.friend.entity.FriendRequestQueue;
 import com.soi.backend.domain.friend.entity.FriendStatus;
 import com.soi.backend.domain.friend.repository.FriendRepository;
+import com.soi.backend.domain.friend.repository.FriendRequestQueueRepository;
 import com.soi.backend.global.exception.CustomException;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.repository.NotificationRepository;
@@ -31,21 +34,37 @@ import java.util.stream.Collectors;
 
 public class FriendService {
     private final FriendRepository friendRepository;
+    private final FriendRequestQueueRepository friendRequestQueueRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
 
     @Transactional
-    public FriendRespDto createFriendRequest(FriendReqDto friendReqDto) {
-        if (!userService.checkUserExists(friendReqDto)) {
-            throw new CustomException("유저 정보를 찾을 수 없습니다.");
+    public FriendRespDto createFriendRequest(FriendCreateReqDto friendCreateReqDto) {
+        /*
+        생각정리
+        friendCreateReqDto에는 친구요청하는 유저의 Id랑, 요청받을 유저의 phoneNumber가 들어온다.
+        요청하는 유저 Id -> 있는지 없는지 검사함, 없으면 예외 던짐
+        요청받는 유저 전화번호 -> 유저 DB에 있는지 없는지 검사함
+            만약 DB에 있으면 -> 앱을 설치한 사용자임 -> 그냥 친구추가 로직 실행
+            만약 DB에 없으면 -> 앱을 설치하지 않은 사용자임 -> 대기열 테이블에 요청한 유저 id랑 요청받은 유저의 전화번호를 등록하고 null 리턴
+         */
+        userRepository.findById(friendCreateReqDto.getRequesterId())
+                .orElseThrow(() -> new CustomException("친구요청을 하는 유저를 찾을 수 없습니다.",HttpStatus.NOT_FOUND));
+
+        Optional<User> receiver = userRepository.findByPhone(friendCreateReqDto.getReceiverPhoneNum());
+
+        if (receiver.isEmpty()) {
+            // 대기열 테이블에 추가하고, null 리턴
+            FriendRequestQueue friendRequestQueue = new FriendRequestQueue(friendCreateReqDto.getRequesterId(), friendCreateReqDto.getReceiverPhoneNum());
+            friendRequestQueueRepository.save(friendRequestQueue);
+            return null;
         }
 
+        Optional<Friend> existing = friendRepository
+                .findByRequesterIdAndReceiverId(friendCreateReqDto.getRequesterId(), receiver.get().getId());
         Long receiverId = null;
         Long requesterId = null;
-        Optional<Friend> existing = friendRepository
-                .findByRequesterIdAndReceiverId(friendReqDto.getRequesterId(), friendReqDto.getReceiverId());
 
         Friend friend;
 
@@ -72,7 +91,7 @@ public class FriendService {
             }
             friendRepository.save(friend);
         } else {
-            friend = new Friend(friendReqDto.getRequesterId(), friendReqDto.getReceiverId(), FriendStatus.PENDING);
+            friend = new Friend(friendCreateReqDto.getRequesterId(), receiver.get().getId(), FriendStatus.PENDING);
             requesterId = friend.getRequesterId();
             receiverId = friend.getReceiverId();
             friendRepository.save(friend);
@@ -207,7 +226,7 @@ public class FriendService {
     // 친구 차단 기능
     @Transactional
     public Boolean blockFriend(FriendReqDto friendReqDto) {
-        if (!userService.checkUserExists(friendReqDto)) {
+        if (!checkUserExists(friendReqDto)) {
             throw new CustomException("유저 정보를 찾을 수 없습니다.");
         }
 
@@ -236,7 +255,7 @@ public class FriendService {
     // 즉, 차단당시 requester == 차단 풀릴때 requester
     @Transactional
     public Boolean unBlockFriend(FriendReqDto friendReqDto) {
-        if (!userService.checkUserExists(friendReqDto)) {
+        if (!checkUserExists(friendReqDto)) {
             throw new CustomException("유저 정보를 찾을 수 없습니다.");
         }
 
@@ -278,6 +297,24 @@ public class FriendService {
             }
         }
         return true;
+    }
+
+
+    @Transactional
+    public void checkIsUserInQueue(String userPhoneNum) {
+        List<FriendRequestQueue> friendRequestQueues = friendRequestQueueRepository.findAllByReceiverPhoneNum(userPhoneNum);
+
+        if (friendRequestQueues.isEmpty()) return;
+        for (FriendRequestQueue friendRequestQueue : friendRequestQueues) {
+            FriendCreateReqDto friendCreateReqDto = new FriendCreateReqDto(friendRequestQueue.getRequesterId(), friendRequestQueue.getReceiverPhoneNum());
+            createFriendRequest(friendCreateReqDto);
+            friendRequestQueueRepository.deleteById(friendRequestQueue.getId());
+        }
+    }
+
+    public Boolean checkUserExists(FriendReqDto friendReqDto) {
+        return userRepository.findByIdAndIsActive(friendReqDto.getRequesterId()).isPresent()
+                && userRepository.findByIdAndIsActive(friendReqDto.getReceiverId()).isPresent();
     }
 
 }

@@ -1,5 +1,6 @@
 package com.soi.backend.domain.friend.controller;
 
+import com.soi.backend.domain.friend.dto.FriendCreateReqDto;
 import com.soi.backend.domain.friend.dto.FriendReqDto;
 import com.soi.backend.domain.friend.dto.FriendRespDto;
 import com.soi.backend.domain.friend.dto.FriendUpdateRespDto;
@@ -25,8 +26,8 @@ public class FriendController {
 
     @Operation(summary = "친구 추가", description = "사용자 id를 통해 친구추가를 합니다.")
     @PostMapping("/create")
-    public ResponseEntity<ApiResponseDto<FriendRespDto>> create(@RequestBody FriendReqDto friendReqDto) {
-        FriendRespDto friendRespDto = friendService.createFriendRequest(friendReqDto);
+    public ResponseEntity<ApiResponseDto<FriendRespDto>> create(@RequestBody FriendCreateReqDto friendCreateReqDto) {
+        FriendRespDto friendRespDto = friendService.createFriendRequest(friendCreateReqDto);
         return ResponseEntity.ok(ApiResponseDto.success(friendRespDto,"친구 요청 성공"));
     }
 
