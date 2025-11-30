@@ -44,7 +44,7 @@ public class CategoryController {
 
     @Operation(summary = "카테고리에 초대된 유저가 초대 승낙여부를 결정하는 API", description = "status에 넣을 수 있는 상태 : PENDING, ACCEPTED, DECLINED, EXPIRED")
     @PostMapping("/invite/response")
-    public ResponseEntity<ApiResponseDto<Boolean>> inviteReponse(@RequestBody CategoryInviteResponseReqDto categoryInviteResponseReqDto) {
+    public ResponseEntity<ApiResponseDto<Boolean>> inviteResponse(@RequestBody CategoryInviteResponseReqDto categoryInviteResponseReqDto) {
         Boolean check = categoryService.responseInvite(categoryInviteResponseReqDto);
         return ResponseEntity.ok(ApiResponseDto.success(check, "초대 상태 변경 완료"));
     }

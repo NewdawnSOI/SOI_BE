@@ -60,7 +60,7 @@ public class CategoryService {
         categoryRepository.save(category);
 
         // 초대유저는 무조건 카테고리-유저 테이블에 생성, 초대 받은 멤버들은 수락하면 생성
-        categoryUserRepository.save(new CategoryUser(category.getId(), categoryCreateReqDto.getRequesterId()));
+        categoryUserRepository.save(new CategoryUser(category.getId(), categoryCreateReqDto.getRequesterId(), LocalDateTime.now()));
 
         return category.getId();
     }
@@ -98,8 +98,7 @@ public class CategoryService {
             String categoryName = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND))
                     .getName();
-
-            createCategoryInvite(categoryId, requesterId, receiverIds);
+            
             sendCategoryNotification(categoryId, requesterId, receiverIds, NotificationType.CATEGORY_ADDED);
             // receiver들에게도 알림
 //            receiverIds.forEach(receiverId ->
