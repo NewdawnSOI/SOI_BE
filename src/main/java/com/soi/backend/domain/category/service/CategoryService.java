@@ -88,7 +88,6 @@ public class CategoryService {
         // 서로가 다 친구인지 확인
         Boolean allFriends = friendService.isAllFriend(requesterId, receiverIds);
 
-        System.out.println("친구인지 확인완료");
         if (allFriends) { // 서로가 다 친구일경우 -> 바로 카테고리에 추가 및 추가됐다는 알림
             receiverIds.forEach(id -> {createCategoryUser(categoryId, id);});
 

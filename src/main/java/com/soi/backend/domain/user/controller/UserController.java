@@ -40,6 +40,13 @@ public class UserController {
         return ResponseEntity.ok(ApiResponseDto.success(users, "모든 사용자 조회 완료"));
     }
 
+    @Operation(summary = "특정유저 조회", description = "유저의 id값(Long)으로 유저를 조회합니다.")
+    @GetMapping("/get")
+    public ResponseEntity<ApiResponseDto<UserRespDto>> getUser(@RequestParam Long id) {
+        UserRespDto user = userService.getUserById(id);
+        return ResponseEntity.ok(ApiResponseDto.success(user, "사용자 조회 완료"));
+    }
+
     @Operation(summary = "사용자 로그인(전화번호로)", description = "인증이 완료된 전화번호로 로그인을 합니다.")
     @PostMapping("/login")
     public ResponseEntity<ApiResponseDto<UserRespDto>> login(@RequestParam String phone) {
