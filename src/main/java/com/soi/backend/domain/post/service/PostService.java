@@ -1,5 +1,6 @@
 package com.soi.backend.domain.post.service;
 
+import com.soi.backend.domain.category.entity.CategoryUser;
 import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
 import com.soi.backend.domain.category.service.CategoryService;
@@ -42,11 +43,16 @@ public class PostService {
 
         for (Long categoryId : postCreateReqDto.getCategoryId()) {
             createPost(postCreateReqDto, categoryId);
+
             List<Long> receivers =
                     categoryUserRepository.findAllUserIdsByCategoryIdExceptUser(categoryId, postCreateReqDto.getId());
+
             String categoryName = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없음",HttpStatus.NOT_FOUND))
                     .getName();
+
+            categoryService.setLastUploaded(categoryId, postCreateReqDto.getUserId());
+
             for (Long receiverId : receivers) {
                 notificationService.sendCategoryPostNotification(
                         postCreateReqDto.getId(),
@@ -105,11 +111,12 @@ public class PostService {
         postRepository.findById(postId);
     }
 
-    public List<PostRespDto> findByCategoryId(Long categoryId) {
+    public List<PostRespDto> findByCategoryId(Long categoryId, Long userId) {
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         List<Post> posts = postRepository.findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtDesc(categoryId, PostStatus.ACTIVE, true);
+        categoryService.setLastViewed(categoryId, userId);
 
         return posts.stream()
                 .map(this::toDto)
