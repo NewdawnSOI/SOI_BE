@@ -39,6 +39,9 @@ public class CategoryUser {
     @Column(name = "last_viewed_at")
     private LocalDateTime lastViewedAt;
 
+    @Column(name = "pinned_at")
+    private LocalDateTime pinnedAt;
+
     public CategoryUser(Long categoryId, Long inviterUserId) {
         this.categoryId = categoryId;
         this.userId = inviterUserId;
@@ -47,5 +50,14 @@ public class CategoryUser {
         this.isPinned = false;
         this.isRead = false;
         this.lastViewedAt = null;
+    }
+
+    public void setLastViewedAt() {
+        this.lastViewedAt = LocalDateTime.now();
+    }
+
+    public void setIsPinned() {
+        isPinned = !isPinned;
+        this.pinnedAt = LocalDateTime.now();
     }
 }

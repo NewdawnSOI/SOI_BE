@@ -6,6 +6,7 @@ import com.soi.backend.domain.category.dto.CategoryInviteResponseReqDto;
 import com.soi.backend.domain.category.dto.CategoryRespDto;
 import com.soi.backend.domain.category.entity.CategoryFilter;
 import com.soi.backend.domain.category.service.CategoryService;
+import com.soi.backend.domain.post.dto.PostRespDto;
 import com.soi.backend.global.ApiResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,6 +55,13 @@ public class CategoryController {
                                                                                @RequestParam Long userId) {
         List<CategoryRespDto> categories = categoryService.findCategories(categoryFilter, userId);
         return ResponseEntity.ok(ApiResponseDto.success(categories, "카테고리 조회 완료"));
+    }
 
+    @Operation(summary = "카테고리 고정", description = "카테고리 아이디, 유저 아이디로 카테고리를 고정 혹은 고정해제 시킵니다.")
+    @PostMapping("/category-pinned")
+    public ResponseEntity<ApiResponseDto<Boolean>> categoryPinned(@RequestParam Long categoryId,
+                                                                  @RequestParam Long userId) {
+        Boolean result = categoryService.setPinned(categoryId, userId);
+        return ResponseEntity.ok(ApiResponseDto.success(result,"상단고정값 변경 완료"));
     }
 }

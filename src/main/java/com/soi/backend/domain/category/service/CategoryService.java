@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -192,6 +193,7 @@ public class CategoryService {
 
             categories.add(toDto(category, categoryUser, users));
         }
+        sortCategories(categories);
         return categories;
     }
 
@@ -211,6 +213,62 @@ public class CategoryService {
                 ? ""
                 : mediaService.getPresignedUrlByKey(key);
 
-        return new CategoryRespDto(category, categoryUser, userProfiles, categoryPhotoKey);
+        return new CategoryRespDto(category, categoryUser, userProfiles, categoryPhotoKey, categoryUser.getPinnedAt());
+    }
+
+    @Transactional
+    public void setLastViewed(Long categoryId, Long userId) {
+        CategoryUser categoryUser = categoryUserRepository.findByCategoryIdAndUserId(categoryId, userId)
+                .orElseThrow(() -> new CustomException(categoryId + "번 카테고리에 " + userId + " 유저가 속해있지 않음",  HttpStatus.NOT_FOUND));
+
+        categoryUser.setLastViewedAt();
+        categoryUserRepository.save(categoryUser);
+    }
+
+    @Transactional
+    public Boolean setPinned(Long categoryId, Long userId) {
+        CategoryUser categoryUser = categoryUserRepository.findByCategoryIdAndUserId(categoryId, userId)
+                .orElseThrow(() -> new CustomException(categoryId + "번 카테고리에 " + userId + " 유저가 속해있지 않음",  HttpStatus.NOT_FOUND));
+
+        categoryUser.setIsPinned();
+        categoryUserRepository.save(categoryUser);
+        return categoryUser.getIsPinned();
+    }
+
+    @Transactional
+    public void setLastUploaded(Long categoryId, Long userId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        category.setLastPhotoUploadedBy(userId);
+        categoryRepository.save(category);
+    }
+
+    private void sortCategories(List<CategoryRespDto> categories) {
+
+        // 1) pinned=true 그룹
+        List<CategoryRespDto> pinned = categories.stream()
+                .filter(c -> Boolean.TRUE.equals(c.getIsPinned()))
+                .sorted((c1, c2) -> {
+                    LocalDateTime t1 = c1.getPinnedAt();
+                    LocalDateTime t2 = c2.getPinnedAt();
+
+                    if (t1 == null && t2 == null) return 0;
+                    if (t1 == null) return 1;
+                    if (t2 == null) return -1;
+
+                    return t2.compareTo(t1); // 최신순
+                })
+                .toList();
+
+        // 2) pinned=false 그룹 (순서 유지)
+        List<CategoryRespDto> notPinned = categories.stream()
+                .filter(c -> !Boolean.TRUE.equals(c.getIsPinned()))
+                .toList(); // 정렬 X 원래순서
+
+        // 3) 두 그룹을 합쳐 리스트 갱신
+        categories.clear();
+        categories.addAll(pinned);
+        categories.addAll(notPinned);
     }
 }

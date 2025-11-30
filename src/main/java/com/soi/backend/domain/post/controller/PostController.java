@@ -44,10 +44,11 @@ public class PostController {
         return ResponseEntity.ok(ApiResponseDto.success(null,"게시물 임시삭제 완료"));
     }
 
-    @Operation(summary = "카테고리에 해당하는 게시물 조회", description = "카테고리 아이디로 해당 카테고리에 속한 게시물을 조회합니다.")
+    @Operation(summary = "카테고리에 해당하는 게시물 조회", description = "카테고리 아이디, 유저아이디로 해당 카테고리에 속한 게시물을 조회합니다.")
     @GetMapping("/find-by/category")
-    public ResponseEntity<ApiResponseDto<List<PostRespDto>>> findByCategoryId(@RequestParam Long categoryId) {
-        List<PostRespDto> postRespDtos = postService.findByCategoryId(categoryId);
+    public ResponseEntity<ApiResponseDto<List<PostRespDto>>> findByCategoryId(@RequestParam Long categoryId,
+                                                                              @RequestParam Long userId) {
+        List<PostRespDto> postRespDtos = postService.findByCategoryId(categoryId, userId);
         return ResponseEntity.ok(ApiResponseDto.success(postRespDtos,"게시물 조회 완료"));
     }
 

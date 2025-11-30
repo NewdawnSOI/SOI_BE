@@ -18,14 +18,16 @@ public class CategoryRespDto {
 
     private Boolean isPinned;
     private List<String> usersProfile; // 카테고리에 있는 유저들 프로필 사진
+    private LocalDateTime pinnedAt;
 
-    public CategoryRespDto(Category category, CategoryUser categoryUser, List<String> usersProfile, String categoryPhotoUrl) {
+    public CategoryRespDto(Category category, CategoryUser categoryUser, List<String> usersProfile, String categoryPhotoUrl,  LocalDateTime pinnedAt) {
         this.id = category.getId();
         this.name = categoryUser.getCustomName().isEmpty() ? category.getName() : categoryUser.getCustomName();
         this.categoryPhotoUrl = categoryPhotoUrl;
         this.isNew = isNew(category.getLastPhotoUploadedAt(), categoryUser.getLastViewedAt());
         this.isPinned = categoryUser.getIsPinned();
         this.usersProfile = usersProfile;
+        this.pinnedAt = pinnedAt;
     }
 
     private boolean isNew(LocalDateTime uploadedAt, LocalDateTime viewedAt) {
