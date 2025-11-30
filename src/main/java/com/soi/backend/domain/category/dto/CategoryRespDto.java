@@ -15,12 +15,14 @@ public class CategoryRespDto {
     private String name; // 카테고리 이름 (커스텀 이름이랑 비교해서 줘야함)
     private String categoryPhotoUrl; // 카테고리 프로필 사진 (커스텀 프로필사진이랑 비교해서 줘야함)
     private Boolean isNew; // 카테고리에 새로운 게시물을 읽었는지 여부
+    private Integer totalNum;
 
     private Boolean isPinned;
     private List<String> usersProfile; // 카테고리에 있는 유저들 프로필 사진
     private LocalDateTime pinnedAt;
 
-    public CategoryRespDto(Category category, CategoryUser categoryUser, List<String> usersProfile, String categoryPhotoUrl,  LocalDateTime pinnedAt) {
+    public CategoryRespDto(Category category, CategoryUser categoryUser, List<String> usersProfile,
+                           String categoryPhotoUrl, Integer totalNum, LocalDateTime pinnedAt) {
         this.id = category.getId();
         this.name = categoryUser.getCustomName().isEmpty() ? category.getName() : categoryUser.getCustomName();
         this.categoryPhotoUrl = categoryPhotoUrl;
@@ -28,6 +30,7 @@ public class CategoryRespDto {
         this.isPinned = categoryUser.getIsPinned();
         this.usersProfile = usersProfile;
         this.pinnedAt = pinnedAt;
+        this.totalNum = totalNum;
     }
 
     private boolean isNew(LocalDateTime uploadedAt, LocalDateTime viewedAt) {
