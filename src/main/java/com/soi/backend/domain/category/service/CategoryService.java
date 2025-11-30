@@ -213,7 +213,7 @@ public class CategoryService {
                 ? ""
                 : mediaService.getPresignedUrlByKey(key);
 
-        return new CategoryRespDto(category, categoryUser, userProfiles, categoryPhotoKey, categoryUser.getPinnedAt());
+        return new CategoryRespDto(category, categoryUser, userProfiles, categoryPhotoKey, users.size(), categoryUser.getPinnedAt());
     }
 
     @Transactional
