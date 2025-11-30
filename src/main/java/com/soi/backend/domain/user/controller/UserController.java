@@ -1,10 +1,7 @@
 package com.soi.backend.domain.user.controller;
 
-import com.soi.backend.domain.user.dto.AuthCheckReqDto;
+import com.soi.backend.domain.user.dto.*;
 import com.soi.backend.global.ApiResponseDto;
-import com.soi.backend.domain.user.dto.UserCreateReqDto;
-import com.soi.backend.domain.user.dto.UserFindRespDto;
-import com.soi.backend.domain.user.dto.UserRespDto;
 import com.soi.backend.domain.user.service.SMSAuthService;
 import com.soi.backend.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -73,7 +70,7 @@ public class UserController {
         Boolean isDup = userService.isDuplicateUserId(userId);
         if (!isDup) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(ApiResponseDto.fail(userId + " id가 중복입니다."));
+                    .body(ApiResponseDto.fail(" id가 중복입니다."));
         }
         return ResponseEntity.ok(ApiResponseDto.success(true, "사용가능한 id입니다."));
     }
@@ -91,4 +88,20 @@ public class UserController {
         List<UserRespDto> userRespDtos = userService.findByUserId(userId);
         return ResponseEntity.ok(ApiResponseDto.success(userRespDtos, "키워드가 포함된 사용자 검색 성공"));
     }
+
+    @Operation(summary = "유저정보 업데이트", description = "새로운 데이터로 유저정보를 업데이트합니다.")
+    @PatchMapping("/update")
+    public ResponseEntity<ApiResponseDto<UserRespDto>> update(@RequestBody UserUpdateReqDto userUpdateReqDto) {
+        UserRespDto userRespDto = userService.update(userUpdateReqDto);
+        return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "유저 정보 업데이트 성공"));
+    }
+
+    @Operation(summary = "유저 프로필 업데이트", description = "유저의 프로필을 업데이트 합니다.")
+    @PatchMapping("/update-profile")
+    public ResponseEntity<ApiResponseDto<UserRespDto>> updateProfile(@RequestParam Long userId,
+                                                                     @RequestParam String profileImage) {
+        UserRespDto userRespDto = userService.updateUserProfile(userId, profileImage);
+        return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "키워드가 포함된 사용자 검색 성공"));
+    }
+
 }

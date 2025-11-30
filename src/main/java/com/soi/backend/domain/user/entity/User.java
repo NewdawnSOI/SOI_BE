@@ -74,4 +74,19 @@ public class User {
         this.privacyPolicyAgreed = privacyPolicyAgreed;
         this.marketingAgreed = marketingAgreed;
     }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
+    public void update(String name, String phone, String userId,  String profileImage, String birthDate,
+                       Boolean marketingAgreed) {
+        this.name = name;
+        this.phone = phone;
+        this.userId = userId;
+        this.profileImage = profileImage;
+        this.birthDate = birthDate;
+        this.isActive = true;
+        this.marketingAgreed = marketingAgreed;
+    }
 }
