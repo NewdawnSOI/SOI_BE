@@ -46,16 +46,17 @@ public class UserController {
 
     @Operation(summary = "사용자 로그인(전화번호로)", description = "인증이 완료된 전화번호로 로그인을 합니다.")
     @PostMapping("/login")
-    public ResponseEntity<ApiResponseDto<UserRespDto>> login(@RequestParam String phone) {
-        UserRespDto userRespDto = userService.loginByPhone(phone);
+    public ResponseEntity<ApiResponseDto<UserRespDto>> login(@RequestParam String phoneNum) {
+        UserRespDto userRespDto = userService.loginByPhone(phoneNum);
         return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "로그인 성공"));
     }
 
     // SMS 전송 서비스 찾을때까지 사용 X
     @Operation(summary = "전화번호 인증", description = "사용자가 입력한 전화번호로 인증을 발송합니다.")
     @PostMapping("/auth")
-    public ResponseEntity<Boolean> authSMS(@RequestParam String phone) {
-        return ResponseEntity.ok(smsAuthService.sendSMStoAuth(phone));
+    public ResponseEntity<Boolean> authSMS(@RequestParam String phoneNum) {
+        return ResponseEntity.ok(smsAuthService.sendSMStoAuth(phoneNum
+        ));
     }
 
     @Operation(summary = "전화번호 인증확인", description = "사용자 전화번호와 사용자가 입력한 인증코드를 보내서 인증확인을 진행합니다.")

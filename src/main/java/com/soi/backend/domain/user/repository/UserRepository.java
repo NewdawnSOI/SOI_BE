@@ -10,7 +10,6 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUserId(String userId);
-    Optional<User> findByPhone(String phone);
 
     @Query("""
         SELECT u FROM User u
@@ -29,4 +28,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
         WHERE u.userId = :Id
     """)
     List<User> findAllProfileImage(@Param("Id") Long userId);
+
+    Optional<User> findByPhoneNum(String phoneNum);
 }

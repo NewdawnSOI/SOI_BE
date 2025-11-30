@@ -8,7 +8,7 @@ public class UserUpdateReqDto {
     private Long id;
     private String name;
     private String userId;
-    private String phone;
+    private String phoneNum;
     private String birthDate;
     private String profileImage;
     private Boolean marketingAgreed;

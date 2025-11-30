@@ -5,6 +5,6 @@ import lombok.Getter;
 @Getter
 
 public class AuthCheckReqDto {
-    String phoneNumber;
+    String phoneNum;
     String code;
 }

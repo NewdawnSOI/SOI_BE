@@ -22,7 +22,7 @@ public class User {
     private String name;
 
     @Column(name = "phone", nullable = false)
-    private String phone;
+    private String phoneNum;
 
     @Column(name = "user_id", nullable = false)
     private String userId;
@@ -60,10 +60,10 @@ public class User {
         this.lastLogin = lastLogin;
     }
 
-    public User (String name, String phone, String userId,  String profileImage, String birthDate,
+    public User (String name, String phoneNum, String userId,  String profileImage, String birthDate,
                  Boolean serviceAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed) {
         this.name = name;
-        this.phone = phone;
+        this.phoneNum = phoneNum;
         this.userId = userId;
         this.profileImage = profileImage;
         this.birthDate = birthDate;
@@ -79,10 +79,10 @@ public class User {
         this.profileImage = profileImage;
     }
 
-    public void update(String name, String phone, String userId,  String profileImage, String birthDate,
+    public void update(String name, String phoneNum, String userId,  String profileImage, String birthDate,
                        Boolean marketingAgreed) {
         this.name = name;
-        this.phone = phone;
+        this.phoneNum = phoneNum;
         this.userId = userId;
         this.profileImage = profileImage;
         this.birthDate = birthDate;

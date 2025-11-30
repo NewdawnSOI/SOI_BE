@@ -22,27 +22,27 @@ public class SMSAuthService {
 
     // 전화번호 인증 메시지 보내기
     @Transactional
-    public Boolean sendSMStoAuth(String phone) {
-        if (!userService.isDuplicatePhone(phone)) {
+    public Boolean sendSMStoAuth(String phoneNum) {
+        if (!userService.isDuplicatePhone(phoneNum)) {
             return false;
         }
 
         String verificationCode = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
 
-        messageService.sendMessage(verificationCode, phone);
-        smsAuthRepository.save(new SMSAuth(phone, verificationCode));
+        messageService.sendMessage(verificationCode, phoneNum);
+        smsAuthRepository.save(new SMSAuth(phoneNum, verificationCode));
         return true;
     }
 
     @Transactional
     public Boolean checkCode(AuthCheckReqDto authCheckReqDto) {
-        final String phoneNumber = authCheckReqDto.getPhoneNumber();
+        final String phoneNum = authCheckReqDto.getPhoneNum();
         final String code = authCheckReqDto.getCode();
       
-        String authCode = smsAuthRepository.findByPhone(phoneNumber)
+        String authCode = smsAuthRepository.findByPhone(phoneNum)
                 .orElseThrow(() -> new CustomException("인증 요청을 보내지 않은 전화번호입니다.", HttpStatus.NOT_FOUND))
                 .getVerificationCode();
-        smsAuthRepository.deleteByPhone(phoneNumber);
+        smsAuthRepository.deleteByPhone(phoneNum);
       
         return authCode.equals(code);
     }
