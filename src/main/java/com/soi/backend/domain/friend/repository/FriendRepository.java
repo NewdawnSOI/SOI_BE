@@ -36,7 +36,19 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
         )
         AND f.status = 'ACCEPTED'
         """)
-    List<Friend> findAllAcceptedFriends(@Param("userId") Long userId);
+    List<Friend> findAllAcceptedFriendsByUserId(@Param("userId") Long userId);
+
+    @Query("""
+    SELECT f FROM Friend f
+    WHERE 
+        (
+            ( f.requesterId = :userId AND f.requesterDeleted = false)
+            OR
+            (f.receiverId = :userId AND f.receiverDeleted = false)
+        )
+        AND f.status = 'ACCEPTED'
+        """)
+    List<Friend> findAllFriendsByUserId(@Param("userId") Long userId);
 
     @Query("""
     SELECT f FROM Friend f
@@ -49,7 +61,7 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
             (f.receiverId = :userId AND f.receiverDeleted = false) AND f.requesterId = :targetId
         )
     """)
-    Optional<Friend> findAcceptedFriend(@Param("userId") Long userId, @Param("targetId") Long targetId);
+    Optional<Friend> findFriend(@Param("userId") Long userId, @Param("targetId") Long targetId);
 
     @Query("""
         SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END
