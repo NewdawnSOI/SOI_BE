@@ -40,7 +40,7 @@ public class UserService {
                 userCreateReqDto.getPhone(),
                 userCreateReqDto.getUserId(),
                 userCreateReqDto.getProfileImage(),
-                userCreateReqDto.getBirth_date(),
+                userCreateReqDto.getBirthDate(),
                 userCreateReqDto.getServiceAgreed(),
                 userCreateReqDto.getPrivacyPolicyAgreed(),
                 userCreateReqDto.getMarketingAgreed()
@@ -49,7 +49,6 @@ public class UserService {
         return toDto(userRepository.save(user));
     }
 
-    @Transactional
     public List<UserFindRespDto> getAllUsers() {
         return userRepository.findAll()
                 .stream()
@@ -61,6 +60,12 @@ public class UserService {
                         user.isActive()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public UserRespDto getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+        return toDto(user);
     }
 
     // 계정 중복 체크
@@ -120,7 +125,13 @@ public class UserService {
     }
 
     private UserRespDto toDto(User user) {
-        return new UserRespDto(user.getId(), user.getUserId());
+        return new UserRespDto(
+                user.getId(),
+                user.getUserId(),
+                user.getName(),
+                user.getProfileImage(),
+                user.getBirthDate(),
+                user.getPhone());
     }
 
     public Boolean checkUserExists(FriendReqDto friendReqDto) {

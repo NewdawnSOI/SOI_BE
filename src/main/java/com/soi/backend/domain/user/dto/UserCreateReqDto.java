@@ -12,7 +12,7 @@ public class UserCreateReqDto {
     private String name;
     private String userId;
     private String phone;
-    private String birth_date;
+    private String birthDate;
     private String profileImage;
     private Boolean serviceAgreed;
     private Boolean privacyPolicyAgreed;
