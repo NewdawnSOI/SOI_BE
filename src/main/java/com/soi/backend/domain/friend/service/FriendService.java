@@ -1,9 +1,6 @@
 package com.soi.backend.domain.friend.service;
 
-import com.soi.backend.domain.friend.dto.FriendCreateReqDto;
-import com.soi.backend.domain.friend.dto.FriendReqDto;
-import com.soi.backend.domain.friend.dto.FriendRespDto;
-import com.soi.backend.domain.friend.dto.FriendUpdateRespDto;
+import com.soi.backend.domain.friend.dto.*;
 import com.soi.backend.domain.friend.entity.Friend;
 import com.soi.backend.domain.friend.entity.FriendRequestQueue;
 import com.soi.backend.domain.friend.entity.FriendStatus;
@@ -24,8 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,7 +48,7 @@ public class FriendService {
         userRepository.findById(friendCreateReqDto.getRequesterId())
                 .orElseThrow(() -> new CustomException("친구요청을 하는 유저를 찾을 수 없습니다.",HttpStatus.NOT_FOUND));
 
-        Optional<User> receiver = userRepository.findByPhone(friendCreateReqDto.getReceiverPhoneNum());
+        Optional<User> receiver = userRepository.findByPhoneNum(friendCreateReqDto.getReceiverPhoneNum());
 
         if (receiver.isEmpty()) {
             // 대기열 테이블에 추가하고, null 리턴
@@ -168,7 +164,7 @@ public class FriendService {
 
     // 친구 리스트 조회 기능
     public List<UserFindRespDto> getAllFriends(Long userId) {
-        List<Friend> friends = friendRepository.findAllAcceptedFriends(userId);
+        List<Friend> friends = friendRepository.findAllAcceptedFriendsByUserId(userId);
 
         List<Long> friendIds = friends.stream()
                 .map(friend ->
@@ -194,7 +190,7 @@ public class FriendService {
     // 친구 삭제 기능
     // friendReqDto에서 삭제 요청을 한 사람이 RequesterId에 들어가고, 삭제를 당하는 사람이 Receiver에 들어감
     public Boolean deleteFriend(FriendReqDto friendReqDto) {
-        Optional<Friend> friend = friendRepository.findAcceptedFriend(friendReqDto.getRequesterId(), friendReqDto.getReceiverId());
+        Optional<Friend> friend = friendRepository.findFriend(friendReqDto.getRequesterId(), friendReqDto.getReceiverId());
 
         if(friend.isPresent()) {
             if (friend.get().getStatus().equals(FriendStatus.PENDING)) {
@@ -315,6 +311,51 @@ public class FriendService {
     public Boolean checkUserExists(FriendReqDto friendReqDto) {
         return userRepository.findByIdAndIsActive(friendReqDto.getRequesterId()).isPresent()
                 && userRepository.findByIdAndIsActive(friendReqDto.getReceiverId()).isPresent();
+    }
+
+    public List<FriendCheckRespDto> checkIsFriend(Long userId, List<String> phoneNums) {
+
+        // 1) 친구 목록 가져오기
+        List<Friend> friends = friendRepository.findAllFriendsByUserId(userId);
+
+        // 2) 친구 id 전부 Set에 저장 → O(1) 조회
+        Set<Long> friendIds = new HashSet<>();
+        for (Friend friend : friends) {
+            friendIds.add(friend.getRequesterId());
+            friendIds.add(friend.getReceiverId());
+        }
+        friendIds.remove(userId); // 자기 자신 제거
+
+        // 3) phoneNums → User 엔티티 한 번에 조회
+        List<User> users = userRepository.findByPhoneNumIn(phoneNums);
+
+        // phoneNum → userId 매핑
+        Map<String, Long> phoneToUserId = users.stream()
+                .collect(Collectors.toMap(User::getPhoneNum, User::getId));
+
+        // 4) 결과 구성
+        List<FriendCheckRespDto> result = new ArrayList<>();
+
+        for (String phone : phoneNums) {
+            Long targetUserId = phoneToUserId.get(phone);
+
+            if (targetUserId == null) {
+                // 앱 미가입자 → 친구 X
+                result.add(new FriendCheckRespDto(phone, false, null));
+                continue;
+            }
+
+            Optional<Friend> relation = friendRepository.findFriend(userId, targetUserId);
+            FriendStatus status = relation.map(Friend::getStatus).orElse(null);
+
+            result.add(new FriendCheckRespDto(
+                    phone,
+                    status != null,
+                    status
+            ));
+        }
+
+        return result;
     }
 
 }

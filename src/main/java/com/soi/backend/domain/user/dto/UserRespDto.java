@@ -15,5 +15,5 @@ public class UserRespDto {
     private String name;
     private String profileImage;
     private String birthDate;
-    private String phone;
+    private String phoneNum;
 }

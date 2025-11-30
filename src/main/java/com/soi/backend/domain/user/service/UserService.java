@@ -34,13 +34,13 @@ public class UserService {
     @Transactional
     public UserRespDto createUser(UserCreateReqDto userCreateReqDto) {
         if (!isDuplicateUserId(userCreateReqDto.getUserId())
-            || !isDuplicatePhone(userCreateReqDto.getPhone())) {
+            || !isDuplicatePhone(userCreateReqDto.getPhoneNum())) {
             throw new CustomException("이미 존재하는 사용자입니다.", HttpStatus.CONFLICT);
         }
 
         User user = new User(
                 userCreateReqDto.getName(),
-                userCreateReqDto.getPhone(),
+                userCreateReqDto.getPhoneNum(),
                 userCreateReqDto.getUserId(),
                 userCreateReqDto.getProfileImage(),
                 userCreateReqDto.getBirthDate(),
@@ -50,7 +50,7 @@ public class UserService {
                 );
 
         User savedUser = userRepository.save(user);
-        friendService.checkIsUserInQueue(savedUser.getPhone());
+        friendService.checkIsUserInQueue(savedUser.getPhoneNum());
 
         return toDto(savedUser);
     }
@@ -87,7 +87,7 @@ public class UserService {
 
     // 전화번호 중복 체크 중복 : false, 가능 : true
     public Boolean isDuplicatePhone(String phone) {
-        if (userRepository.findByPhone(phone).isPresent()) {
+        if (userRepository.findByPhoneNum(phone).isPresent()) {
             log.error("아이디 중복 체크 : 이미 존재하는 전화번호 {}", phone);
             return false;
         } else {
@@ -97,8 +97,8 @@ public class UserService {
     }
 
     public UserRespDto loginByPhone(String phone) {
-        if (userRepository.findByPhone(phone).isPresent()) {
-            User user = userRepository.findByPhone(phone).get();
+        if (userRepository.findByPhoneNum(phone).isPresent()) {
+            User user = userRepository.findByPhoneNum(phone).get();
             return toDto(user);
         } else {
             throw new CustomException("로그인 에러 : 로그인 에러 : 해당 번호로 등록된 유저가 없습니다.", HttpStatus.NOT_FOUND);
@@ -137,7 +137,7 @@ public class UserService {
                 user.getName(),
                 user.getProfileImage(),
                 user.getBirthDate(),
-                user.getPhone());
+                user.getPhoneNum());
     }
 
 
@@ -147,7 +147,7 @@ public class UserService {
                 .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         user.update(userUpdateReqDto.getName(),
-                userUpdateReqDto.getPhone(),
+                userUpdateReqDto.getPhoneNum(),
                 userUpdateReqDto.getUserId(),
                 userUpdateReqDto.getProfileImage(),
                 userUpdateReqDto.getBirthDate(),
