@@ -17,16 +17,17 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "send_user_id")
-    private Long sendUserId;
+    @Column(name = "send_user_id", nullable = false)
+    private Long requesterId;
 
-    @Column(name = "receiver_user_id")
-    private Long receiverUserId;
+    @Column(name = "receiver_user_id", nullable = false)
+    private Long receiverId;
 
-    @Column(name = "type")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
     private NotificationType type;
 
-    @Column(name = "title")
+    @Column(name = "title", nullable = false)
     private String title;
 
     @Column(name = "friend_id")
@@ -35,14 +36,14 @@ public class Notification {
     @Column(name = "category_id")
     private Long categoryId; // 카테고리 관련된 알람일 때 카테고리 아이디
 
-    @Column(name = "requires_acceptance")
-    private Boolean requiresAcceptance; // 초대 수락 대기 여부
-
     @Column(name = "category_invite_id")
     private Long categoryInviteId; // 초대 ID, category_invite 테이블의 아이디임
 
     @Column(name = "comment_id")
     private Long commentId; // 댓글 알람일떄 댓글 ID
+
+    @Column(name = "post_id")
+    private Long postId; // 댓글달린 게시물의 ID
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -55,17 +56,20 @@ public class Notification {
         this.createdAt = LocalDateTime.now();
     }
 
-    public Notification(Long friendId, Long senderId, Long receiverId, NotificationType type, String title) {
+    // 친구요청 알림
+    public Notification(Long requesterId, Long receiverId, NotificationType type, String title,
+                        Long friendId, Long categoryId, Long categoryInviteId, Long commentId) {
+        this.requesterId = requesterId;
+        this.receiverId = receiverId;
         this.friendId = friendId;
-        this.sendUserId = senderId;
-        this.receiverUserId = receiverId;
         this.type = type;
         this.title = title;
-        this.categoryId = null;
-        this.requiresAcceptance = false;
-        this.categoryInviteId = null;
-        this.commentId = null;
+        this.categoryId = categoryId;
+        this.categoryInviteId = categoryInviteId;
+        this.commentId = commentId;
         this.createdAt = LocalDateTime.now();
         this.isRead = false;
     }
+
+    // 카테고리 초대 알림
 }

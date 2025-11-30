@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 public class UserCreateReqDto {
     private String name;
     private String userId;
-    private String phone;
-    private String birth_date;
+    private String phoneNum;
+    private String birthDate;
     private String profileImage;
     private Boolean serviceAgreed;
     private Boolean privacyPolicyAgreed;

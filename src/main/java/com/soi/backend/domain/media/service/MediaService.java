@@ -1,7 +1,12 @@
 package com.soi.backend.domain.media.service;
 
+import com.soi.backend.domain.media.entity.FileType;
+import com.soi.backend.domain.media.entity.Media;
+import com.soi.backend.domain.media.entity.UsageType;
+import com.soi.backend.domain.media.repository.MediaRepository;
 import com.soi.backend.external.awsS3.S3Uploader;
 import com.soi.backend.global.exception.CustomException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,28 +22,45 @@ import java.util.List;
 public class MediaService {
 
     private final S3Uploader s3Uploader;
+    private final MediaRepository mediaRepository;
 
-    public List<String> uploadMedia(String types, Long id, List<MultipartFile> files) throws IOException {
+    @Transactional
+    public List<String> uploadMedia(List<FileType> types, List<UsageType> usageTypes, Long id, Long refId, List<MultipartFile> files) throws IOException {
         List<String> urls = new ArrayList<>();
-        List<String> typeList = List.of(types.split(","));
 
-        if (typeList.size() != files.size()) {
+        if (types.size() != files.size()) {
             throw new CustomException("파일 수와 타입 수가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
         }
         
         for (int i=0; i<files.size(); i++) {
             MultipartFile file = files.get(i);
-            String fileType = typeList.get(i);
+            FileType fileType = types.get(i);
+            UsageType usageType = usageTypes.get(i);
 
             switch (fileType) {
-                case "image" :
-                case "video" :
-                case "audio" :
-                    urls.add(s3Uploader.upload(file, fileType, id));
+                case IMAGE:
+                case VIDEO:
+                case AUDIO:
+                    String url = s3Uploader.upload(file, fileType, id);
+                    urls.add(url);
+                    saveMedia(new Media(url, id,fileType, usageType, refId));
                     break;
                 default :
                     throw new CustomException("지원하지 않는 미디어 타입", HttpStatus.BAD_REQUEST);
             }
+        }
+        return urls;
+    }
+
+    @Transactional
+    public void saveMedia(Media media) {
+        mediaRepository.save(media);
+    }
+
+    public List<String> getPresignedUrlByKey(List<String> key) {
+        List<String> urls = new ArrayList<>();
+        for (String url : key) {
+            urls.add(s3Uploader.getPressigneUrl(url));
         }
         return urls;
     }

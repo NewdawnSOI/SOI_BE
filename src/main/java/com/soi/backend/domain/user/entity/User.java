@@ -18,16 +18,19 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "name", nullable = false)
     private String name;
-    private String phone;
 
-    @Column(name = "user_id",  nullable = false)
+    @Column(name = "phone", nullable = false)
+    private String phoneNum;
+
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(name = "profile_image")
+    @Column(name = "profile_image", nullable = false)
     private String profileImage;
 
-    @Column(name = "birth_date")
+    @Column(name = "birth_date", nullable = false)
     private String birthDate;
 
     @Column(name = "is_active")
@@ -57,10 +60,10 @@ public class User {
         this.lastLogin = lastLogin;
     }
 
-    public User (String name, String phone, String userId,  String profileImage, String birthDate,
+    public User (String name, String phoneNum, String userId,  String profileImage, String birthDate,
                  Boolean serviceAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed) {
         this.name = name;
-        this.phone = phone;
+        this.phoneNum = phoneNum;
         this.userId = userId;
         this.profileImage = profileImage;
         this.birthDate = birthDate;
@@ -69,6 +72,21 @@ public class User {
         this.lastLogin = LocalDateTime.now();
         this.serviceAgreed = serviceAgreed;
         this.privacyPolicyAgreed = privacyPolicyAgreed;
+        this.marketingAgreed = marketingAgreed;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
+    public void update(String name, String phoneNum, String userId,  String profileImage, String birthDate,
+                       Boolean marketingAgreed) {
+        this.name = name;
+        this.phoneNum = phoneNum;
+        this.userId = userId;
+        this.profileImage = profileImage;
+        this.birthDate = birthDate;
+        this.isActive = true;
         this.marketingAgreed = marketingAgreed;
     }
 }
