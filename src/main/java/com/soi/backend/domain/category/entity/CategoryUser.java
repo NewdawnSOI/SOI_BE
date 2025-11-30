@@ -52,6 +52,16 @@ public class CategoryUser {
         this.lastViewedAt = null;
     }
 
+    public CategoryUser(Long categoryId, Long inviterUserId, LocalDateTime lastViewedAt) {
+        this.categoryId = categoryId;
+        this.userId = inviterUserId;
+        this.customName = "";
+        this.customProfile = "";
+        this.isPinned = false;
+        this.isRead = false;
+        this.lastViewedAt = lastViewedAt;
+    }
+
     public void setLastViewedAt() {
         this.lastViewedAt = LocalDateTime.now();
     }
