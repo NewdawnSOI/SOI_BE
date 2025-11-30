@@ -51,7 +51,7 @@ public class PostService {
                     .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없음",HttpStatus.NOT_FOUND))
                     .getName();
 
-            categoryService.setLastUploaded(categoryId, postCreateReqDto.getUserId());
+            categoryService.setLastUploaded(categoryId, postCreateReqDto.getId());
 
             for (Long receiverId : receivers) {
                 notificationService.sendCategoryPostNotification(
@@ -69,7 +69,7 @@ public class PostService {
     @Transactional
     public void createPost(PostCreateReqDto postCreateReqDto, Long categoryId) {
         Post post = new Post(
-                postCreateReqDto.getUserId(),
+                postCreateReqDto.getId(),
                 postCreateReqDto.getContent(),
                 postCreateReqDto.getPostFileKey(),
                 postCreateReqDto.getAudioFileKey(),
