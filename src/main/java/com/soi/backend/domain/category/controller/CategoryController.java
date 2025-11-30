@@ -58,7 +58,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "카테고리 고정", description = "카테고리 아이디, 유저 아이디로 카테고리를 고정 혹은 고정해제 시킵니다.")
-    @PostMapping("/category-pinned")
+    @PostMapping("/pinned")
     public ResponseEntity<ApiResponseDto<Boolean>> categoryPinned(@RequestParam Long categoryId,
                                                                   @RequestParam Long userId) {
         Boolean result = categoryService.setPinned(categoryId, userId);
