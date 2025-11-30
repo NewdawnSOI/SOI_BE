@@ -1,5 +1,6 @@
 package com.soi.backend.domain.user.service;
 
+import com.soi.backend.domain.user.dto.UserUpdateReqDto;
 import com.soi.backend.external.sms.MessageService;
 import com.soi.backend.domain.friend.dto.FriendReqDto;
 import com.soi.backend.global.exception.CustomException;
@@ -137,6 +138,34 @@ public class UserService {
     public Boolean checkUserExists(FriendReqDto friendReqDto) {
         return userRepository.findByIdAndIsActive(friendReqDto.getRequesterId()).isPresent()
                 && userRepository.findByIdAndIsActive(friendReqDto.getReceiverId()).isPresent();
+    }
+
+    @Transactional
+    public UserRespDto update(UserUpdateReqDto userUpdateReqDto) {
+        User user = userRepository.findById(userUpdateReqDto.getId())
+                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        user.update(userUpdateReqDto.getName(),
+                userUpdateReqDto.getPhone(),
+                userUpdateReqDto.getUserId(),
+                userUpdateReqDto.getProfileImage(),
+                userUpdateReqDto.getBirthDate(),
+                userUpdateReqDto.getMarketingAgreed());
+
+        userRepository.save(user);
+
+        return toDto(user);
+    }
+
+    @Transactional
+    public UserRespDto updateUserProfile(Long userId, String profileImageKey) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        user.setProfileImage(profileImageKey);
+        userRepository.save(user);
+
+        return toDto(user);
     }
 
 }
