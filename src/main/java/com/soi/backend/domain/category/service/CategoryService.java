@@ -98,7 +98,7 @@ public class CategoryService {
             String categoryName = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND))
                     .getName();
-            
+
             sendCategoryNotification(categoryId, requesterId, receiverIds, NotificationType.CATEGORY_ADDED);
             // receiver들에게도 알림
 //            receiverIds.forEach(receiverId ->
