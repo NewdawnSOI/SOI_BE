@@ -72,7 +72,7 @@ public class CategoryService {
 
     @Transactional
     public Boolean inviteUserToCategory(Long categoryId, Long requesterId, List<Long> receiverIds) {
-        categoryRepository.findById(categoryId)
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomException("존재하지 않는 카테고리입니다.", HttpStatus.NOT_FOUND));
         userRepository.findById(requesterId)
                 .orElseThrow(() -> new CustomException("초대한 유저가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
@@ -99,7 +99,7 @@ public class CategoryService {
                     .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND))
                     .getName();
 
-            sendCategoryNotification(categoryId, requesterId, receiverIds, NotificationType.CATEGORY_ADDED);
+            sendCategoryNotification(categoryId, requesterId, receiverIds, NotificationType.CATEGORY_ADDED, category.getCategoryPhotoKey());
             // receiver들에게도 알림
 //            receiverIds.forEach(receiverId ->
 //                    notificationService.createCategoryNotification(
@@ -115,7 +115,7 @@ public class CategoryService {
         }
 
         createCategoryInvite(categoryId, requesterId, receiverIds);
-        sendCategoryNotification(categoryId, requesterId, receiverIds, NotificationType.CATEGORY_INVITE);
+        sendCategoryNotification(categoryId, requesterId, receiverIds, NotificationType.CATEGORY_INVITE, category.getCategoryPhotoKey());
 
         return true;
     }
@@ -130,7 +130,7 @@ public class CategoryService {
     }
 
     @Transactional
-    public void sendCategoryNotification(Long categoryId, Long requesterId, List<Long> receiverIds,  NotificationType type) {
+    public void sendCategoryNotification(Long categoryId, Long requesterId, List<Long> receiverIds,  NotificationType type, String imageKey) {
         String userId = userRepository.findById(requesterId).get().getUserId();
         String categoryName = categoryRepository.findById(categoryId).get().getName();
         for (Long receiverId : receiverIds) {
@@ -141,7 +141,8 @@ public class CategoryService {
                     type,
                     notificationService.makeMessage(requesterId, categoryName, type),
                     categoryId,
-                    categoryInviteId
+                    categoryInviteId,
+                    imageKey
             );
         }
     }
@@ -206,7 +207,7 @@ public class CategoryService {
 
         String key = !categoryUser.getCustomProfile().isEmpty()
                 ? categoryUser.getCustomProfile()
-                : category.getCategoryPhotoUrl();
+                : category.getCategoryPhotoKey();
 
         String categoryPhotoKey = key.isEmpty()
                 ? ""

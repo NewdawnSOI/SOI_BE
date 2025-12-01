@@ -23,7 +23,7 @@ public class Category {
     private String name;
 
     @Column(name = "category_photo_url", nullable = false)
-    private String categoryPhotoUrl;
+    private String categoryPhotoKey;
 
     @Column(name = "last_photo_uploaded_by", nullable = false)
     private Long lastPhotoUploadedBy;
@@ -36,7 +36,7 @@ public class Category {
 
     public Category(String name, Boolean isPublic) {
         this.name = name;
-        this.categoryPhotoUrl = "";
+        this.categoryPhotoKey = "";
         this.lastPhotoUploadedBy = null;
         this.isPublic = isPublic;
         this.lastPhotoUploadedAt = LocalDateTime.now();
@@ -47,7 +47,7 @@ public class Category {
         this.lastPhotoUploadedAt = LocalDateTime.now();
     }
 
-    public void setCategoryPhotoUrl(String categoryPhotoUrl) {
-        this.categoryPhotoUrl = categoryPhotoUrl;
+    public void setCategoryPhotoUrl(String categoryPhotoKey) {
+        this.categoryPhotoKey = categoryPhotoKey;
     }
 }

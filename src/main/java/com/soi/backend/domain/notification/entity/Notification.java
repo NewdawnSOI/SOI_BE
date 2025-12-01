@@ -45,6 +45,9 @@ public class Notification {
     @Column(name = "post_id")
     private Long postId; // 댓글달린 게시물의 ID
 
+    @Column(name = "image_key")
+    private String imageKey; // 관련된 Url
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -58,7 +61,7 @@ public class Notification {
 
     // 친구요청 알림
     public Notification(Long requesterId, Long receiverId, NotificationType type, String title,
-                        Long friendId, Long categoryId, Long categoryInviteId, Long commentId) {
+                        Long friendId, Long categoryId, Long categoryInviteId, Long commentId, String imageKey) {
         this.requesterId = requesterId;
         this.receiverId = receiverId;
         this.friendId = friendId;
@@ -68,6 +71,7 @@ public class Notification {
         this.categoryInviteId = categoryInviteId;
         this.commentId = commentId;
         this.createdAt = LocalDateTime.now();
+        this.imageKey = imageKey;
         this.isRead = false;
     }
 
