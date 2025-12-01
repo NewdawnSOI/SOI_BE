@@ -6,6 +6,7 @@ import com.soi.backend.domain.friend.entity.FriendRequestQueue;
 import com.soi.backend.domain.friend.entity.FriendStatus;
 import com.soi.backend.domain.friend.repository.FriendRepository;
 import com.soi.backend.domain.friend.repository.FriendRequestQueueRepository;
+import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.global.exception.CustomException;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.repository.NotificationRepository;
@@ -34,6 +35,7 @@ public class FriendService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
+    private final MediaService mediaService;
 
     @Transactional
     public FriendRespDto createFriendRequest(FriendCreateReqDto friendCreateReqDto) {
@@ -182,7 +184,7 @@ public class FriendService {
                         user.getId(),
                         user.getName(),
                         user.getUserId(),
-                        user.getProfileImage(),
+                        user.getProfileImageKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(user.getProfileImageKey()),
                         user.isActive()
                 ))
                 .collect(Collectors.toList());
@@ -277,7 +279,7 @@ public class FriendService {
 
     public Boolean isAllFriend(Long requesterId, List<Long> receiverIds) {
         for (Long receiverId : receiverIds) {
-            if (!friendRepository.isFriend(requesterId, receiverId)) {
+            if (friendRepository.isFriend(requesterId, receiverId) == 0) {
                 return false;
             }
         }
@@ -288,7 +290,7 @@ public class FriendService {
 
         for (int i=0; i<receiverIds.size(); i++) {
             for (int j=i+1; j<receiverIds.size(); j++) {
-                if (!friendRepository.isFriend(receiverIds.get(i), receiverIds.get(j))) {
+                if (friendRepository.isFriend(receiverIds.get(i), receiverIds.get(j)) == 0) {
                     return false;
                 }
             }

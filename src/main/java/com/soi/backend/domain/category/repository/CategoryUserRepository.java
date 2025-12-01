@@ -34,4 +34,8 @@ public interface CategoryUserRepository extends JpaRepository<CategoryUser, Long
         AND u.id <> :userId
     """)
     List<Long> findAllUserIdsByCategoryIdExceptUser(Long categoryId, Long userId);
+
+    Optional<CategoryUser> findByUserIdAndCategoryId(Long userId, Long categoryId);
+
+    List<CategoryUser> findAllByCategoryId(Long categoryId);
 }

@@ -10,6 +10,6 @@ public class UserUpdateReqDto {
     private String userId;
     private String phoneNum;
     private String birthDate;
-    private String profileImage;
+    private String profileImageKey;
     private Boolean marketingAgreed;
 }

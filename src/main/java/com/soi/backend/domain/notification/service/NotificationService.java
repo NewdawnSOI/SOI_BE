@@ -39,6 +39,7 @@ public class NotificationService {
                 dto.getFriendId(),
                 dto.getCategoryId(),
                 dto.getCategoryInviteId(),
+                dto.getPostId(),
                 dto.getCommentId(),
                 dto.getImageKey()
         );
@@ -110,6 +111,7 @@ public class NotificationService {
         return bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, true);
     }
 
+    @Transactional
     public Long sendFriendNotification(Long requesterId, Long receiverId, Long friendId, String message, NotificationType type) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
@@ -124,8 +126,9 @@ public class NotificationService {
         return createNotification(dto);
     }
 
-    public Long sendCategoryPostNotification(
-            Long requesterId, Long receiverId, Long categoryId, String title) {
+    @Transactional
+    public void sendCategoryPostNotification(
+            Long requesterId, Long receiverId, Long categoryId, String title, String imageKey) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
                 .requesterId(requesterId)
@@ -133,12 +136,14 @@ public class NotificationService {
                 .type(NotificationType.PHOTO_ADDED)
                 .title(title)
                 .categoryId(categoryId)
+                .imageKey(imageKey)
                 .build();
 
-        return createNotification(dto);
+        createNotification(dto);
     }
 
-    public Long sendPostCommentNotification(
+    @Transactional
+    public void sendPostCommentNotification(
             Long requesterId, Long receiverId, Long commentId, Long postId, String title) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
@@ -148,9 +153,49 @@ public class NotificationService {
                 .title(title)
                 .postId(postId)
                 .commentId(commentId)
+                .imageKey("")
                 .build();
 
-        return createNotification(dto);
+        createNotification(dto);
+    }
+
+    @Transactional
+    public void deleteCategoryNotification(Long userId, Long categoryId) {
+        // 유저 아이디를 받아서 receiver id가 유저인 카테고리 알림을 다 삭제함
+        List<Long> notificationIds = notificationRepository.findAllIdByCategoryId(userId, categoryId);
+
+        for (Long notificationId : notificationIds) {
+            notificationRepository.deleteById(notificationId);
+        }
+    }
+    @Transactional
+    public void deleteCategoryInviteNotification(Long userId, Long categoryInviteId) {
+        // 유저 아이디를 받아서 receiver id가 유저인 카테고리 초대 알림을 다 삭제함
+        List<Long> notificationIds = notificationRepository.deleteCategoryInviteNotification(userId, categoryInviteId);
+
+        for (Long notificationId : notificationIds) {
+            notificationRepository.deleteById(notificationId);
+        }
+    }
+
+    @Transactional
+    public void deletePostNotification(Long userId, Long postId) {
+        // 유저 아이디를 받아서 receiver id가 유저인 게시물 알림을 다 삭제함
+        List<Long> notificationIds = notificationRepository.findAllIdByPostId(userId, postId);
+
+        for (Long notificationId : notificationIds) {
+            notificationRepository.deleteById(notificationId);
+        }
+    }
+
+    @Transactional
+    public void deleteCommentNotification(Long userId, Long commentId) {
+        // 유저 아이디를 받아서 receiver id가 유저인 댓글 알림을 다 삭제함
+        List<Long> notificationIds = notificationRepository.findAllIdByCommentId(userId, commentId);
+
+        for (Long notificationId : notificationIds) {
+            notificationRepository.deleteById(notificationId);
+        }
     }
 
     public String makeMessage(Long requesterId, String targetName, NotificationType type ) {

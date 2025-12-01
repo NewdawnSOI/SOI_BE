@@ -12,7 +12,7 @@ public class CommentRespDto {
     private String text;
     private Long emojiId;
     private String audioUrl;
-    private String waveformdata;
+    private String waveFormData;
     private Integer duration;
     private Double locationX;
     private Double locationY;

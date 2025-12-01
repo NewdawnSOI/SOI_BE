@@ -13,7 +13,7 @@ public class UserRespDto {
     private Long id;
     private String userId;
     private String name;
-    private String profileImage;
+    private String profileImageUrl;
     private String birthDate;
     private String phoneNum;
 }

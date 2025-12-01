@@ -102,11 +102,24 @@ public class S3Uploader {
     }
 
     /** Temp 파일 삭제 */
-    private void removeNewFile(File targetFile) {
+    public void removeNewFile(File targetFile) {
         if (targetFile.delete()) {
             log.info("파일이 삭제되었습니다.");
         } else {
             log.info("파일 삭제 실패");
+        }
+    }
+
+    public void delete(String key) {
+        try {
+            s3Client.deleteObject(builder -> builder
+                    .bucket(bucket)
+                    .key(key)
+                    .build()
+            );
+            log.info("S3 파일 삭제 완료: {}", key);
+        } catch (Exception e) {
+            throw new CustomException("S3 파일 삭제 실패: " + key, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -2,6 +2,7 @@ package com.soi.backend.domain.user.service;
 
 import com.soi.backend.domain.friend.repository.FriendRepository;
 import com.soi.backend.domain.friend.service.FriendService;
+import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.user.dto.UserUpdateReqDto;
 import com.soi.backend.external.sms.MessageService;
 import com.soi.backend.domain.friend.dto.FriendReqDto;
@@ -29,6 +30,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final FriendService  friendService;
+    private final MediaService mediaService;
 
     // 계정 생성
     @Transactional
@@ -42,7 +44,7 @@ public class UserService {
                 userCreateReqDto.getName(),
                 userCreateReqDto.getPhoneNum(),
                 userCreateReqDto.getUserId(),
-                userCreateReqDto.getProfileImage(),
+                userCreateReqDto.getProfileImageKey(),
                 userCreateReqDto.getBirthDate(),
                 userCreateReqDto.getServiceAgreed(),
                 userCreateReqDto.getPrivacyPolicyAgreed(),
@@ -62,7 +64,7 @@ public class UserService {
                         user.getId(),
                         user.getName(),
                         user.getUserId(),
-                        user.getProfileImage(),
+                        user.getProfileImageKey(),
                         user.isActive()
                 ))
                 .collect(Collectors.toList());
@@ -135,7 +137,7 @@ public class UserService {
                 user.getId(),
                 user.getUserId(),
                 user.getName(),
-                user.getProfileImage(),
+                user.getProfileImageKey(),
                 user.getBirthDate(),
                 user.getPhoneNum());
     }
@@ -149,7 +151,7 @@ public class UserService {
         user.update(userUpdateReqDto.getName(),
                 userUpdateReqDto.getPhoneNum(),
                 userUpdateReqDto.getUserId(),
-                userUpdateReqDto.getProfileImage(),
+                userUpdateReqDto.getProfileImageKey(),
                 userUpdateReqDto.getBirthDate(),
                 userUpdateReqDto.getMarketingAgreed());
 
@@ -163,7 +165,15 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        user.setProfileImage(profileImageKey);
+        if (!user.getProfileImageKey().isEmpty()) {
+            mediaService.removeMedia(user.getProfileImageKey());
+        }
+
+        if (profileImageKey == null || profileImageKey.isEmpty()) {
+            user.setProfileImage("");
+        } else {
+            user.setProfileImage(profileImageKey);
+        }
         userRepository.save(user);
 
         return toDto(user);
