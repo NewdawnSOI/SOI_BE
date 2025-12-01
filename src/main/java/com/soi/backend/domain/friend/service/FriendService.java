@@ -94,18 +94,19 @@ public class FriendService {
         }
 
         // 알림 생성
-        Long notificationId = notificationService.sendFriendRequestNotification(
+        Long notificationId = notificationService.sendFriendNotification(
                 requesterId,
                 receiverId,
                 friend.getId(),
-                notificationService.makeMessage(requesterId,"", NotificationType.FRIEND_REQUEST
-                )
+                notificationService.makeMessage(requesterId,"", NotificationType.FRIEND_REQUEST),
+                NotificationType.FRIEND_REQUEST
         );
 
         return toDto(friend, notificationId);
     }
 
     @Transactional
+    // 친구 상태 업데이트 (요청을 받거나 삭제하거나 차단하거나)
     public FriendRespDto updateFriendRequest(FriendUpdateRespDto friendUpdateRespDto) {
         Friend friend = friendRepository.findById(friendUpdateRespDto.getId())
                 .orElseThrow(() -> new CustomException("유저 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
@@ -151,12 +152,12 @@ public class FriendService {
         Friend savedFriend = friendRepository.save(friend);
 
         // 알림 생성
-        Long notificationId = notificationService.sendFriendRequestNotification(
+        Long notificationId = notificationService.sendFriendNotification(
                 requesterId,
                 receiverId,
                 savedFriend.getId(),
-                notificationService.makeMessage(requesterId, "", NotificationType.FRIEND_RESPOND
-                )
+                notificationService.makeMessage(requesterId, "", NotificationType.FRIEND_RESPOND),
+                NotificationType.FRIEND_RESPOND
         );
 
         return toDto(savedFriend, notificationId);

@@ -28,7 +28,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
         SELECT u.profileImage FROM User u
         WHERE u.userId = :Id
     """)
-    List<User> findAllProfileImage(@Param("Id") Long userId);
+    String getProfileImageByUserId(@Param("Id") Long userId);
 
     Optional<User> findByPhoneNum(String phoneNum);
 }
