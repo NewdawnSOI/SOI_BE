@@ -16,9 +16,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                                                                            PostStatus status,
                                                                            Boolean isActive);
     @Query("""
-        SELECT p.userId
+        SELECT p
         FROM Post p
-        WHERE p.id = :postId
+        WHERE p.categoryId = :categoryId
     """)
-    User findUserByPostId(Long postId);
+    List<Post> findAllByCategoryId(Long categoryId);
 }

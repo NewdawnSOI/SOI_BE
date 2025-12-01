@@ -97,12 +97,12 @@ public class UserController {
         return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "유저 정보 업데이트 성공"));
     }
 
-    @Operation(summary = "유저 프로필 업데이트", description = "유저의 프로필을 업데이트 합니다.")
+    @Operation(summary = "유저 프로필 업데이트", description = "유저의 프로필을 업데이트 합니다.\n기본 프로필로 변경하고싶으면 profileImageKey에 \"\" 을 넣으면 됩니다.")
     @PatchMapping("/update-profile")
     public ResponseEntity<ApiResponseDto<UserRespDto>> updateProfile(@RequestParam Long userId,
-                                                                     @RequestParam String profileImage) {
-        UserRespDto userRespDto = userService.updateUserProfile(userId, profileImage);
-        return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "키워드가 포함된 사용자 검색 성공"));
+                                                                     @RequestParam(required = false) String profileImageKey) {
+        UserRespDto userRespDto = userService.updateUserProfile(userId, profileImageKey);
+        return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "유저 프로필 업데이트 성공"));
     }
 
 }

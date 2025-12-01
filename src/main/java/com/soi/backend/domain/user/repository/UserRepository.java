@@ -25,7 +25,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> searchAllByUserId(@Param("keyword") String keyword);
 
     @Query("""
-        SELECT u.profileImage FROM User u
+        SELECT u.profileImageKey FROM User u
         WHERE u.userId = :Id
     """)
     String getProfileImageByUserId(@Param("Id") Long userId);

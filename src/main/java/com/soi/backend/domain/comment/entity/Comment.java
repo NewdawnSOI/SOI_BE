@@ -31,7 +31,7 @@ public class Comment {
     private String text;
 
     @Column(name = "audio_url", nullable = false)
-    private String audioUrl;
+    private String audioKey;
 
     @Column(name = "waveform_data", nullable = false)
     private String waveformData;
@@ -52,13 +52,13 @@ public class Comment {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public Comment(Long userId, Long emojiId, Long postId, String text, String audioUrl,
+    public Comment(Long userId, Long emojiId, Long postId, String text, String audioKey,
                     String waveformData, Integer duration, Double locationX, Double locationY, CommentType commentType) {
         this.userId = userId;
         this.emojiId = emojiId;
         this.postId = postId;
         this.text = text;
-        this.audioUrl = audioUrl;
+        this.audioKey = audioKey;
         this.waveformData = waveformData;
         this.duration = duration;
         this.locationX = locationX;

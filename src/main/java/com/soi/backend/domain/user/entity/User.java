@@ -28,7 +28,7 @@ public class User {
     private String userId;
 
     @Column(name = "profile_image", nullable = false)
-    private String profileImage;
+    private String profileImageKey;
 
     @Column(name = "birth_date", nullable = false)
     private String birthDate;
@@ -60,12 +60,12 @@ public class User {
         this.lastLogin = lastLogin;
     }
 
-    public User (String name, String phoneNum, String userId,  String profileImage, String birthDate,
+    public User (String name, String phoneNum, String userId,  String profileImageKey, String birthDate,
                  Boolean serviceAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed) {
         this.name = name;
         this.phoneNum = phoneNum;
         this.userId = userId;
-        this.profileImage = profileImage;
+        this.profileImageKey = profileImageKey;
         this.birthDate = birthDate;
         this.isActive = true;
         this.createdAt = LocalDateTime.now();
@@ -75,16 +75,16 @@ public class User {
         this.marketingAgreed = marketingAgreed;
     }
 
-    public void setProfileImage(String profileImage) {
-        this.profileImage = profileImage;
+    public void setProfileImage(String profileImageKey) {
+        this.profileImageKey = profileImageKey;
     }
 
-    public void update(String name, String phoneNum, String userId,  String profileImage, String birthDate,
+    public void update(String name, String phoneNum, String userId,  String profileImageKey, String birthDate,
                        Boolean marketingAgreed) {
         this.name = name;
         this.phoneNum = phoneNum;
         this.userId = userId;
-        this.profileImage = profileImage;
+        this.profileImageKey = profileImageKey;
         this.birthDate = birthDate;
         this.isActive = true;
         this.marketingAgreed = marketingAgreed;

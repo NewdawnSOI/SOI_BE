@@ -10,7 +10,7 @@ public class CommentReqDto {
     Long emojiId;
     Long postId;
     String text;
-    String audioUrl;
+    String audioKey;
     String waveformData;
     Integer duration;
     Double locationX;
