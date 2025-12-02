@@ -9,6 +9,7 @@ import lombok.Getter;
 
 public class CommentRespDto {
     private String userProfile;
+    private String userId;
     private String text;
     private Long emojiId;
     private String audioUrl;
