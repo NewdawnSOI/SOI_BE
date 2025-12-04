@@ -7,7 +7,7 @@ import lombok.Getter;
 public class UserUpdateReqDto {
     private Long id;
     private String name;
-    private String userId;
+    private String nickname;
     private String phoneNum;
     private String birthDate;
     private String profileImageKey;

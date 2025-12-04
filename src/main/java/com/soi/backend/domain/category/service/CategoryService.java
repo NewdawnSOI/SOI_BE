@@ -50,9 +50,9 @@ public class CategoryService {
     @Transactional
     public Long createCategory(CategoryCreateReqDto categoryCreateReqDto) {
 
-        String userId = userRepository.findById(categoryCreateReqDto.getRequesterId())
+        String nickname = userRepository.findById(categoryCreateReqDto.getRequesterId())
                 .orElseThrow(() -> new CustomException("카테고리 생성한 유저 id를 찾을 수 없음", HttpStatus.NOT_FOUND))
-                .getUserId();
+                .getNickname();
 
         Category category = new Category(
                     categoryCreateReqDto.getName(),
@@ -141,7 +141,7 @@ public class CategoryService {
 
     @Transactional
     public void sendCategoryNotification(Long categoryId, Long requesterId, List<Long> receiverIds,  NotificationType type, String imageKey) {
-        String userId = userRepository.findById(requesterId).get().getUserId();
+        String nickname = userRepository.findById(requesterId).get().getNickname();
         String categoryName = categoryRepository.findById(categoryId).get().getName();
         for (Long receiverId : receiverIds) {
             Long categoryInviteId = categoryInviteRepository.findByCategoryIdAndInvitedUserId(categoryId, receiverId)
@@ -188,6 +188,9 @@ public class CategoryService {
 
         List<CategoryRespDto> categories = new ArrayList<>();
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.",  HttpStatus.NOT_FOUND));
+
         // 1차 : 필터 옵션에 따라서 유저가 속한 모든 카테고리의 id를 가져옴
         List<Long> categoryIds = switch (filter) {
             case ALL -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,null);
@@ -203,13 +206,13 @@ public class CategoryService {
                     .orElseThrow(() -> new CustomException(categoryId + "번 카테고리에 " + userId + " 유저가 속해있지 않음",  HttpStatus.NOT_FOUND));
             List<User> users = categoryUserRepository.findAllUsersByCategoryIdExceptUser(categoryId, userId);
 
-            categories.add(toDto(category, categoryUser, users));
+            categories.add(toDto(category, categoryUser, users, user.getNickname()));
         }
         sortCategories(categories);
         return categories;
     }
 
-    public CategoryRespDto toDto(Category category, CategoryUser categoryUser, List<User> users) {
+    public CategoryRespDto toDto(Category category, CategoryUser categoryUser, List<User> users, String nickname) {
         List<String> userProfiles = users.stream()
                 .map(user -> {
                     return user.getProfileImageKey();
@@ -226,7 +229,7 @@ public class CategoryService {
                 ? ""
                 : mediaService.getPresignedUrlByKey(key);
 
-        return new CategoryRespDto(category, categoryUser, userProfiles, categoryPhotoKey, users.size(), categoryUser.getPinnedAt());
+        return new CategoryRespDto(category, categoryUser, nickname, userProfiles, categoryPhotoKey, users.size(), categoryUser.getPinnedAt());
     }
 
     private void sortCategories(List<CategoryRespDto> categories) {

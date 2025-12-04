@@ -11,7 +11,7 @@ import lombok.*;
 
 public class UserRespDto {
     private Long id;
-    private String userId;
+    private String nickname;
     private String name;
     private String profileImageUrl;
     private String birthDate;

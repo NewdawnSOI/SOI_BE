@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 public class UserCreateReqDto {
     private String name;
-    private String userId;
+    private String nickname;
     private String phoneNum;
     private String birthDate;
     private String profileImageKey;

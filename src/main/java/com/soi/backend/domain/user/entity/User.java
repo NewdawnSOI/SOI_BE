@@ -24,8 +24,8 @@ public class User {
     @Column(name = "phone", nullable = false)
     private String phoneNum;
 
-    @Column(name = "user_id", nullable = false)
-    private String userId;
+    @Column(name = "nickname", nullable = false)
+    private String nickname;
 
     @Column(name = "profile_image", nullable = false)
     private String profileImageKey;
@@ -60,11 +60,11 @@ public class User {
         this.lastLogin = lastLogin;
     }
 
-    public User (String name, String phoneNum, String userId,  String profileImageKey, String birthDate,
+    public User (String name, String phoneNum, String nickname,  String profileImageKey, String birthDate,
                  Boolean serviceAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed) {
         this.name = name;
         this.phoneNum = phoneNum;
-        this.userId = userId;
+        this.nickname = nickname;
         this.profileImageKey = profileImageKey;
         this.birthDate = birthDate;
         this.isActive = true;
@@ -79,11 +79,11 @@ public class User {
         this.profileImageKey = profileImageKey;
     }
 
-    public void update(String name, String phoneNum, String userId,  String profileImageKey, String birthDate,
+    public void update(String name, String phoneNum, String nickname,  String profileImageKey, String birthDate,
                        Boolean marketingAgreed) {
         this.name = name;
         this.phoneNum = phoneNum;
-        this.userId = userId;
+        this.nickname = nickname;
         this.profileImageKey = profileImageKey;
         this.birthDate = birthDate;
         this.isActive = true;

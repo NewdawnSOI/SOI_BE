@@ -1,9 +1,7 @@
 package com.soi.backend.domain.post.service;
 
-import com.soi.backend.domain.category.entity.CategoryUser;
 import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
-import com.soi.backend.domain.category.service.CategoryService;
 import com.soi.backend.domain.category.service.CategorySetService;
 import com.soi.backend.domain.comment.service.CommentService;
 import com.soi.backend.domain.media.service.MediaService;
@@ -21,7 +19,6 @@ import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -177,7 +174,7 @@ public class PostService {
 
         return new PostRespDto(
                 post.getId(),
-                user.getUserId(),
+                user.getNickname(),
                 post.getContent(),
                 post.getFileKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(post.getFileKey()),
                 post.getAudioKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(post.getAudioKey()),
