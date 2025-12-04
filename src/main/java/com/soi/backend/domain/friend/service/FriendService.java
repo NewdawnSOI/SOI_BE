@@ -183,7 +183,7 @@ public class FriendService {
                 .map(user -> new UserFindRespDto(
                         user.getId(),
                         user.getName(),
-                        user.getUserId(),
+                        user.getNickname(),
                         user.getProfileImageKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(user.getProfileImageKey()),
                         user.isActive()
                 ))

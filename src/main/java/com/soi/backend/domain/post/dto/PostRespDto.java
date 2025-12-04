@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 public class PostRespDto {
     private Long id;
-    private String userId;
+    private String nickname;
     private String content;
     private String postFileUrl;
     private String audioFileUrl;

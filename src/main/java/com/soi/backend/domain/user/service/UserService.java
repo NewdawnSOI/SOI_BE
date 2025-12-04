@@ -35,7 +35,7 @@ public class UserService {
     // 계정 생성
     @Transactional
     public UserRespDto createUser(UserCreateReqDto userCreateReqDto) {
-        if (!isDuplicateUserId(userCreateReqDto.getUserId())
+        if (!isDuplicateUserId(userCreateReqDto.getNickname())
             || !isDuplicatePhone(userCreateReqDto.getPhoneNum())) {
             throw new CustomException("이미 존재하는 사용자입니다.", HttpStatus.CONFLICT);
         }
@@ -43,7 +43,7 @@ public class UserService {
         User user = new User(
                 userCreateReqDto.getName(),
                 userCreateReqDto.getPhoneNum(),
-                userCreateReqDto.getUserId(),
+                userCreateReqDto.getNickname(),
                 userCreateReqDto.getProfileImageKey(),
                 userCreateReqDto.getBirthDate(),
                 userCreateReqDto.getServiceAgreed(),
@@ -63,7 +63,7 @@ public class UserService {
                 .map(user -> new UserFindRespDto(
                         user.getId(),
                         user.getName(),
-                        user.getUserId(),
+                        user.getNickname(),
                         user.getProfileImageKey(),
                         user.isActive()
                 ))
@@ -77,12 +77,12 @@ public class UserService {
     }
 
     // 계정 중복 체크
-    public Boolean isDuplicateUserId(String userId) {
-        if (userRepository.findByUserId(userId).isPresent()) {
-            log.error("아이디 중복 체크 : 이미 존재하는 아이디 {}", userId);
+    public Boolean isDuplicateUserId(String nickname) {
+        if (userRepository.findByUserId(nickname).isPresent()) {
+            log.error("아이디 중복 체크 : 이미 존재하는 아이디 {}", nickname);
             return false;
         } else {
-            log.info("아이디 중복 체크 : 생성가능한 아이디 {}", userId);
+            log.info("아이디 중복 체크 : 생성가능한 아이디 {}", nickname);
             return true;
         }
     }
@@ -118,8 +118,8 @@ public class UserService {
         }
     }
 
-    public List<UserRespDto> findByUserId(String userId) {
-        return userRepository.searchAllByUserId(escapeLikeKeyword(userId))
+    public List<UserRespDto> findByUserId(String nickname) {
+        return userRepository.searchAllByUserId(escapeLikeKeyword(nickname))
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -135,7 +135,7 @@ public class UserService {
     private UserRespDto toDto(User user) {
         return new UserRespDto(
                 user.getId(),
-                user.getUserId(),
+                user.getNickname(),
                 user.getName(),
                 user.getProfileImageKey(),
                 user.getBirthDate(),
@@ -150,7 +150,7 @@ public class UserService {
 
         user.update(userUpdateReqDto.getName(),
                 userUpdateReqDto.getPhoneNum(),
-                userUpdateReqDto.getUserId(),
+                userUpdateReqDto.getNickname(),
                 userUpdateReqDto.getProfileImageKey(),
                 userUpdateReqDto.getBirthDate(),
                 userUpdateReqDto.getMarketingAgreed());

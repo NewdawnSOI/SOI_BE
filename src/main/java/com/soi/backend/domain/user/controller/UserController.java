@@ -85,8 +85,8 @@ public class UserController {
 
     @Operation(summary = "키워드로 사용자 검색", description = "키워드가 포함된 userId를 갖고있는 사용자를 전부 검색합니다.")
     @GetMapping("/find-by-keyword")
-    public ResponseEntity<ApiResponseDto<List<UserRespDto>>> findUser(@RequestParam String userId) {
-        List<UserRespDto> userRespDtos = userService.findByUserId(userId);
+    public ResponseEntity<ApiResponseDto<List<UserRespDto>>> findUser(@RequestParam String nickname) {
+        List<UserRespDto> userRespDtos = userService.findByUserId(nickname);
         return ResponseEntity.ok(ApiResponseDto.success(userRespDtos, "키워드가 포함된 사용자 검색 성공"));
     }
 
