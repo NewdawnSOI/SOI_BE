@@ -70,10 +70,15 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteComment(Long postId) {
+    public void deleteComment(Long commentId) {
+        commentRepository.deleteById(commentId);
+    }
+
+    @Transactional
+    public void deleteComments(Long postId) {
         List<Long> commentIds = commentRepository.findAllIdByPostId(postId);
         for (Long commentId : commentIds) {
-            commentRepository.deleteById(commentId);
+            deleteComment(commentId);
         }
     }
 
