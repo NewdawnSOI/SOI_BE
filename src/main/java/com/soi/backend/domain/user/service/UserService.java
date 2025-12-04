@@ -78,7 +78,7 @@ public class UserService {
 
     // 계정 중복 체크
     public Boolean isDuplicateUserId(String nickname) {
-        if (userRepository.findByUserId(nickname).isPresent()) {
+        if (userRepository.findByNickname(nickname).isPresent()) {
             log.error("아이디 중복 체크 : 이미 존재하는 아이디 {}", nickname);
             return false;
         } else {
@@ -118,8 +118,8 @@ public class UserService {
         }
     }
 
-    public List<UserRespDto> findByUserId(String nickname) {
-        return userRepository.searchAllByUserId(escapeLikeKeyword(nickname))
+    public List<UserRespDto> findByUserId(String userId) {
+        return userRepository.searchAllByUserId(escapeLikeKeyword(userId))
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());

@@ -41,9 +41,14 @@ public class CategoryService {
 
     @Transactional
     public Long initializeCategory(CategoryCreateReqDto dto) {
+        if (dto.getReceiverIds() == null && dto.getIsPublic() != false) {
+            throw new CustomException("비공계 카테고리는 ReceiverIds가 비어있고, isPublic이 false여야합니다.", HttpStatus.BAD_REQUEST);
+        }
         Long categoryId = createCategory(dto);
 //        createCategoryUser(categoryId, dto.getUsers());
-        inviteUserToCategory(categoryId, dto.getRequesterId(), dto.getReceiverIds());
+        if (dto.getReceiverIds() != null && dto.getIsPublic() == true) {
+            inviteUserToCategory(categoryId, dto.getRequesterId(), dto.getReceiverIds());
+        }
         return categoryId;
     }
 
@@ -100,7 +105,7 @@ public class CategoryService {
                 .toList();
 
         if (filterOnlyNewUser.isEmpty()) { // 초대할사람이 아무도 없을때
-            throw new CustomException("초대할 유저가 없음 (이미 초대되어있음)",  HttpStatus.BAD_REQUEST);
+            throw new CustomException("유저가 이미 초대되어있습니다",  HttpStatus.BAD_REQUEST);
         }
 
         // 서로가 다 친구인지 확인
