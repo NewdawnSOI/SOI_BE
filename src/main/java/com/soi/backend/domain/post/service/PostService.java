@@ -99,17 +99,29 @@ public class PostService {
     }
 
     @Transactional
-    public void softDeletePost(Long postId) {
+    public PostStatus setPostStatus(Long postId, PostStatus postStatus) {
         Post originalPost = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(postId + " id의 게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        originalPost.setStatus(PostStatus.DELETED, false);
+        originalPost.setStatus(postStatus, postStatus ==  PostStatus.ACTIVE);
+
         postRepository.save(originalPost);
+
+        return originalPost.getStatus();
     }
 
     @Transactional
-    public void hardDeletePost(Long postId) {
-        postRepository.findById(postId);
+    public void hardDelete(Post post) {
+        // 게시물과 관련된 알림 삭제
+        notificationService.deletePostNotification(post.getUserId(), post.getId());
+        // 카테고리에 등록된 모든 post 삭제
+        commentService.deleteComment(post.getId());
+
+        // s3파일 삭제
+        mediaService.removeMedia(post.getFileKey());
+        mediaService.removeMedia(post.getAudioKey());
+
+        postRepository.deleteById(post.getId());
     }
 
     @Transactional
@@ -118,17 +130,15 @@ public class PostService {
         List<Post> posts = postRepository.findAllByCategoryId(categoryId);
 
         for (Post post : posts) {
-            // 게시물과 관련된 알림 삭제
-            notificationService.deletePostNotification(post.getUserId(), post.getId());
-            // 카테고리에 등록된 모든 post 삭제
-            commentService.deleteComment(post.getId());
-
-            // s3파일 삭제
-            mediaService.removeMedia(post.getFileKey());
-            mediaService.removeMedia(post.getAudioKey());
-
-            postRepository.deleteById(post.getId());
+            hardDelete(post);
         }
+    }
+
+    @Transactional
+    public void hardDeletePost(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new CustomException("게시물이 없습니다.", HttpStatus.NOT_FOUND));
+        hardDelete(post);
     }
 
     public List<PostRespDto> findByCategoryId(Long categoryId, Long userId) {
@@ -143,8 +153,8 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
-    // 메인페이지에 나올 전체 게시물 출력하기
-    public List<PostRespDto> findPostToShowMainPage(Long userId) {
+    // 게시물 출력하기
+    public List<PostRespDto> findPostToShowMainPage(Long userId, PostStatus postStatus) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
@@ -152,8 +162,8 @@ public class PostService {
 
         List<Post> posts = new ArrayList<>(postRepository.findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtDesc(
                 categoryIds,
-                PostStatus.ACTIVE,
-                true));
+                postStatus,
+                postStatus == PostStatus.ACTIVE));
 
         return posts.stream()
                 .map(this::toDto)
