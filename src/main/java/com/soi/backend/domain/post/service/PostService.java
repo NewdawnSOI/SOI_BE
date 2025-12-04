@@ -115,7 +115,7 @@ public class PostService {
         // 게시물과 관련된 알림 삭제
         notificationService.deletePostNotification(post.getUserId(), post.getId());
         // 카테고리에 등록된 모든 post 삭제
-        commentService.deleteComment(post.getId());
+        commentService.deleteComments(post.getId());
 
         // s3파일 삭제
         mediaService.removeMedia(post.getFileKey());
