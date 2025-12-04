@@ -212,8 +212,9 @@ public class CategoryService {
     public CategoryRespDto toDto(Category category, CategoryUser categoryUser, List<User> users) {
         List<String> userProfiles = users.stream()
                 .map(user -> {
-                    String image = user.getProfileImageKey();
-                    return image.isEmpty() ? "" : mediaService.getPresignedUrlByKey(image);
+                    return user.getProfileImageKey();
+//                    String image = user.getProfileImageKey();
+//                    return image.isEmpty() ? "" : mediaService.getPresignedUrlByKey(image);
                 })
                 .toList();
 
