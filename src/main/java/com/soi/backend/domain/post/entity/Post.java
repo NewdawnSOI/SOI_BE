@@ -74,11 +74,7 @@ public class Post {
     }
 
     public void setStatus(PostStatus status, Boolean isActive) {
-        if (status == PostStatus.ACTIVE) {
-            this.isActive = isActive;
-        } else{
-            this.status = PostStatus.DELETED;
-            this.isActive = isActive;
-        }
+        this.status = status;
+        this.isActive = isActive;
     }
 }
