@@ -38,11 +38,11 @@ public class CommentController {
                 ApiResponseDto.success(commentRespDtos,"댓글 조회 완료"));
     }
 
-    @Operation(summary = "댓글 삭제", description = "댓글을 삭제합니다.")
+    @Operation(summary = "댓글 삭제", description = "id를 통해서 댓글을 삭제합니다.")
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponseDto<List<?>>> deleteComment(@RequestParam Long postId) {
         commentService.deleteComment(postId);
         return ResponseEntity.ok(
-                ApiResponseDto.success(null,"댓글 조회 완료"));
+                ApiResponseDto.success(null,"댓글 삭제 완료"));
     }
 }

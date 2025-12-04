@@ -8,6 +8,7 @@ import lombok.Getter;
 @Getter
 
 public class CommentRespDto {
+    private Long id;
     private String userProfile;
     private String nickname;
     private String text;

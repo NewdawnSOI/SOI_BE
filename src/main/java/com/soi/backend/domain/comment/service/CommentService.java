@@ -105,6 +105,7 @@ public class CommentService {
                             ? ""
                             : mediaService.getPresignedUrlByKey(comment.getAudioKey());
                     return new CommentRespDto(
+                            comment.getId(),
                             userProfileUrl,
                             user.getNickname(),
                             comment.getText(),
