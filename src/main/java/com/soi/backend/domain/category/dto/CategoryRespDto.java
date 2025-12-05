@@ -12,7 +12,7 @@ import java.util.List;
 public class CategoryRespDto {
     private Long id; // 카테고리 id
     private String name; // 카테고리 이름 (커스텀 이름이랑 비교해서 줘야함)
-    private String nickname;
+    private List<String> nicknames;
     private String categoryPhotoKey; // 카테고리 프로필 사진 (커스텀 프로필사진이랑 비교해서 줘야함)
     private Boolean isNew; // 카테고리에 새로운 게시물을 읽었는지 여부
     private Integer totalUserNum;
@@ -21,11 +21,11 @@ public class CategoryRespDto {
     private List<String> usersProfile; // 카테고리에 있는 유저들 프로필 사진
     private LocalDateTime pinnedAt;
 
-    public CategoryRespDto(Category category, CategoryUser categoryUser, String nickname, List<String> usersProfile,
+    public CategoryRespDto(Category category, CategoryUser categoryUser, List<String> nicknames, List<String> usersProfile,
                            String categoryPhotoKey, Integer totalUserNum, LocalDateTime pinnedAt) {
         this.id = category.getId();
         this.name = categoryUser.getCustomName().isEmpty() ? category.getName() : categoryUser.getCustomName();
-        this.nickname = nickname;
+        this.nicknames = nicknames;
         this.categoryPhotoKey = categoryPhotoKey;
         this.isNew = isNew(category.getLastPhotoUploadedAt(), categoryUser.getLastViewedAt());
         this.isPinned = categoryUser.getIsPinned();
