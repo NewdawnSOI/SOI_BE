@@ -12,6 +12,7 @@ public class PostRespDto {
     private Long id;
     private String nickname;
     private String content;
+    private String userProfileImageKey;
     private String postFileUrl;
     private String audioFileUrl;
     private String waveformData;
