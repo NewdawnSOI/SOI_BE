@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public class UserFindRespDto {
     private Long id;
     private String name;
-    private String userId;
-    private String profileImage;
+    private String nickname;
+    private String profileImageKey;
     private boolean isActive;
 }

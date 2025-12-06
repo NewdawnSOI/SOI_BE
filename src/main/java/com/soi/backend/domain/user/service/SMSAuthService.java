@@ -23,9 +23,9 @@ public class SMSAuthService {
     // 전화번호 인증 메시지 보내기
     @Transactional
     public Boolean sendSMStoAuth(String phoneNum) {
-        if (!userService.isDuplicatePhone(phoneNum)) {
-            return false;
-        }
+//        if (!userService.isDuplicatePhone(phoneNum)) {
+//            return false;
+//        } -> 인증 보낼때는 중복체크 X
 
         String verificationCode = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
 

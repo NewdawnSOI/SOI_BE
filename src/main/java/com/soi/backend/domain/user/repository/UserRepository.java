@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUserId(String userId);
+    Optional<User> findByNickname(String nickname);
     List<User> findByPhoneNumIn(List<String> phoneNums);
 
     @Query("""
@@ -20,15 +20,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("""
         SELECT u FROM User u
-        WHERE u.userId LIKE %:keyword% ESCAPE '\\'
+        WHERE u.nickname LIKE %:keyword% ESCAPE '\\'
     """)
     List<User> searchAllByUserId(@Param("keyword") String keyword);
 
     @Query("""
-        SELECT u.profileImage FROM User u
-        WHERE u.userId = :Id
+        SELECT u.profileImageKey FROM User u
+        WHERE u.id = :Id
     """)
-    List<User> findAllProfileImage(@Param("Id") Long userId);
+    String getProfileImageByUserId(@Param("Id") Long userId);
 
     Optional<User> findByPhoneNum(String phoneNum);
 }

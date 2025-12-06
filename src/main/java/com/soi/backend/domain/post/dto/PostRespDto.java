@@ -9,10 +9,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 
 public class PostRespDto {
-    private String userId;
+    private Long id;
+    private String nickname;
     private String content;
-    private String postFileKey;
-    private String audioFileKey;
+    private String postFileUrl;
+    private String audioFileUrl;
     private String waveformData;
     private int duration;
     private Boolean is_active;

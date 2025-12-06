@@ -57,6 +57,14 @@ public class MediaService {
         mediaRepository.save(media);
     }
 
+    @Transactional
+    public void removeMedia(String key) {
+        Media media = mediaRepository.findByMediaKey(key)
+                .orElseThrow(() -> new CustomException("미디어 파일을 찾을 수 없음", HttpStatus.NOT_FOUND));
+        mediaRepository.deleteById(media.getId());
+        s3Uploader.delete(key);
+    }
+
     public List<String> getPresignedUrlByKey(List<String> key) {
         List<String> urls = new ArrayList<>();
         for (String url : key) {

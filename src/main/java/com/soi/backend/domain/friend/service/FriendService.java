@@ -6,6 +6,7 @@ import com.soi.backend.domain.friend.entity.FriendRequestQueue;
 import com.soi.backend.domain.friend.entity.FriendStatus;
 import com.soi.backend.domain.friend.repository.FriendRepository;
 import com.soi.backend.domain.friend.repository.FriendRequestQueueRepository;
+import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.global.exception.CustomException;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.repository.NotificationRepository;
@@ -34,6 +35,7 @@ public class FriendService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
+    private final MediaService mediaService;
 
     @Transactional
     public FriendRespDto createFriendRequest(FriendCreateReqDto friendCreateReqDto) {
@@ -94,18 +96,19 @@ public class FriendService {
         }
 
         // 알림 생성
-        Long notificationId = notificationService.sendFriendRequestNotification(
+        Long notificationId = notificationService.sendFriendNotification(
                 requesterId,
                 receiverId,
                 friend.getId(),
-                notificationService.makeMessage(requesterId,"", NotificationType.FRIEND_REQUEST
-                )
+                notificationService.makeMessage(requesterId,"", NotificationType.FRIEND_REQUEST),
+                NotificationType.FRIEND_REQUEST
         );
 
         return toDto(friend, notificationId);
     }
 
     @Transactional
+    // 친구 상태 업데이트 (요청을 받거나 삭제하거나 차단하거나)
     public FriendRespDto updateFriendRequest(FriendUpdateRespDto friendUpdateRespDto) {
         Friend friend = friendRepository.findById(friendUpdateRespDto.getId())
                 .orElseThrow(() -> new CustomException("유저 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
@@ -151,12 +154,12 @@ public class FriendService {
         Friend savedFriend = friendRepository.save(friend);
 
         // 알림 생성
-        Long notificationId = notificationService.sendFriendRequestNotification(
+        Long notificationId = notificationService.sendFriendNotification(
                 requesterId,
                 receiverId,
                 savedFriend.getId(),
-                notificationService.makeMessage(requesterId, "", NotificationType.FRIEND_RESPOND
-                )
+                notificationService.makeMessage(requesterId, "", NotificationType.FRIEND_RESPOND),
+                NotificationType.FRIEND_RESPOND
         );
 
         return toDto(savedFriend, notificationId);
@@ -180,8 +183,8 @@ public class FriendService {
                 .map(user -> new UserFindRespDto(
                         user.getId(),
                         user.getName(),
-                        user.getUserId(),
-                        user.getProfileImage(),
+                        user.getNickname(),
+                        user.getProfileImageKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(user.getProfileImageKey()),
                         user.isActive()
                 ))
                 .collect(Collectors.toList());
@@ -276,7 +279,7 @@ public class FriendService {
 
     public Boolean isAllFriend(Long requesterId, List<Long> receiverIds) {
         for (Long receiverId : receiverIds) {
-            if (!friendRepository.isFriend(requesterId, receiverId)) {
+            if (friendRepository.isFriend(requesterId, receiverId) == 0) {
                 return false;
             }
         }
@@ -287,7 +290,7 @@ public class FriendService {
 
         for (int i=0; i<receiverIds.size(); i++) {
             for (int j=i+1; j<receiverIds.size(); j++) {
-                if (!friendRepository.isFriend(receiverIds.get(i), receiverIds.get(j))) {
+                if (friendRepository.isFriend(receiverIds.get(i), receiverIds.get(j)) == 0) {
                     return false;
                 }
             }

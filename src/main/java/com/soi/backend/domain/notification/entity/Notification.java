@@ -45,6 +45,9 @@ public class Notification {
     @Column(name = "post_id")
     private Long postId; // 댓글달린 게시물의 ID
 
+    @Column(name = "image_key")
+    private String imageKey; // 관련된 Url
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -56,9 +59,8 @@ public class Notification {
         this.createdAt = LocalDateTime.now();
     }
 
-    // 친구요청 알림
     public Notification(Long requesterId, Long receiverId, NotificationType type, String title,
-                        Long friendId, Long categoryId, Long categoryInviteId, Long commentId) {
+                        Long friendId, Long categoryId, Long categoryInviteId, Long postId, Long commentId, String imageKey) {
         this.requesterId = requesterId;
         this.receiverId = receiverId;
         this.friendId = friendId;
@@ -66,10 +68,10 @@ public class Notification {
         this.title = title;
         this.categoryId = categoryId;
         this.categoryInviteId = categoryInviteId;
+        this.postId = postId;
         this.commentId = commentId;
         this.createdAt = LocalDateTime.now();
+        this.imageKey = imageKey;
         this.isRead = false;
     }
-
-    // 카테고리 초대 알림
 }

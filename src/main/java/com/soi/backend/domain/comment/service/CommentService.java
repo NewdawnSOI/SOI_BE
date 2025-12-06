@@ -39,13 +39,15 @@ public class CommentService {
         Post post = postRepository.findById(commentReqDto.getPostId())
                         .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        notificationService.sendPostCommentNotification(
-                commentReqDto.getUserId(),
-                post.getId(),
-                commentId,
-                post.getId(),
-                notificationService.makeMessage(user.getId(), post.getContent(), NotificationType.COMMENT_ADDED)
-        );
+        if (!post.getUserId().equals(commentReqDto.getUserId())) {
+            notificationService.sendPostCommentNotification(
+                    commentReqDto.getUserId(),
+                    post.getUserId(),
+                    commentId,
+                    post.getId(),
+                    notificationService.makeMessage(user.getId(), post.getContent(), NotificationType.COMMENT_ADDED)
+            );
+        }
     }
 
     @Transactional
@@ -55,7 +57,7 @@ public class CommentService {
                 commentReqDto.getEmojiId(),
                 commentReqDto.getPostId(),
                 commentReqDto.getText(),
-                commentReqDto.getAudioUrl(),
+                commentReqDto.getAudioKey(),
                 commentReqDto.getWaveformData(),
                 commentReqDto.getDuration(),
                 commentReqDto.getLocationX(),
@@ -67,8 +69,21 @@ public class CommentService {
         return comment.getId();
     }
 
+    @Transactional
+    public void deleteComment(Long commentId) {
+        commentRepository.deleteById(commentId);
+    }
+
+    @Transactional
+    public void deleteComments(Long postId) {
+        List<Long> commentIds = commentRepository.findAllIdByPostId(postId);
+        for (Long commentId : commentIds) {
+            deleteComment(commentId);
+        }
+    }
+
     public List<CommentRespDto> getComments(Long postId) {
-        Post post = postRepository.findById(postId)
+        postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         List<Comment> comments = commentRepository.findAllByPostId(postId);
@@ -83,15 +98,19 @@ public class CommentService {
                     User user = userRepository.findById(comment.getUserId())
                             .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.",  HttpStatus.NOT_FOUND));
 
-                    String userProfile = user.getProfileImage().isEmpty()
+                    String userProfileUrl = user.getProfileImageKey().isEmpty()
                             ? ""
-                            : mediaService.getPresignedUrlByKey(user.getProfileImage());
-
+                            : mediaService.getPresignedUrlByKey(user.getProfileImageKey());
+                    String audioUrl =  comment.getAudioKey() == null || comment.getAudioKey().isEmpty()
+                            ? ""
+                            : mediaService.getPresignedUrlByKey(comment.getAudioKey());
                     return new CommentRespDto(
-                            userProfile,
+                            comment.getId(),
+                            userProfileUrl,
+                            user.getNickname(),
                             comment.getText(),
                             comment.getEmojiId(),
-                            comment.getAudioUrl(),
+                            audioUrl,
                             comment.getWaveformData(),
                             comment.getDuration(),
                             comment.getLocationX(),

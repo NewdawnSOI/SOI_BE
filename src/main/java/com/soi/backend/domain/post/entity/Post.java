@@ -25,10 +25,10 @@ public class Post {
     private String content;
 
     @Column(name = "file_url", nullable = false)
-    private String fileUrl;
+    private String fileKey;
 
-    @Column(name = "audio_url", nullable = false)
-    private String audioUrl;
+    @Column(name = "audio_url")
+    private String audioKey;
 
     @Column(name = "category_id", nullable = false)
     private Long categoryId;
@@ -36,7 +36,7 @@ public class Post {
     @Column(name = "is_active")
     private Boolean isActive;
 
-    @Column(name = "waveform_data", nullable = false)
+    @Column(name = "waveform_data")
     private String waveformData;
 
     @Column(name = "duration")
@@ -52,11 +52,11 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private PostStatus status;
 
-    public Post (Long userId, String content, String fileUrl, String audioUrl, Long categoryId, String waveformData, int duration) {
+    public Post (Long userId, String content, String fileKey, String audioKey, Long categoryId, String waveformData, int duration) {
         this.userId = userId;
         this.content = content;
-        this.fileUrl = fileUrl;
-        this.audioUrl = audioUrl;
+        this.fileKey = fileKey;
+        this.audioKey = audioKey;
         this.categoryId = categoryId;
         this.waveformData = waveformData;
         this.duration = duration;
@@ -65,20 +65,16 @@ public class Post {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void update(String content, String fileUrl, String audioUrl, String waveformData, int duration) {
-        this.content = getContent();
-        this.fileUrl = getFileUrl();
-        this.audioUrl = getAudioUrl();
-        this.waveformData = getWaveformData();
-        this.duration = getDuration();
+    public void update(String content, String fileKey, String audioKey, String waveformData, int duration) {
+        this.content = content;
+        this.fileKey = fileKey;
+        this.audioKey = audioKey;
+        this.waveformData = waveformData;
+        this.duration = duration;
     }
 
     public void setStatus(PostStatus status, Boolean isActive) {
-        if (status == PostStatus.ACTIVE) {
-            this.isActive = isActive;
-        } else{
-            this.status = PostStatus.DELETED;
-            this.isActive = isActive;
-        }
+        this.status = status;
+        this.isActive = isActive;
     }
 }

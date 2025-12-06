@@ -70,4 +70,12 @@ public class CategoryUser {
         isPinned = !isPinned;
         this.pinnedAt = LocalDateTime.now();
     }
+
+    public void setCustomName(String customName) {
+        this.customName = customName;
+    }
+
+    public void setCustomProfile(String customProfile) {
+        this.customProfile = customProfile;
+    }
 }
