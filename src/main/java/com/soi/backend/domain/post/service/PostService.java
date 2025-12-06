@@ -186,6 +186,7 @@ public class PostService {
                 post.getId(),
                 user.getNickname(),
                 post.getContent(),
+                user.getProfileImageKey(),
                 post.getFileKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(post.getFileKey()),
                 post.getAudioKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(post.getAudioKey()),
                 post.getWaveformData(),
