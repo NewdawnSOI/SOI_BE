@@ -40,11 +40,11 @@ public class CategorySetService {
     }
 
     @Transactional
-    public void setLastUploaded(Long categoryId, Long userId) {
+    public void setLastUploadedAndProfile(Long categoryId, Long userId, String postFileKey) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        category.setLastPhotoUploadedBy(userId);
+        category.setLastPhotoUploadedByAndProfile(userId, postFileKey);
         categoryRepository.save(category);
     }
 

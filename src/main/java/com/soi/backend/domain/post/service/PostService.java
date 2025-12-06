@@ -52,7 +52,7 @@ public class PostService {
                     .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없음",HttpStatus.NOT_FOUND))
                     .getName();
 
-            categorySetService.setLastUploaded(categoryId, postCreateReqDto.getId());
+            categorySetService.setLastUploadedAndProfile(categoryId, postCreateReqDto.getId(), postCreateReqDto.getPostFileKey());
 
             for (Long receiverId : receivers) {
                 notificationService.sendCategoryPostNotification(
