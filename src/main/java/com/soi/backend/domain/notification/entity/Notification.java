@@ -74,4 +74,8 @@ public class Notification {
         this.imageKey = imageKey;
         this.isRead = false;
     }
+
+    public void setIsRead() {
+        this.isRead = !isRead;
+    }
 }

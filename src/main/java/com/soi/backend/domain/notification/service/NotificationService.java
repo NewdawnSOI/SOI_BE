@@ -7,6 +7,7 @@ import com.soi.backend.domain.notification.dto.NotificationRespDto;
 import com.soi.backend.domain.notification.entity.Notification;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.repository.NotificationRepository;
+import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
@@ -68,6 +69,9 @@ public class NotificationService {
         List<NotificationRespDto> notificationRespDtos = new ArrayList<>();
         List<Notification> notifications = notificationRepository.getAllByReceiverIdOrderByCreatedAt(userId);
 
+        User user =  userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+
         for (Notification notification : notifications) {
             if (isInclude) { // isInclude == true 면 해당 타입만 포함해서 가져옴,
                             // isInclude == false 면 해당 타입만 제외하고 가져옴
@@ -93,6 +97,8 @@ public class NotificationService {
                     : mediaService.getPresignedUrlByKey(profileKey);
             NotificationRespDto notificationRespDto = new NotificationRespDto(
                     notification.getTitle(),
+                    user.getName(),
+                    user.getNickname(),
                     profileUrl,
                     imageUrl,
                     id
