@@ -13,7 +13,7 @@ public class UserRespDto {
     private Long id;
     private String nickname;
     private String name;
-    private String profileImageUrl;
+    private String profileImageKey;
     private String birthDate;
     private String phoneNum;
 }
