@@ -53,18 +53,20 @@ public class PostController {
         return ResponseEntity.ok(ApiResponseDto.success(null,"게시물 영구삭제 완료"));
     }
 
-    @Operation(summary = "카테고리에 해당하는 게시물 조회", description = "카테고리 아이디, 유저아이디로 해당 카테고리에 속한 게시물을 조회합니다.")
+    @Operation(summary = "카테고리에 해당하는 게시물 조회", description = "카테고리 아이디, 유저아이디로 해당 카테고리에 속한 게시물을 조회합니다.\n page에 원하는 페이지 번호를 입력 0부터 시작")
     @GetMapping("/find-by/category")
     public ResponseEntity<ApiResponseDto<List<PostRespDto>>> findByCategoryId(@RequestParam Long categoryId,
-                                                                              @RequestParam Long userId) {
-        List<PostRespDto> postRespDtos = postService.findByCategoryId(categoryId, userId);
+                                                                              @RequestParam Long userId,
+                                                                              @RequestParam(defaultValue = "0") int page) {
+        List<PostRespDto> postRespDtos = postService.findByCategoryId(categoryId, userId, page);
         return ResponseEntity.ok(ApiResponseDto.success(postRespDtos,"게시물 조회 완료"));
     }
 
-    @Operation(summary = "전체 게시물 조회", description = "사용자가 포함된 카테고리의 모든 게시물을 상태 (활성화, 삭제됨, 비활성화)에따라 리턴해줌")
+    @Operation(summary = "전체 게시물 조회", description = "사용자가 포함된 카테고리의 모든 게시물을 상태 (활성화, 삭제됨, 비활성화)에따라 리턴해줌\n page에 원하는 페이지 번호를 입력 0부터 시작")
     @GetMapping("/find-all")
-    public ResponseEntity<ApiResponseDto<List<PostRespDto>>> findAllByUserId(@RequestParam Long userId, @RequestParam PostStatus postStatus) {
-        List<PostRespDto> postRespDtos = postService.findPostToShowMainPage(userId, postStatus);
+    public ResponseEntity<ApiResponseDto<List<PostRespDto>>> findAllByUserId(@RequestParam Long userId, @RequestParam PostStatus postStatus,
+                                                                             @RequestParam(defaultValue = "0") int page) {
+        List<PostRespDto> postRespDtos = postService.findPostToShowMainPage(userId, postStatus, page);
         return ResponseEntity.ok(ApiResponseDto.success(postRespDtos,"전체 게시물 조회 완료"));
     }
 

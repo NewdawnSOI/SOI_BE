@@ -7,7 +7,7 @@ import java.util.List;
 @Getter
 
 public class PostCreateReqDto {
-    private Long id; // 생성한 유저의 id
+    private Long userId; // 생성한 유저의 id
     private String nickname; // 생성한 유저의 nickname
     private String content; // 텍스트 내용
     private List<String> postFileKey; // S3에 업로드된 file Key값

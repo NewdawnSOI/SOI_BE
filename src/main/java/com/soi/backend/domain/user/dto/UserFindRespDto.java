@@ -1,5 +1,6 @@
 package com.soi.backend.domain.user.dto;
 
+import com.soi.backend.domain.friend.entity.FriendStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

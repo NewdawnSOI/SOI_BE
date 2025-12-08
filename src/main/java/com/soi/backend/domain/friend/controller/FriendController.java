@@ -1,6 +1,7 @@
 package com.soi.backend.domain.friend.controller;
 
 import com.soi.backend.domain.friend.dto.*;
+import com.soi.backend.domain.friend.entity.FriendStatus;
 import com.soi.backend.domain.friend.service.FriendService;
 import com.soi.backend.global.ApiResponseDto;
 import com.soi.backend.domain.user.dto.UserFindRespDto;
@@ -28,7 +29,7 @@ public class FriendController {
         return ResponseEntity.ok(ApiResponseDto.success(friendRespDto,"친구 요청 성공"));
     }
 
-    @Operation(summary = "친구 상태 업데이트", description = "친구 관계 id, 상태 : ACCEPTED, BLOCKED, CANCELLED 를 받아 상태를 업데이트합니다.")
+    @Operation(summary = "친구 상태 업데이트", description = "친구 관계 id, 상태 : ACCEPTED, CANCELLED 를 받아 상태를 업데이트합니다.")
     @PostMapping("/update")
     public ResponseEntity<ApiResponseDto<FriendRespDto>> update(@RequestBody FriendUpdateRespDto friendUpdateRespDto) {
         FriendRespDto friendRespDto = friendService.updateFriendRequest(friendUpdateRespDto);
@@ -46,8 +47,8 @@ public class FriendController {
 
     @Operation(summary = "모든 친구 조회", description = "유저의 id (user_id 말고 그냥 id)를 통해 모든 친구를 조회합니다.")
     @GetMapping("/get-all")
-    public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllFriend(@RequestParam Long id) {
-        List<UserFindRespDto> friends = friendService.getAllFriends(id);
+    public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllFriend(@RequestParam Long id, @RequestParam FriendStatus friendStatus) {
+        List<UserFindRespDto> friends = friendService.getAllFriends(id, friendStatus);
         return ResponseEntity.ok(ApiResponseDto.success(friends, "모든 친구 조회 완료"));
     }
 
