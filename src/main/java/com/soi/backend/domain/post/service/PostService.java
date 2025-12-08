@@ -5,6 +5,9 @@ import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
 import com.soi.backend.domain.category.service.CategorySetService;
 import com.soi.backend.domain.comment.service.CommentService;
+import com.soi.backend.domain.friend.entity.Friend;
+import com.soi.backend.domain.friend.entity.FriendStatus;
+import com.soi.backend.domain.friend.repository.FriendRepository;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.service.NotificationService;
@@ -24,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +40,7 @@ public class PostService {
     private final CategorySetService categorySetService;
     private final CategoryRepository categoryRepository;
     private final CategoryUserRepository categoryUserRepository;
+    private final FriendRepository friendRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final CommentService commentService;
@@ -155,13 +160,31 @@ public class PostService {
     }
 
     public List<PostRespDto> findByCategoryId(Long categoryId, Long userId) {
+        // 차단한 유저들 가져오기
+        List<Friend> BlockedUsers = friendRepository.findAllFriendsByUserIdAndStatus(userId, FriendStatus.BLOCKED);
+        Set<Long> BlockedUserIds = BlockedUsers.stream()
+                .map(friend -> {
+                    if (friend.getReceiverId().equals(userId)) {
+                        return friend.getRequesterId();
+                    } else  {
+                        return friend.getReceiverId();
+                    }
+                }).collect(Collectors.toSet());
+
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
+        // 카테고리에 있는 게시물 가져오기
         List<Post> posts = postRepository.findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtDesc(categoryId, PostStatus.ACTIVE, true);
+
+        // 차단된 유저가 올린 게시물을 필터링하기
+        List<Post> filteredPosts = posts.stream()
+                .filter(post -> !BlockedUserIds.contains(post.getUserId()))
+                .collect(Collectors.toList());
+
         categorySetService.setLastViewed(categoryId, userId);
 
-        return posts.stream()
+        return filteredPosts.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
