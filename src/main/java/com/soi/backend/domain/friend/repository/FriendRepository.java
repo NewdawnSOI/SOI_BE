@@ -1,6 +1,7 @@
 package com.soi.backend.domain.friend.repository;
 
 import com.soi.backend.domain.friend.entity.Friend;
+import com.soi.backend.domain.friend.entity.FriendStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,8 +10,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FriendRepository extends JpaRepository<Friend, Long> {
-
-    Optional<Friend> findFriendByRequesterIdAndReceiverId(Long requesterId, Long receiverId);
 
     @Query("""
     SELECT f FROM Friend f
@@ -34,9 +33,9 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
             OR
             (f.receiverId = :userId AND f.receiverDeleted = false)
         )
-        AND f.status = 'ACCEPTED'
+        AND f.status = :status
         """)
-    List<Friend> findAllAcceptedFriendsByUserId(@Param("userId") Long userId);
+    List<Friend> findAllFriendsByUserIdAndStatus(@Param("userId") Long userId, @Param("status") FriendStatus status);
 
     @Query("""
     SELECT f FROM Friend f
