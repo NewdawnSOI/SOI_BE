@@ -114,6 +114,10 @@ public class CategoryService {
         if (allFriends) { // 서로가 다 친구일경우 -> 바로 카테고리에 추가 및 추가됐다는 알림
             filterOnlyNewUser.forEach(id -> {createCategoryUser(categoryId, id);});
 
+            // 만약 비공개 카테고리인경우, 한명 이상이 카테고리에 들어오게되면 자동으로 공개 카테고리로 전환시켜야함
+            if (category.getIsPublic() == false) {
+                category.setIsPublic(true);
+            }
 //            sendCategoryNotification(categoryId, requesterId, filterOnlyNewUser, NotificationType.CATEGORY_ADDED, category.getCategoryPhotoKey());
             // receiver들에게도 알림
 //            receiverIds.forEach(receiverId ->
@@ -166,7 +170,7 @@ public class CategoryService {
 
     @Transactional
     public Boolean responseInvite(CategoryInviteResponseReqDto inviteResponseDto) {
-        categoryRepository.findById(inviteResponseDto.getCategoryId())
+        Category category = categoryRepository.findById(inviteResponseDto.getCategoryId())
                 .orElseThrow(() -> new CustomException("존재하지 않는 카테고리입니다.", HttpStatus.NOT_FOUND));
 
         CategoryInvite categoryInvite = categoryInviteRepository
@@ -177,6 +181,11 @@ public class CategoryService {
             case ACCEPTED:
                 createCategoryUser(inviteResponseDto.getCategoryId(), inviteResponseDto.getResponserId());
                 categoryInvite.setStatus(CategoryInviteStatus.ACCEPTED);
+
+                // 만약 비공개 카테고리인데, 내가 최초로 들어가는 상황이면 카테고리를 공개로 전환시켜야함
+                if (category.getIsPublic() == false) {
+                    category.setIsPublic(true);
+                }
                 break;
             case DECLINED:
                 categoryInvite.setStatus(CategoryInviteStatus.DECLINED);
