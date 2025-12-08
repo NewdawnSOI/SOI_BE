@@ -277,7 +277,7 @@ public class CategoryService {
         Optional<Long> categoryInviteId = categoryInviteRepository.findIdByCategoryIdAndUserId(userId, categoryId);
 
         if (categoryUserIds.isEmpty()) {
-            throw new CustomException("사용자가 게시물에 속해있지 않음", HttpStatus.NOT_FOUND);
+            throw new CustomException("사용자가 게시물에 속해있지 않습니다.", HttpStatus.NOT_FOUND);
         }
 
         // 카테고리유저 테이블에서 유저 삭제
@@ -287,6 +287,12 @@ public class CategoryService {
         // 카테고리 초대 관련 알림 삭제
         if (categoryInviteId.isPresent()) {
             notificationService.deleteCategoryInviteNotification(userId, categoryInviteId.get());
+        }
+
+        if (categoryUserIds.size() == 2) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+            category.setIsPublic(false); // public을 false로 조정
         }
 
         if (categoryUserIds.size() == 1) { // 사용자가 카테고리의 마지막 유저인경우
