@@ -43,8 +43,15 @@ public class PostService {
     @Transactional
     public Boolean addPostToCategory(PostCreateReqDto postCreateReqDto) {
 
-        for (Long categoryId : postCreateReqDto.getCategoryId()) {
-            createPost(postCreateReqDto, categoryId);
+        for (int i=0; i<postCreateReqDto.getCategoryId().size(); i++) {
+            Long categoryId = postCreateReqDto.getCategoryId().get(i);
+            String fileKey = postCreateReqDto.getPostFileKey().get(i);
+            String audioFileKey = "";
+            if (postCreateReqDto.getPostFileKey().size() == postCreateReqDto.getAudioFileKey().size()) {
+                audioFileKey = postCreateReqDto.getPostFileKey().get(i);
+            }
+
+            createPost(postCreateReqDto, categoryId, fileKey, audioFileKey);
 
             List<Long> receivers =
                     categoryUserRepository.findAllUserIdsByCategoryIdExceptUser(categoryId, postCreateReqDto.getId());
@@ -58,7 +65,7 @@ public class PostService {
                     .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없음",HttpStatus.NOT_FOUND))
                     .getName();
 
-            categorySetService.setLastUploadedAndProfile(categoryId, postCreateReqDto.getId(), postCreateReqDto.getPostFileKey());
+            categorySetService.setLastUploadedAndProfile(categoryId, postCreateReqDto.getId(), fileKey);
 
             for (Long receiverId : receivers) {
                 notificationService.sendCategoryPostNotification(
@@ -66,7 +73,7 @@ public class PostService {
                         receiverId,
                         categoryId,
                         notificationService.makeMessage(postCreateReqDto.getId(), categoryName, NotificationType.PHOTO_ADDED),
-                        postCreateReqDto.getPostFileKey()
+                        fileKey
                 );
             }
         }
@@ -74,12 +81,12 @@ public class PostService {
     }
 
     @Transactional
-    public void createPost(PostCreateReqDto postCreateReqDto, Long categoryId) {
+    public void createPost(PostCreateReqDto postCreateReqDto, Long categoryId, String fileKey, String audioFileKey) {
         Post post = new Post(
                 postCreateReqDto.getId(),
                 postCreateReqDto.getContent(),
-                postCreateReqDto.getPostFileKey(),
-                postCreateReqDto.getAudioFileKey(),
+                fileKey,
+                audioFileKey,
                 categoryId,
                 postCreateReqDto.getWaveformData(),
                 postCreateReqDto.getDuration()
