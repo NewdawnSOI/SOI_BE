@@ -1,5 +1,6 @@
 package com.soi.backend.domain.post.service;
 
+import com.soi.backend.domain.category.entity.CategoryUser;
 import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
 import com.soi.backend.domain.category.service.CategorySetService;
@@ -47,6 +48,11 @@ public class PostService {
 
             List<Long> receivers =
                     categoryUserRepository.findAllUserIdsByCategoryIdExceptUser(categoryId, postCreateReqDto.getId());
+
+            CategoryUser categoryUser = categoryUserRepository.findByCategoryIdAndUserId(categoryId, postCreateReqDto.getId())
+                    .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없음", HttpStatus.NOT_FOUND));
+
+            categoryUser.setLastViewedAt();
 
             String categoryName = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없음",HttpStatus.NOT_FOUND))
@@ -187,8 +193,8 @@ public class PostService {
                 user.getNickname(),
                 post.getContent(),
                 user.getProfileImageKey(),
-                post.getFileKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(post.getFileKey()),
-                post.getAudioKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(post.getAudioKey()),
+                post.getFileKey(),
+                post.getAudioKey(),
                 post.getWaveformData(),
                 post.getDuration(),
                 post.getIsActive(),

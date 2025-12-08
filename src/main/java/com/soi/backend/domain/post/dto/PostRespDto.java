@@ -13,8 +13,8 @@ public class PostRespDto {
     private String nickname;
     private String content;
     private String userProfileImageKey;
-    private String postFileUrl;
-    private String audioFileUrl;
+    private String postFileKey;
+    private String audioFileKey;
     private String waveformData;
     private int duration;
     private Boolean is_active;
