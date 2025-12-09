@@ -25,7 +25,7 @@ public class MediaService {
     private final MediaRepository mediaRepository;
 
     @Transactional
-    public List<String> uploadMedia(List<FileType> types, List<UsageType> usageTypes, Long id, Long refId, List<MultipartFile> files) throws IOException {
+    public List<String> uploadMedia(List<String> types, List<String> usageTypes, Long id, Long refId, List<MultipartFile> files) throws IOException {
         List<String> urls = new ArrayList<>();
 
         if (types.size() != files.size()) {
@@ -34,13 +34,13 @@ public class MediaService {
         
         for (int i=0; i<files.size(); i++) {
             MultipartFile file = files.get(i);
-            FileType fileType = types.get(i);
-            UsageType usageType = usageTypes.get(i);
+            String fileType = types.get(i);
+            String usageType = usageTypes.get(i);
 
             switch (fileType) {
-                case IMAGE:
-                case VIDEO:
-                case AUDIO:
+                case "IMAGE":
+                case "VIDEO":
+                case "AUDIO":
                     String url = s3Uploader.upload(file, fileType, id);
                     urls.add(url);
                     saveMedia(new Media(url, id,fileType, usageType, refId));
