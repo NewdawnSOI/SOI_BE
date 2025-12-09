@@ -25,17 +25,21 @@ public class MediaService {
     private final MediaRepository mediaRepository;
 
     @Transactional
-    public List<String> uploadMedia(List<String> types, List<String> usageTypes, Long id, Long refId, List<MultipartFile> files) throws IOException {
+    public List<String> uploadMedia(List<String> types, List<String> usageTypes, Long id, Long refId, List<MultipartFile> files, Long usageCount) throws IOException {
         List<String> urls = new ArrayList<>();
+        int index = 0;
 
         if (types.size() != files.size()) {
             throw new CustomException("파일 수와 타입 수가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
         }
         
-        for (int i=0; i<files.size(); i++) {
-            MultipartFile file = files.get(i);
-            String fileType = types.get(i);
-            String usageType = usageTypes.get(i);
+        for (int i=0; i<usageCount*types.size(); i++) {
+            if (i == usageCount) {
+                index++;
+            }
+            MultipartFile file = files.get(index);
+            String fileType = types.get(index);
+            String usageType = usageTypes.get(index);
 
             switch (fileType) {
                 case "IMAGE":
