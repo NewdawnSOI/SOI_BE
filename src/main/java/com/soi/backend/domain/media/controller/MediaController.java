@@ -28,12 +28,13 @@ public class MediaController {
             "id값은 고유 id를 받습니다.")
     @PostMapping(path = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<ApiResponseDto<List<String>>> uploadMedia(
-            @RequestParam("types") List<FileType> types,
-            @RequestParam("usageTypes") List<UsageType> useageTypes,
+            @RequestParam("types") List<String> types,
+            @RequestParam("usageTypes") List<String> useageTypes,
             @RequestParam("userId") Long userId,
             @RequestParam("refId") Long refId,
+            @RequestParam("usageCount") Long usageCount,
             @RequestPart("files") List<MultipartFile> files) throws IOException {
-        List<String> urls = mediaService.uploadMedia(types,useageTypes,userId,refId,files);
+        List<String> urls = mediaService.uploadMedia(types,useageTypes,userId,refId,files,usageCount);
         return ResponseEntity.ok(ApiResponseDto.success(urls, "파일 저장성공"));
     }
 

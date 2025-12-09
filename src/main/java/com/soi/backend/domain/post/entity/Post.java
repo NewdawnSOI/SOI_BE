@@ -36,7 +36,7 @@ public class Post {
     @Column(name = "is_active")
     private Boolean isActive;
 
-    @Column(name = "waveform_data")
+    @Column(name = "waveform_data", columnDefinition = "TEXT")
     private String waveformData;
 
     @Column(name = "duration")
