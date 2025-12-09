@@ -45,6 +45,7 @@ public class MediaService {
                 case "IMAGE":
                 case "VIDEO":
                 case "AUDIO":
+                case "COMMENT":
                     String url = s3Uploader.upload(file, fileType, id);
                     urls.add(url);
                     saveMedia(new Media(url, id,fileType, usageType, refId));

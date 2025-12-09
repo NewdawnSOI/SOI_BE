@@ -104,9 +104,9 @@ public class S3Uploader {
     /** Temp 파일 삭제 */
     public void removeNewFile(File targetFile) {
         if (targetFile.delete()) {
-            log.info("파일이 삭제되었습니다.");
+            log.info("Temp 파일이 삭제되었습니다.");
         } else {
-            log.info("파일 삭제 실패");
+            log.info("Temp 파일 삭제 실패");
         }
     }
 
