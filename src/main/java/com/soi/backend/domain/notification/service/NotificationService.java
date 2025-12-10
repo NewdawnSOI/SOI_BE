@@ -69,10 +69,11 @@ public class NotificationService {
         List<NotificationRespDto> notificationRespDtos = new ArrayList<>();
         List<Notification> notifications = notificationRepository.getAllByReceiverIdOrderByCreatedAt(userId);
 
-        User user =  userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
 
         for (Notification notification : notifications) {
+            User user = userRepository.findById(notification.getReceiverId())
+                    .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+
             if (isInclude) { // isInclude == true 면 해당 타입만 포함해서 가져옴,
                             // isInclude == false 면 해당 타입만 제외하고 가져옴
                 if (notification.getType() != filterType) {
