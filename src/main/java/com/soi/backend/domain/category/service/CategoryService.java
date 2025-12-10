@@ -17,6 +17,8 @@ import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -198,7 +200,7 @@ public class CategoryService {
         return true;
     }
 
-    public List<CategoryRespDto> findCategories(CategoryFilter filter, Long userId) {
+    public List<CategoryRespDto> findCategories(CategoryFilter filter, Long userId, int page) {
 
         List<CategoryRespDto> categories = new ArrayList<>();
 
@@ -206,10 +208,11 @@ public class CategoryService {
                 .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.",  HttpStatus.NOT_FOUND));
 
         // 1차 : 필터 옵션에 따라서 유저가 속한 모든 카테고리의 id를 가져옴
+        Pageable pageable = PageRequest.of(page,10);
         List<Long> categoryIds = switch (filter) {
-            case ALL -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,null);
-            case PUBLIC -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,true);
-            case PRIVATE ->  categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,false);
+            case ALL -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,null, pageable);
+            case PUBLIC -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,true, pageable);
+            case PRIVATE ->  categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,false, pageable);
         };
 
         // 2차 : 카테고리 아이디랑 유저 아이디로 커스텀 내용 반영해서 Dto 만들기

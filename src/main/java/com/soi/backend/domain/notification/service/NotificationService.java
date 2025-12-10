@@ -13,6 +13,8 @@ import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -65,9 +67,11 @@ public class NotificationService {
     }
 
     public List<NotificationRespDto> bindNotificationDtos(
-            Long userId, NotificationType filterType, boolean isInclude) {
+            Long userId, NotificationType filterType, boolean isInclude, int page) {
+
+        Pageable pageable = PageRequest.of(page,10);
         List<NotificationRespDto> notificationRespDtos = new ArrayList<>();
-        List<Notification> notifications = notificationRepository.getAllByReceiverIdOrderByCreatedAt(userId);
+        List<Notification> notifications = notificationRepository.getAllByReceiverIdOrderByCreatedAt(userId, pageable);
 
 
         for (Notification notification : notifications) {
@@ -88,6 +92,7 @@ public class NotificationService {
             String imageKey =  notification.getImageKey();
             String profileKey = userRepository.getProfileImageByUserId(notification.getRequesterId());
             Long id = parseId(notification);
+            NotificationType type = notification.getType();
 
             String imageUrl = (imageKey == null || imageKey.isEmpty())
                     ? null
@@ -102,6 +107,9 @@ public class NotificationService {
                     user.getNickname(),
                     profileUrl,
                     imageUrl,
+                    type,
+                    notification.getIsRead(),
+                    type == NotificationType.PHOTO_ADDED ? notification.getCategoryId() : null,
                     id
             );
             notificationRespDtos.add(notificationRespDto);
@@ -109,13 +117,13 @@ public class NotificationService {
         return notificationRespDtos;
     }
 
-    public NotificationGetAllRespDto getAllNotifications(Long userId) {
+    public NotificationGetAllRespDto getAllNotifications(Long userId, int page) {
         return new NotificationGetAllRespDto(
-                bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, false));
+                bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, false, page));
     }
 
-    public List<NotificationRespDto> getAllFriendNotifications(Long userId) {
-        return bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, true);
+    public List<NotificationRespDto> getAllFriendNotifications(Long userId, int page) {
+        return bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, true, page);
     }
 
     @Transactional
@@ -135,13 +143,14 @@ public class NotificationService {
 
     @Transactional
     public void sendCategoryPostNotification(
-            Long requesterId, Long receiverId, Long categoryId, String title, String imageKey) {
+            Long requesterId, Long receiverId, Long postId, Long categoryId, String title, String imageKey) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
                 .requesterId(requesterId)
                 .receiverId(receiverId)
                 .type(NotificationType.PHOTO_ADDED)
                 .title(title)
+                .postId(postId)
                 .categoryId(categoryId)
                 .imageKey(imageKey)
                 .build();

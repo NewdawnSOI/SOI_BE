@@ -59,7 +59,7 @@ public class PostService {
                 audioFileKey = postCreateReqDto.getAudioFileKey().get(i);
             }
 
-            createPost(postCreateReqDto, categoryId, fileKey, audioFileKey);
+            Long postId = createPost(postCreateReqDto, categoryId, fileKey, audioFileKey);
 
             List<Long> receivers =
                     categoryUserRepository.findAllUserIdsByCategoryIdExceptUser(categoryId, postCreateReqDto.getUserId());
@@ -78,6 +78,7 @@ public class PostService {
             for (Long receiverId : receivers) {
                 notificationService.sendCategoryPostNotification(
                         postCreateReqDto.getUserId(),
+                        postId,
                         receiverId,
                         categoryId,
                         notificationService.makeMessage(postCreateReqDto.getUserId(), categoryName, NotificationType.PHOTO_ADDED),
@@ -89,7 +90,7 @@ public class PostService {
     }
 
     @Transactional
-    public void createPost(PostCreateReqDto postCreateReqDto, Long categoryId, String fileKey, String audioFileKey) {
+    public Long createPost(PostCreateReqDto postCreateReqDto, Long categoryId, String fileKey, String audioFileKey) {
         Post post = new Post(
                 postCreateReqDto.getUserId(),
                 postCreateReqDto.getContent(),
@@ -101,6 +102,8 @@ public class PostService {
         );
 
         postRepository.save(post);
+
+        return post.getId();
     }
 
     @Transactional

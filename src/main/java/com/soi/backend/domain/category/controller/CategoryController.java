@@ -60,8 +60,9 @@ public class CategoryController {
     @Operation(summary = "유저가 속한 카테고리 리스트를 가져오는 API", description = "CategoryFilter : ALL, PUBLIC, PRIVATE -> 옵션에 따라서 전체, 그룹, 개인으로 가져올 수 있음")
     @PostMapping("/find")
     public ResponseEntity<ApiResponseDto<List<CategoryRespDto>>> getCategories(@RequestParam CategoryFilter categoryFilter,
-                                                                               @RequestParam Long userId) {
-        List<CategoryRespDto> categories = categoryService.findCategories(categoryFilter, userId);
+                                                                               @RequestParam Long userId,
+                                                                               @RequestParam(defaultValue = "0") int page) {
+        List<CategoryRespDto> categories = categoryService.findCategories(categoryFilter, userId, page);
         return ResponseEntity.ok(ApiResponseDto.success(categories, "카테고리 조회 완료"));
     }
 
