@@ -112,6 +112,9 @@ public class FriendService {
     public FriendRespDto updateFriendRequest(FriendUpdateRespDto friendUpdateRespDto) {
         Friend friend = friendRepository.findById(friendUpdateRespDto.getId())
                 .orElseThrow(() -> new CustomException("유저 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        notificationService.setIsRead(friendUpdateRespDto.getNotificationId());
+
         Long receiverId = null;
         Long requesterId = null;
 

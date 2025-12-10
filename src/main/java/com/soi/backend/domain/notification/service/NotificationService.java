@@ -160,7 +160,7 @@ public class NotificationService {
 
     @Transactional
     public void sendPostCommentNotification(
-            Long requesterId, Long receiverId, Long commentId, Long postId, String title) {
+            Long requesterId, Long receiverId, Long commentId, Long postId, Long categoryId, String title) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
                 .requesterId(requesterId)
@@ -168,6 +168,7 @@ public class NotificationService {
                 .type(NotificationType.COMMENT_ADDED)
                 .title(title)
                 .postId(postId)
+                .categoryId(categoryId)
                 .commentId(commentId)
                 .imageKey("")
                 .build();
@@ -214,6 +215,15 @@ public class NotificationService {
         }
     }
 
+    @Transactional
+    public void setIsRead(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new CustomException("알림을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        notification.setIsRead();
+        notificationRepository.save(notification);
+    }
+
     public String makeMessage(Long requesterId, String targetName, NotificationType type ) {
         String requesterName = userRepository.findById(requesterId)
                 .orElseThrow(() -> new CustomException("요청 유저 없음", HttpStatus.NOT_FOUND))
@@ -225,6 +235,7 @@ public class NotificationService {
             case CATEGORY_ADDED -> requesterName + " 님의 " + targetName + " 카테고리에 추가되었습니다.";
             case PHOTO_ADDED -> requesterName + " 님이 " + targetName + " 카테고리에 게시물을 추가하였습니다.";
             case COMMENT_ADDED -> requesterName + " 님이" + targetName + " 게시물에 댓글을 남겼습니다.";
+            case COMMENT_AUDIO_ADDED -> requesterName + " 님이" + targetName + " 게시물에 음성 댓글을 남겼습니다.";
             default -> "";
         };
     }
@@ -232,12 +243,10 @@ public class NotificationService {
     private Long parseId(Notification notification) {
         Long id;
         switch (notification.getType()) {
-            case FRIEND_REQUEST -> id = notification.getFriendId();
-            case FRIEND_RESPOND -> id = notification.getFriendId();
-            case CATEGORY_INVITE -> id =notification.getCategoryId();
-            case CATEGORY_ADDED -> id = notification.getCategoryId();
+            case FRIEND_REQUEST, FRIEND_RESPOND -> id = notification.getFriendId();
+            case CATEGORY_INVITE, CATEGORY_ADDED -> id =notification.getCategoryId();
             case PHOTO_ADDED -> id = notification.getPostId();
-            case COMMENT_ADDED -> id = notification.getCommentId();
+            case COMMENT_AUDIO_ADDED, COMMENT_ADDED -> id = notification.getCommentId();
             default -> id = null;
         }
         return id;

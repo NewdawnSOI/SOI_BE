@@ -5,6 +5,7 @@ public enum NotificationType {
     CATEGORY_ADDED,
     PHOTO_ADDED,
     COMMENT_ADDED,
+    COMMENT_AUDIO_ADDED,
     FRIEND_REQUEST,
     FRIEND_RESPOND
 }
