@@ -56,7 +56,7 @@ public class PostService {
             String fileKey = postCreateReqDto.getPostFileKey().get(i);
             String audioFileKey = "";
             if (postCreateReqDto.getPostFileKey().size() == postCreateReqDto.getAudioFileKey().size()) {
-                audioFileKey = postCreateReqDto.getPostFileKey().get(i);
+                audioFileKey = postCreateReqDto.getAudioFileKey().get(i);
             }
 
             createPost(postCreateReqDto, categoryId, fileKey, audioFileKey);
