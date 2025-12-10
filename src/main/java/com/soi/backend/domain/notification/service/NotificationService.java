@@ -88,6 +88,7 @@ public class NotificationService {
             String imageKey =  notification.getImageKey();
             String profileKey = userRepository.getProfileImageByUserId(notification.getRequesterId());
             Long id = parseId(notification);
+            NotificationType type = notification.getType();
 
             String imageUrl = (imageKey == null || imageKey.isEmpty())
                     ? null
@@ -102,8 +103,9 @@ public class NotificationService {
                     user.getNickname(),
                     profileUrl,
                     imageUrl,
-                    notification.getType(),
+                    type,
                     notification.getIsRead(),
+                    type == NotificationType.PHOTO_ADDED ? notification.getCategoryId() : null,
                     id
             );
             notificationRespDtos.add(notificationRespDto);
@@ -137,13 +139,14 @@ public class NotificationService {
 
     @Transactional
     public void sendCategoryPostNotification(
-            Long requesterId, Long receiverId, Long categoryId, String title, String imageKey) {
+            Long requesterId, Long receiverId, Long postId, Long categoryId, String title, String imageKey) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
                 .requesterId(requesterId)
                 .receiverId(receiverId)
                 .type(NotificationType.PHOTO_ADDED)
                 .title(title)
+                .postId(postId)
                 .categoryId(categoryId)
                 .imageKey(imageKey)
                 .build();

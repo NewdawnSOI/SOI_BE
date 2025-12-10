@@ -15,5 +15,6 @@ public class NotificationRespDto {
     private String imageUrl; // 내용이랑 관련된 사진 이미지, 사진 없으면 그냥 null
     private NotificationType type;
     private Boolean isRead;
+    private Long categoryIdForPost; // 게시물 알림일때 넣을 카테고리 id
     private Long relatedId; // 뭐든 관련된거의 id
 }
