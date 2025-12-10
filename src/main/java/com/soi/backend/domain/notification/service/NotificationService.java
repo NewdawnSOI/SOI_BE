@@ -102,6 +102,8 @@ public class NotificationService {
                     user.getNickname(),
                     profileUrl,
                     imageUrl,
+                    notification.getType(),
+                    notification.getIsRead(),
                     id
             );
             notificationRespDtos.add(notificationRespDto);
