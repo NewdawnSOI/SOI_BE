@@ -36,8 +36,10 @@ public class CommentService {
                 .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         Long commentId = createComment(commentReqDto);
+        String audioFileKey = commentReqDto.getAudioKey();
         Post post = postRepository.findById(commentReqDto.getPostId())
                         .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+        Long categoryId = post.getCategoryId();
 
         if (!post.getUserId().equals(commentReqDto.getUserId())) {
             notificationService.sendPostCommentNotification(
@@ -45,7 +47,9 @@ public class CommentService {
                     post.getUserId(),
                     commentId,
                     post.getId(),
-                    notificationService.makeMessage(user.getId(), post.getContent(), NotificationType.COMMENT_ADDED)
+                    categoryId,
+                    notificationService.makeMessage(user.getId(), post.getContent(),
+                            audioFileKey.isEmpty() ? NotificationType.COMMENT_AUDIO_ADDED : NotificationType.COMMENT_ADDED)
             );
         }
     }

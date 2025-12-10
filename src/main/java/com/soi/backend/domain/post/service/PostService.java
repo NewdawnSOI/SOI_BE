@@ -165,14 +165,17 @@ public class PostService {
         hardDelete(post);
     }
 
-    public List<PostRespDto> findByCategoryId(Long categoryId, Long userId, int page) {
+    @Transactional
+    public List<PostRespDto> findByCategoryId(Long categoryId, Long userId, Long notificationId, int page) {
 
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        Pageable pageable = PageRequest.of(page,10);
+        // 알림 읽음처리하기
+        notificationService.setIsRead(notificationId);
 
         // 카테고리에 있는 게시물 가져오기
+        Pageable pageable = PageRequest.of(page,10);
         List<Post> posts = postRepository.findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtDesc(categoryId, PostStatus.ACTIVE, true,pageable);
 
         categorySetService.setLastViewed(categoryId, userId);
