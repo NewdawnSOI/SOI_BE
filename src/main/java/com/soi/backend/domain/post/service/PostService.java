@@ -78,8 +78,8 @@ public class PostService {
             for (Long receiverId : receivers) {
                 notificationService.sendCategoryPostNotification(
                         postCreateReqDto.getUserId(),
-                        postId,
                         receiverId,
+                        postId,
                         categoryId,
                         notificationService.makeMessage(postCreateReqDto.getUserId(), categoryName, NotificationType.PHOTO_ADDED),
                         fileKey
