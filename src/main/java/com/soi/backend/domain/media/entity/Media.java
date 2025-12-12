@@ -25,13 +25,11 @@ public class Media {
     @Column(name = "uploader_id", nullable = false)
     private Long uploaderId;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "media_type", nullable = false)
-    private FileType mediaType;
+    private String mediaType;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "media_usage_type", nullable = false)
-    private UsageType mediaUsageType;
+    private String mediaUsageType;
 
     @Column(name = "usage_ref_id", nullable = false)
     private Long usageRefId;
@@ -42,7 +40,7 @@ public class Media {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public Media (String mediaKey, Long uploaderId, FileType mediaType, UsageType mediaUsageType, Long usageRefId) {
+    public Media (String mediaKey, Long uploaderId, String mediaType, String mediaUsageType, Long usageRefId) {
         this.mediaKey = mediaKey;
         this.uploaderId = uploaderId;
         this.mediaType = mediaType;

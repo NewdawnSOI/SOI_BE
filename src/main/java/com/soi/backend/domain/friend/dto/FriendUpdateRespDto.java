@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class FriendUpdateRespDto {
     private Long id;
     private FriendStatus status;
+    private Long notificationId; // 알림 id (읽음처리를 위해서)
 }

@@ -17,6 +17,8 @@ import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -114,6 +116,10 @@ public class CategoryService {
         if (allFriends) { // 서로가 다 친구일경우 -> 바로 카테고리에 추가 및 추가됐다는 알림
             filterOnlyNewUser.forEach(id -> {createCategoryUser(categoryId, id);});
 
+            // 만약 비공개 카테고리인경우, 한명 이상이 카테고리에 들어오게되면 자동으로 공개 카테고리로 전환시켜야함
+            if (category.getIsPublic() == false) {
+                category.setIsPublic(true);
+            }
 //            sendCategoryNotification(categoryId, requesterId, filterOnlyNewUser, NotificationType.CATEGORY_ADDED, category.getCategoryPhotoKey());
             // receiver들에게도 알림
 //            receiverIds.forEach(receiverId ->
@@ -166,7 +172,7 @@ public class CategoryService {
 
     @Transactional
     public Boolean responseInvite(CategoryInviteResponseReqDto inviteResponseDto) {
-        categoryRepository.findById(inviteResponseDto.getCategoryId())
+        Category category = categoryRepository.findById(inviteResponseDto.getCategoryId())
                 .orElseThrow(() -> new CustomException("존재하지 않는 카테고리입니다.", HttpStatus.NOT_FOUND));
 
         CategoryInvite categoryInvite = categoryInviteRepository
@@ -177,6 +183,11 @@ public class CategoryService {
             case ACCEPTED:
                 createCategoryUser(inviteResponseDto.getCategoryId(), inviteResponseDto.getResponserId());
                 categoryInvite.setStatus(CategoryInviteStatus.ACCEPTED);
+
+                // 만약 비공개 카테고리인데, 내가 최초로 들어가는 상황이면 카테고리를 공개로 전환시켜야함
+                if (category.getIsPublic() == false) {
+                    category.setIsPublic(true);
+                }
                 break;
             case DECLINED:
                 categoryInvite.setStatus(CategoryInviteStatus.DECLINED);
@@ -189,7 +200,7 @@ public class CategoryService {
         return true;
     }
 
-    public List<CategoryRespDto> findCategories(CategoryFilter filter, Long userId) {
+    public List<CategoryRespDto> findCategories(CategoryFilter filter, Long userId, int page) {
 
         List<CategoryRespDto> categories = new ArrayList<>();
 
@@ -197,10 +208,11 @@ public class CategoryService {
                 .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.",  HttpStatus.NOT_FOUND));
 
         // 1차 : 필터 옵션에 따라서 유저가 속한 모든 카테고리의 id를 가져옴
+        Pageable pageable = PageRequest.of(page,10);
         List<Long> categoryIds = switch (filter) {
-            case ALL -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,null);
-            case PUBLIC -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,true);
-            case PRIVATE ->  categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,false);
+            case ALL -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,null, pageable);
+            case PUBLIC -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,true, pageable);
+            case PRIVATE ->  categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,false, pageable);
         };
 
         // 2차 : 카테고리 아이디랑 유저 아이디로 커스텀 내용 반영해서 Dto 만들기
@@ -277,7 +289,7 @@ public class CategoryService {
         Optional<Long> categoryInviteId = categoryInviteRepository.findIdByCategoryIdAndUserId(userId, categoryId);
 
         if (categoryUserIds.isEmpty()) {
-            throw new CustomException("사용자가 게시물에 속해있지 않음", HttpStatus.NOT_FOUND);
+            throw new CustomException("사용자가 게시물에 속해있지 않습니다.", HttpStatus.NOT_FOUND);
         }
 
         // 카테고리유저 테이블에서 유저 삭제
@@ -287,6 +299,12 @@ public class CategoryService {
         // 카테고리 초대 관련 알림 삭제
         if (categoryInviteId.isPresent()) {
             notificationService.deleteCategoryInviteNotification(userId, categoryInviteId.get());
+        }
+
+        if (categoryUserIds.size() == 2) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+            category.setIsPublic(false); // public을 false로 조정
         }
 
         if (categoryUserIds.size() == 1) { // 사용자가 카테고리의 마지막 유저인경우

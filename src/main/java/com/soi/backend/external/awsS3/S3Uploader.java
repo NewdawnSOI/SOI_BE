@@ -48,11 +48,11 @@ public class S3Uploader {
     /**
      * MultipartFile → Temp File → S3 업로드 → Temp 삭제
      */
-    public String upload(MultipartFile multipartFile, FileType fileType, Long id) throws IOException {
+    public String upload(MultipartFile multipartFile, String fileType, Long id) throws IOException {
         File uploadFile = convert(multipartFile)
                 .orElseThrow(() -> new CustomException("MultipartFile -> File 전환 실패", HttpStatus.INTERNAL_SERVER_ERROR));
 
-        String key = buildKey(fileType.toString(), id, multipartFile.getOriginalFilename());
+        String key = buildKey(fileType, id, multipartFile.getOriginalFilename());
 
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
@@ -104,9 +104,9 @@ public class S3Uploader {
     /** Temp 파일 삭제 */
     public void removeNewFile(File targetFile) {
         if (targetFile.delete()) {
-            log.info("파일이 삭제되었습니다.");
+            log.info("Temp 파일이 삭제되었습니다.");
         } else {
-            log.info("파일 삭제 실패");
+            log.info("Temp 파일 삭제 실패");
         }
     }
 

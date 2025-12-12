@@ -1,9 +1,13 @@
 package com.soi.backend.domain.post.service;
 
+import com.soi.backend.domain.category.entity.CategoryUser;
 import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
 import com.soi.backend.domain.category.service.CategorySetService;
 import com.soi.backend.domain.comment.service.CommentService;
+import com.soi.backend.domain.friend.entity.Friend;
+import com.soi.backend.domain.friend.entity.FriendStatus;
+import com.soi.backend.domain.friend.repository.FriendRepository;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.service.NotificationService;
@@ -18,11 +22,15 @@ import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +43,7 @@ public class PostService {
     private final CategorySetService categorySetService;
     private final CategoryRepository categoryRepository;
     private final CategoryUserRepository categoryUserRepository;
+    private final FriendRepository friendRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final CommentService commentService;
@@ -42,25 +51,38 @@ public class PostService {
     @Transactional
     public Boolean addPostToCategory(PostCreateReqDto postCreateReqDto) {
 
-        for (Long categoryId : postCreateReqDto.getCategoryId()) {
-            createPost(postCreateReqDto, categoryId);
+        for (int i=0; i<postCreateReqDto.getCategoryId().size(); i++) {
+            Long categoryId = postCreateReqDto.getCategoryId().get(i);
+            String fileKey = postCreateReqDto.getPostFileKey().get(i);
+            String audioFileKey = "";
+            if (postCreateReqDto.getPostFileKey().size() == postCreateReqDto.getAudioFileKey().size()) {
+                audioFileKey = postCreateReqDto.getAudioFileKey().get(i);
+            }
+
+            Long postId = createPost(postCreateReqDto, categoryId, fileKey, audioFileKey);
 
             List<Long> receivers =
-                    categoryUserRepository.findAllUserIdsByCategoryIdExceptUser(categoryId, postCreateReqDto.getId());
+                    categoryUserRepository.findAllUserIdsByCategoryIdExceptUser(categoryId, postCreateReqDto.getUserId());
+
+            CategoryUser categoryUser = categoryUserRepository.findByCategoryIdAndUserId(categoryId, postCreateReqDto.getUserId())
+                    .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없음", HttpStatus.NOT_FOUND));
+
+            categoryUser.setLastViewedAt();
 
             String categoryName = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없음",HttpStatus.NOT_FOUND))
                     .getName();
 
-            categorySetService.setLastUploaded(categoryId, postCreateReqDto.getId());
+            categorySetService.setLastUploadedAndProfile(categoryId, postCreateReqDto.getUserId(), fileKey);
 
             for (Long receiverId : receivers) {
                 notificationService.sendCategoryPostNotification(
-                        postCreateReqDto.getId(),
+                        postCreateReqDto.getUserId(),
+                        postId,
                         receiverId,
                         categoryId,
-                        notificationService.makeMessage(postCreateReqDto.getId(), categoryName, NotificationType.PHOTO_ADDED),
-                        postCreateReqDto.getPostFileKey()
+                        notificationService.makeMessage(postCreateReqDto.getUserId(), categoryName, NotificationType.PHOTO_ADDED),
+                        fileKey
                 );
             }
         }
@@ -68,18 +90,20 @@ public class PostService {
     }
 
     @Transactional
-    public void createPost(PostCreateReqDto postCreateReqDto, Long categoryId) {
+    public Long createPost(PostCreateReqDto postCreateReqDto, Long categoryId, String fileKey, String audioFileKey) {
         Post post = new Post(
-                postCreateReqDto.getId(),
+                postCreateReqDto.getUserId(),
                 postCreateReqDto.getContent(),
-                postCreateReqDto.getPostFileKey(),
-                postCreateReqDto.getAudioFileKey(),
+                fileKey,
+                audioFileKey,
                 categoryId,
                 postCreateReqDto.getWaveformData(),
                 postCreateReqDto.getDuration()
         );
 
         postRepository.save(post);
+
+        return post.getId();
     }
 
     @Transactional
@@ -141,31 +165,51 @@ public class PostService {
         hardDelete(post);
     }
 
-    public List<PostRespDto> findByCategoryId(Long categoryId, Long userId) {
+    @Transactional
+    public List<PostRespDto> findByCategoryId(Long categoryId, Long userId, Long notificationId, int page) {
+
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+        if (notificationId != null) {
+            // 알림 읽음처리하기
+            notificationService.setIsRead(notificationId);
+        }
 
-        List<Post> posts = postRepository.findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtDesc(categoryId, PostStatus.ACTIVE, true);
+
+        // 카테고리에 있는 게시물 가져오기
+        Pageable pageable = PageRequest.of(page,10);
+        List<Post> posts = postRepository.findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtDesc(categoryId, PostStatus.ACTIVE, true,pageable);
+
         categorySetService.setLastViewed(categoryId, userId);
 
-        return posts.stream()
+        // 차단 관계의 사용자 게시물 필터링하기
+        List<Post> filteredPosts = filterBlockedPosts(posts, userId);
+
+        return filteredPosts.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     // 게시물 출력하기
-    public List<PostRespDto> findPostToShowMainPage(Long userId, PostStatus postStatus) {
+    public List<PostRespDto> findPostToShowMainPage(Long userId, PostStatus postStatus, int page) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         List<Long> categoryIds = categoryUserRepository.findCategoriesByUserId(userId);
 
+        // 10개씩 페이징하기
+        Pageable pageable = PageRequest.of(page,10);
+
         List<Post> posts = new ArrayList<>(postRepository.findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtDesc(
                 categoryIds,
                 postStatus,
-                postStatus == PostStatus.ACTIVE));
+                postStatus == PostStatus.ACTIVE,
+                pageable));
 
-        return posts.stream()
+        // 차단 관계의 사용자 게시물 필터링하기
+        List<Post> filteredPosts = filterBlockedPosts(posts, userId);
+
+        return filteredPosts.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -186,12 +230,33 @@ public class PostService {
                 post.getId(),
                 user.getNickname(),
                 post.getContent(),
-                post.getFileKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(post.getFileKey()),
-                post.getAudioKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(post.getAudioKey()),
+                user.getProfileImageKey(),
+                post.getFileKey(),
+                post.getAudioKey(),
                 post.getWaveformData(),
                 post.getDuration(),
                 post.getIsActive(),
                 post.getCreatedAt()
         );
+    }
+
+    private List<Post> filterBlockedPosts(List<Post> posts, Long userId) {
+        Set<Long> blockedUserIds = getBlockedUserIds(userId);
+
+        return posts.stream()
+                .filter(post -> !blockedUserIds.contains(post.getUserId()))
+                .collect(Collectors.toList());
+    }
+
+    private Set<Long> getBlockedUserIds(Long userId) {
+        List<Friend> BlockedUsers = friendRepository.findAllFriendsByUserIdAndOnlyStatus(userId, FriendStatus.BLOCKED);
+        return BlockedUsers.stream()
+                .map(friend -> {
+                    if (friend.getReceiverId().equals(userId)) {
+                        return friend.getRequesterId();
+                    } else  {
+                        return friend.getReceiverId();
+                    }
+                }).collect(Collectors.toSet());
     }
 }

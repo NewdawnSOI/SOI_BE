@@ -7,11 +7,14 @@ import com.soi.backend.domain.notification.dto.NotificationRespDto;
 import com.soi.backend.domain.notification.entity.Notification;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.repository.NotificationRepository;
+import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -64,11 +67,17 @@ public class NotificationService {
     }
 
     public List<NotificationRespDto> bindNotificationDtos(
-            Long userId, NotificationType filterType, boolean isInclude) {
+            Long userId, NotificationType filterType, boolean isInclude, int page) {
+
+        Pageable pageable = PageRequest.of(page,10);
         List<NotificationRespDto> notificationRespDtos = new ArrayList<>();
-        List<Notification> notifications = notificationRepository.getAllByReceiverIdOrderByCreatedAt(userId);
+        List<Notification> notifications = notificationRepository.getAllByReceiverIdOrderByCreatedAt(userId, pageable);
+
 
         for (Notification notification : notifications) {
+            User user = userRepository.findById(notification.getReceiverId())
+                    .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+
             if (isInclude) { // isInclude == true 면 해당 타입만 포함해서 가져옴,
                             // isInclude == false 면 해당 타입만 제외하고 가져옴
                 if (notification.getType() != filterType) {
@@ -83,6 +92,7 @@ public class NotificationService {
             String imageKey =  notification.getImageKey();
             String profileKey = userRepository.getProfileImageByUserId(notification.getRequesterId());
             Long id = parseId(notification);
+            NotificationType type = notification.getType();
 
             String imageUrl = (imageKey == null || imageKey.isEmpty())
                     ? null
@@ -93,8 +103,13 @@ public class NotificationService {
                     : mediaService.getPresignedUrlByKey(profileKey);
             NotificationRespDto notificationRespDto = new NotificationRespDto(
                     notification.getTitle(),
+                    user.getName(),
+                    user.getNickname(),
                     profileUrl,
                     imageUrl,
+                    type,
+                    notification.getIsRead(),
+                    type == NotificationType.PHOTO_ADDED ? notification.getCategoryId() : null,
                     id
             );
             notificationRespDtos.add(notificationRespDto);
@@ -102,13 +117,13 @@ public class NotificationService {
         return notificationRespDtos;
     }
 
-    public NotificationGetAllRespDto getAllNotifications(Long userId) {
+    public NotificationGetAllRespDto getAllNotifications(Long userId, int page) {
         return new NotificationGetAllRespDto(
-                bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, false));
+                bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, false, page));
     }
 
-    public List<NotificationRespDto> getAllFriendNotifications(Long userId) {
-        return bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, true);
+    public List<NotificationRespDto> getAllFriendNotifications(Long userId, int page) {
+        return bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, true, page);
     }
 
     @Transactional
@@ -128,13 +143,14 @@ public class NotificationService {
 
     @Transactional
     public void sendCategoryPostNotification(
-            Long requesterId, Long receiverId, Long categoryId, String title, String imageKey) {
+            Long requesterId, Long receiverId, Long postId, Long categoryId, String title, String imageKey) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
                 .requesterId(requesterId)
                 .receiverId(receiverId)
                 .type(NotificationType.PHOTO_ADDED)
                 .title(title)
+                .postId(postId)
                 .categoryId(categoryId)
                 .imageKey(imageKey)
                 .build();
@@ -144,7 +160,7 @@ public class NotificationService {
 
     @Transactional
     public void sendPostCommentNotification(
-            Long requesterId, Long receiverId, Long commentId, Long postId, String title) {
+            Long requesterId, Long receiverId, Long commentId, Long postId, Long categoryId, String title) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
                 .requesterId(requesterId)
@@ -152,6 +168,7 @@ public class NotificationService {
                 .type(NotificationType.COMMENT_ADDED)
                 .title(title)
                 .postId(postId)
+                .categoryId(categoryId)
                 .commentId(commentId)
                 .imageKey("")
                 .build();
@@ -198,6 +215,15 @@ public class NotificationService {
         }
     }
 
+    @Transactional
+    public void setIsRead(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new CustomException("알림을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        notification.setIsRead();
+        notificationRepository.save(notification);
+    }
+
     public String makeMessage(Long requesterId, String targetName, NotificationType type ) {
         String requesterName = userRepository.findById(requesterId)
                 .orElseThrow(() -> new CustomException("요청 유저 없음", HttpStatus.NOT_FOUND))
@@ -209,6 +235,7 @@ public class NotificationService {
             case CATEGORY_ADDED -> requesterName + " 님의 " + targetName + " 카테고리에 추가되었습니다.";
             case PHOTO_ADDED -> requesterName + " 님이 " + targetName + " 카테고리에 게시물을 추가하였습니다.";
             case COMMENT_ADDED -> requesterName + " 님이" + targetName + " 게시물에 댓글을 남겼습니다.";
+            case COMMENT_AUDIO_ADDED -> requesterName + " 님이" + targetName + " 게시물에 음성 댓글을 남겼습니다.";
             default -> "";
         };
     }
@@ -216,12 +243,10 @@ public class NotificationService {
     private Long parseId(Notification notification) {
         Long id;
         switch (notification.getType()) {
-            case FRIEND_REQUEST -> id = notification.getFriendId();
-            case FRIEND_RESPOND -> id = notification.getFriendId();
-            case CATEGORY_INVITE -> id =notification.getCategoryId();
-            case CATEGORY_ADDED -> id = notification.getCategoryId();
+            case FRIEND_REQUEST, FRIEND_RESPOND -> id = notification.getFriendId();
+            case CATEGORY_INVITE, CATEGORY_ADDED -> id =notification.getCategoryId();
             case PHOTO_ADDED -> id = notification.getPostId();
-            case COMMENT_ADDED -> id = notification.getCommentId();
+            case COMMENT_AUDIO_ADDED, COMMENT_ADDED -> id = notification.getCommentId();
             default -> id = null;
         }
         return id;
