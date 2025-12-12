@@ -72,6 +72,19 @@ public class FriendService {
                 throw new CustomException("차단된 친구 관계입니다.", HttpStatus.FORBIDDEN);
             }
             if (!friend.getRequesterDeleted() && !friend.getReceiverDeleted()) {
+                if (friend.getStatus().equals(FriendStatus.PENDING)) { // 만약 요청을 보냈는데, 요청상대가 이미 유저한테 친구요청을 보낸상태
+                    friend.SetFriendStatus(FriendStatus.ACCEPTED);
+
+                    Long notificationId = notificationService.sendFriendNotification(
+                            friend.getRequesterId(),
+                            friend.getReceiverId(),
+                            friend.getId(),
+                            notificationService.makeMessage(friend.getRequesterId(), "", NotificationType.FRIEND_RESPOND),
+                            NotificationType.FRIEND_RESPOND
+                    );
+                    friendRepository.save(friend);
+                    return toDto(friend, notificationId);
+                }
                 throw new CustomException("이미 친구관계가 존재합니다.", HttpStatus.CONFLICT);
             }
 
