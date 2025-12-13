@@ -6,6 +6,7 @@ public enum NotificationType {
     PHOTO_ADDED,
     COMMENT_ADDED,
     COMMENT_AUDIO_ADDED,
+    COMMENT_REACT_ADDED,
     FRIEND_REQUEST,
     FRIEND_RESPOND
 }

@@ -75,7 +75,7 @@ public class NotificationService {
 
 
         for (Notification notification : notifications) {
-            User user = userRepository.findById(notification.getReceiverId())
+            User user = userRepository.findById(notification.getRequesterId())
                     .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
 
             if (isInclude) { // isInclude == true 면 해당 타입만 포함해서 가져옴,
@@ -161,19 +161,18 @@ public class NotificationService {
 
     @Transactional
     public void sendPostCommentNotification(
-            Long requesterId, Long receiverId, Long commentId, Long postId, Long categoryId, String title) {
+            Long requesterId, Long receiverId, Long commentId, Long postId, Long categoryId, String title, NotificationType type) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
                 .requesterId(requesterId)
                 .receiverId(receiverId)
-                .type(NotificationType.COMMENT_ADDED)
+                .type(type)
                 .title(title)
                 .postId(postId)
                 .categoryId(categoryId)
                 .commentId(commentId)
                 .imageKey("")
                 .build();
-
         createNotification(dto);
     }
 
@@ -232,11 +231,16 @@ public class NotificationService {
         return switch (type) {
             case FRIEND_REQUEST -> requesterName + " 님이 친구추가 요청을 보냈습니다.";
             case FRIEND_RESPOND -> requesterName + " 님이 친구요청을 수락하였습니다.";
-            case CATEGORY_INVITE -> requesterName + " 님이 " + targetName + " 카테고리에 초대하였습니다.";
-            case CATEGORY_ADDED -> requesterName + " 님의 " + targetName + " 카테고리에 추가되었습니다.";
-            case PHOTO_ADDED -> requesterName + " 님이 " + targetName + " 카테고리에 게시물을 추가하였습니다.";
-            case COMMENT_ADDED -> requesterName + " 님이" + targetName + " 게시물에 댓글을 남겼습니다.";
-            case COMMENT_AUDIO_ADDED -> requesterName + " 님이" + targetName + " 게시물에 음성 댓글을 남겼습니다.";
+//            case CATEGORY_INVITE -> requesterName + " 님이 " + targetName + " 카테고리에 초대하였습니다.";
+//            case CATEGORY_ADDED -> requesterName + " 님의 " + targetName + " 카테고리에 추가되었습니다.";
+//            case PHOTO_ADDED -> requesterName + " 님이 " + targetName + " 카테고리에 게시물을 추가하였습니다.";
+//            case COMMENT_ADDED -> requesterName + " 님이" + targetName + " 게시물에 댓글을 남겼습니다.";
+//            case COMMENT_AUDIO_ADDED -> requesterName + " 님이" + targetName + " 게시물에 음성 댓글을 남겼습니다.";
+            case CATEGORY_INVITE -> requesterName + " 님이 카테고리에 초대하였습니다.";
+            case CATEGORY_ADDED -> requesterName + " 님의 카테고리에 추가되었습니다.";
+            case PHOTO_ADDED -> requesterName + " 님이 카테고리에 게시물을 추가하였습니다.";
+            case COMMENT_ADDED -> requesterName + " 님이 게시물에 댓글을 남겼습니다.";
+            case COMMENT_AUDIO_ADDED -> requesterName + " 님이 게시물에 음성 댓글을 남겼습니다.";
             default -> "";
         };
     }
@@ -246,8 +250,7 @@ public class NotificationService {
         switch (notification.getType()) {
             case FRIEND_REQUEST, FRIEND_RESPOND -> id = notification.getFriendId();
             case CATEGORY_INVITE, CATEGORY_ADDED -> id =notification.getCategoryId();
-            case PHOTO_ADDED -> id = notification.getPostId();
-            case COMMENT_AUDIO_ADDED, COMMENT_ADDED -> id = notification.getCommentId();
+            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED -> id = notification.getPostId();
             default -> id = null;
         }
         return id;
