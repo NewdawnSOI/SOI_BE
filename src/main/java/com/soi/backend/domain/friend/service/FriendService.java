@@ -76,10 +76,10 @@ public class FriendService {
                     friend.SetFriendStatus(FriendStatus.ACCEPTED);
 
                     Long notificationId = notificationService.sendFriendNotification(
-                            friend.getRequesterId(),
                             friend.getReceiverId(),
+                            friend.getRequesterId(),
                             friend.getId(),
-                            notificationService.makeMessage(friend.getRequesterId(), "", NotificationType.FRIEND_RESPOND),
+                            notificationService.makeMessage(friend.getReceiverId(), "", NotificationType.FRIEND_RESPOND),
                             NotificationType.FRIEND_RESPOND
                     );
                     friendRepository.save(friend);
