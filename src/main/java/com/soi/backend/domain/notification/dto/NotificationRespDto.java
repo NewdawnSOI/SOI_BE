@@ -8,6 +8,7 @@ import lombok.Getter;
 @AllArgsConstructor
 
 public class NotificationRespDto {
+    private Long id;
     private String text; // 알림 내용
     private String name;
     private String nickname;

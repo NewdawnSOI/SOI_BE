@@ -102,6 +102,7 @@ public class NotificationService {
                     ? null
                     : mediaService.getPresignedUrlByKey(profileKey);
             NotificationRespDto notificationRespDto = new NotificationRespDto(
+                    notification.getId(),
                     notification.getTitle(),
                     user.getName(),
                     user.getNickname(),
