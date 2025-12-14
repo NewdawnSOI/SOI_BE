@@ -71,7 +71,7 @@ public class NotificationService {
 
         Pageable pageable = PageRequest.of(page,10);
         List<NotificationRespDto> notificationRespDtos = new ArrayList<>();
-        List<Notification> notifications = notificationRepository.getAllByReceiverIdOrderByCreatedAt(userId, pageable);
+        List<Notification> notifications = notificationRepository.getAllByReceiverIdOrderByCreatedAtDesc(userId, pageable);
 
 
         for (Notification notification : notifications) {
