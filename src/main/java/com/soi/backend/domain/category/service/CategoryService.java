@@ -120,23 +120,13 @@ public class CategoryService {
             if (category.getIsPublic() == false) {
                 category.setIsPublic(true);
             }
-//            sendCategoryNotification(categoryId, requesterId, filterOnlyNewUser, NotificationType.CATEGORY_ADDED, category.getCategoryPhotoKey());
             // receiver들에게도 알림
-//            receiverIds.forEach(receiverId ->
-//                    notificationService.createCategoryNotification(
-//                            requesterId,
-//                            receiverId,
-//                            NotificationType.CATEGORY_ADDED,
-//                            notificationService.makeMessage(requesterId, categoryName, NotificationType.CATEGORY_ADDED),
-//                            categoryId,
-//                            null
-//                    )
-//            );
+            sendCategoryAddedNotification(categoryId, requesterId, filterOnlyNewUser, category.getCategoryProfileKey());
             return true;
         }
 
         createCategoryInvite(categoryId, requesterId, filterOnlyNewUser);
-        sendCategoryNotification(categoryId, requesterId, filterOnlyNewUser, NotificationType.CATEGORY_INVITE, category.getCategoryProfileKey());
+        sendCategoryInvitedNotification(categoryId, requesterId, filterOnlyNewUser, category.getCategoryProfileKey());
 
         return true;
     }
@@ -151,9 +141,10 @@ public class CategoryService {
     }
 
     @Transactional
-    public void sendCategoryNotification(Long categoryId, Long requesterId, List<Long> receiverIds,  NotificationType type, String imageKey) {
-        String nickname = userRepository.findById(requesterId).get().getNickname();
+    public void sendCategoryInvitedNotification(Long categoryId, Long requesterId,
+                                                List<Long> receiverIds, String imageKey) {
         String categoryName = categoryRepository.findById(categoryId).get().getName();
+
         for (Long receiverId : receiverIds) {
             Long categoryInviteId = categoryInviteRepository.findByCategoryIdAndInvitedUserId(categoryId, receiverId)
                     .orElseThrow(() -> new CustomException("카테고리에 초대되어있지 않습니다.", HttpStatus.NOT_FOUND))
@@ -161,10 +152,28 @@ public class CategoryService {
             notificationService.createCategoryNotification(
                     requesterId,
                     receiverId,
-                    type,
-                    notificationService.makeMessage(requesterId, categoryName, type),
+                    NotificationType.CATEGORY_INVITE,
+                    notificationService.makeMessage(requesterId, categoryName, NotificationType.CATEGORY_INVITE),
                     categoryId,
                     categoryInviteId,
+                    imageKey
+            );
+        }
+    }
+
+    @Transactional
+    public void sendCategoryAddedNotification(Long categoryId, Long requesterId,
+                                              List<Long> receiverIds, String imageKey) {
+        String categoryName = categoryRepository.findById(categoryId).get().getName();
+
+        for (Long receiverId : receiverIds) {
+            notificationService.createCategoryNotification(
+                    requesterId,
+                    receiverId,
+                    NotificationType.CATEGORY_ADDED,
+                    notificationService.makeMessage(requesterId, categoryName, NotificationType.CATEGORY_ADDED),
+                    categoryId,
+                    null,
                     imageKey
             );
         }

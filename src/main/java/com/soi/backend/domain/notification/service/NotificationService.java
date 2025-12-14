@@ -101,6 +101,7 @@ public class NotificationService {
             String profileUrl = (profileKey == null || profileKey.isEmpty())
                     ? null
                     : mediaService.getPresignedUrlByKey(profileKey);
+
             NotificationRespDto notificationRespDto = new NotificationRespDto(
                     notification.getId(),
                     notification.getTitle(),
@@ -110,7 +111,7 @@ public class NotificationService {
                     imageUrl,
                     type,
                     notification.getIsRead(),
-                    type == NotificationType.PHOTO_ADDED ? notification.getCategoryId() : null,
+                    parseCategoryId(notification),
                     id
             );
             notificationRespDtos.add(notificationRespDto);
@@ -231,13 +232,13 @@ public class NotificationService {
         return switch (type) {
             case FRIEND_REQUEST -> requesterName + " 님이 친구추가 요청을 보냈습니다.";
             case FRIEND_RESPOND -> requesterName + " 님이 친구요청을 수락하였습니다.";
-//            case CATEGORY_INVITE -> requesterName + " 님이 " + targetName + " 카테고리에 초대하였습니다.";
-//            case CATEGORY_ADDED -> requesterName + " 님의 " + targetName + " 카테고리에 추가되었습니다.";
+            case CATEGORY_INVITE -> requesterName + " 님이 \"" + targetName + "\" 카테고리에 초대하였습니다.";
+            case CATEGORY_ADDED -> requesterName + " 님의 \"" + targetName + "\" 카테고리에 추가되었습니다.";
 //            case PHOTO_ADDED -> requesterName + " 님이 " + targetName + " 카테고리에 게시물을 추가하였습니다.";
 //            case COMMENT_ADDED -> requesterName + " 님이" + targetName + " 게시물에 댓글을 남겼습니다.";
 //            case COMMENT_AUDIO_ADDED -> requesterName + " 님이" + targetName + " 게시물에 음성 댓글을 남겼습니다.";
-            case CATEGORY_INVITE -> requesterName + " 님이 카테고리에 초대하였습니다.";
-            case CATEGORY_ADDED -> requesterName + " 님의 카테고리에 추가되었습니다.";
+//            case CATEGORY_INVITE -> requesterName + " 님이 카테고리에 초대하였습니다.";
+//            case CATEGORY_ADDED -> requesterName + " 님의 카테고리에 추가되었습니다.";
             case PHOTO_ADDED -> requesterName + " 님이 카테고리에 게시물을 추가하였습니다.";
             case COMMENT_ADDED -> requesterName + " 님이 게시물에 댓글을 남겼습니다.";
             case COMMENT_AUDIO_ADDED -> requesterName + " 님이 게시물에 음성 댓글을 남겼습니다.";
@@ -255,5 +256,16 @@ public class NotificationService {
         }
         return id;
     }
+
+    private Long parseCategoryId(Notification notification) {
+        Long id;
+        switch (notification.getType()) {
+            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED -> id = notification.getCategoryId();
+            default -> id = null;
+        }
+        return id;
+    }
+
+//    private List<Long>
 
 }
