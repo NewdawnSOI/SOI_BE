@@ -41,13 +41,13 @@ public class CategoryController {
         return ResponseEntity.ok(ApiResponseDto.success(null,"카테고리 나가기(삭제) 완료"));
     }
 
-    @Operation(summary = " 카테고리에 유저 추가", description = "이미 생성된 카테고리에 유저를 초대할 때 사용합니다.")
+    @Operation(summary = " 카테고리에 유저 추가(초대)", description = "이미 생성된 카테고리에 유저를 추가(초대)할 때 사용합니다.")
     @PostMapping("/invite")
     public ResponseEntity<ApiResponseDto<Boolean>> inviteUser(@RequestBody CategoryInviteReqDto categoryInviteReqDto) {
         Boolean check = categoryService.inviteUserToCategory(categoryInviteReqDto.getCategoryId(),
                     categoryInviteReqDto.getRequesterId(),
                     categoryInviteReqDto.getReceiverId());
-        return ResponseEntity.ok(ApiResponseDto.success(check, "유저 카테고리에 초대 완료"));
+        return ResponseEntity.ok(ApiResponseDto.success(check, "유저 카테고리에 추가(초대) 완료"));
     }
 
     @Operation(summary = "카테고리에 초대된 유저가 초대 승낙여부를 결정하는 API", description = "status에 넣을 수 있는 상태 : PENDING, ACCEPTED, DECLINED, EXPIRED")

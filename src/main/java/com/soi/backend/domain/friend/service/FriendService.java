@@ -155,10 +155,11 @@ public class FriendService {
                     receiverId = friend.getRequesterId();
                 }
                 friend.SetFriendStatus(friendUpdateRespDto.getStatus());
+                notificationRepository.deleteById(friendUpdateRespDto.getNotificationId());
                 break;
             case CANCELLED:
                 friendRepository.deleteById(friend.getId());
-                notificationRepository.deleteById(notificationRepository.findByFriendId(friend.getId()).get().getFriendId());
+                notificationRepository.deleteById(friendUpdateRespDto.getNotificationId());
                 return new FriendRespDto(friend.getId(), friend.getRequesterId(),
                     friend.getReceiverId(), null, friendUpdateRespDto.getStatus(), LocalDateTime.now());
 
