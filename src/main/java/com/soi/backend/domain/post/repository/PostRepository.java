@@ -10,11 +10,11 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
-    List<Post> findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtAsc(Long categoryId,
+    List<Post> findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtDesc(Long categoryId,
                                                                            PostStatus status,
                                                                            Boolean isActive,
                                                                            Pageable pageable);
-    List<Post> findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtAsc(List<Long> categoryId,
+    List<Post> findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtDesc(List<Long> categoryId,
                                                                            PostStatus status,
                                                                            Boolean isActive,
                                                                              Pageable pageable);

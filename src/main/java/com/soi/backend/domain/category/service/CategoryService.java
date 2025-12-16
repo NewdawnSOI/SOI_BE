@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -259,7 +260,8 @@ public class CategoryService {
                 ? ""
                 : mediaService.getPresignedUrlByKey(key);
 
-        return new CategoryRespDto(category, categoryUser, nicknames, userProfiles, categoryPhotoKey, users.size(), categoryUser.getPinnedAt());
+        return new CategoryRespDto(category, categoryUser, nicknames, userProfiles,
+                categoryPhotoKey, users.size(), categoryUser.getPinnedAt(), category.getLastPhotoUploadedAt());
     }
 
     private void sortCategories(List<CategoryRespDto> categories) {
@@ -282,7 +284,9 @@ public class CategoryService {
         // 2) pinned=false 그룹 (순서 유지)
         List<CategoryRespDto> notPinned = categories.stream()
                 .filter(c -> !Boolean.TRUE.equals(c.getIsPinned()))
-                .toList(); // 정렬 X 원래순서
+                .filter(c -> c.getLastPhotoUploadedAt() != null)
+                .sorted(Comparator.comparing(CategoryRespDto::getLastPhotoUploadedAt).reversed())
+                .toList(); // 고정 안된건, 최신 게시물 업데이트된 순서대로 나오게
 
         // 3) 두 그룹을 합쳐 리스트 갱신
         categories.clear();
