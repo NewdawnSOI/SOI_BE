@@ -200,7 +200,7 @@ public class PostService {
         // 10개씩 페이징하기
         Pageable pageable = PageRequest.of(page,10);
 
-        List<Post> posts = new ArrayList<>(postRepository.findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtDesc(
+        List<Post> posts = new ArrayList<>(postRepository.findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtAsc(
                 categoryIds,
                 postStatus,
                 postStatus == PostStatus.ACTIVE,

@@ -14,7 +14,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                                                                            PostStatus status,
                                                                            Boolean isActive,
                                                                            Pageable pageable);
-    List<Post> findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtDesc(List<Long> categoryId,
+    List<Post> findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtAsc(List<Long> categoryId,
                                                                            PostStatus status,
                                                                            Boolean isActive,
                                                                              Pageable pageable);
