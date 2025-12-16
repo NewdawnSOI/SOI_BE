@@ -178,7 +178,7 @@ public class PostService {
 
         // 카테고리에 있는 게시물 가져오기
         Pageable pageable = PageRequest.of(page,10);
-        List<Post> posts = postRepository.findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtDesc(categoryId, PostStatus.ACTIVE, true,pageable);
+        List<Post> posts = postRepository.findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtAsc(categoryId, PostStatus.ACTIVE, true,pageable);
 
         categorySetService.setLastViewed(categoryId, userId);
 
