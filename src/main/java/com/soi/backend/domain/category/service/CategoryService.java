@@ -44,8 +44,8 @@ public class CategoryService {
 
     @Transactional
     public Long initializeCategory(CategoryCreateReqDto dto) {
-        if (dto.getReceiverIds() == null && dto.getIsPublic() != false) {
-            throw new CustomException("비공계 카테고리는 ReceiverIds가 비어있고, isPublic이 false여야합니다.", HttpStatus.BAD_REQUEST);
+        if (dto.getReceiverIds().isEmpty() && dto.getIsPublic() != false) {
+            throw new CustomException("비공개 카테고리는 ReceiverIds가 비어있고, isPublic이 false여야합니다.", HttpStatus.BAD_REQUEST);
         }
         Long categoryId = createCategory(dto);
 //        createCategoryUser(categoryId, dto.getUsers());
