@@ -142,8 +142,12 @@ public class PostService {
         commentService.deleteComments(post.getId());
 
         // s3파일 삭제
-        mediaService.removeMedia(post.getFileKey());
-        mediaService.removeMedia(post.getAudioKey());
+        if (post.getFileKey() != null && !post.getFileKey().isEmpty()) {
+            mediaService.removeMedia(post.getFileKey());
+        }
+        if (post.getAudioKey() != null && !post.getAudioKey().isEmpty()) {
+            mediaService.removeMedia(post.getAudioKey());
+        }
 
         postRepository.deleteById(post.getId());
     }
