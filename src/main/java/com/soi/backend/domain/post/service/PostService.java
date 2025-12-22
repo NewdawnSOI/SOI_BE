@@ -24,7 +24,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -131,6 +130,9 @@ public class PostService {
 
         postRepository.save(originalPost);
 
+        if (postStatus == PostStatus.DELETED) {
+            categorySetService.setCategoryProfile(originalPost);
+        }
         return originalPost.getStatus();
     }
 

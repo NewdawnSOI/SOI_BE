@@ -4,6 +4,7 @@ import com.soi.backend.domain.category.entity.Category;
 import com.soi.backend.domain.category.entity.CategoryUser;
 import com.soi.backend.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -38,11 +39,17 @@ public interface CategoryUserRepository extends JpaRepository<CategoryUser, Long
 
     List<CategoryUser> findAllByCategoryId(Long categoryId);
 
+
+    // 게시물 삭제될 때, 해당 게시물의 사진을 커스텀 프로필 사진으로 지정해놓은경우 지워지도록
+    @Modifying
     @Query("""
-    SELECT cu.categoryId AS categoryId, u 
-    FROM CategoryUser cu
-    JOIN User u ON cu.userId = u.id
-    WHERE cu.categoryId IN :categoryIds
+    UPDATE CategoryUser cu
+    SET cu.customProfile = null
+    WHERE cu.categoryId = :categoryId
+      AND cu.customProfile = :fileKey
 """)
-    List<String[]> findUsersByCategoryIds(List<Long> categoryIds);
+    int clearCustomProfileByCategoryIdAndFileKey(
+            Long categoryId,
+            String fileKey
+    );
 }
