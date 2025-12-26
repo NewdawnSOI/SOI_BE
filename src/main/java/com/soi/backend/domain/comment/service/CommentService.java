@@ -1,5 +1,6 @@
 package com.soi.backend.domain.comment.service;
 
+import com.soi.backend.domain.category.entity.CategoryUser;
 import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
 import com.soi.backend.domain.comment.dto.CommentReqDto;
@@ -53,19 +54,22 @@ public class CommentService {
             default -> notificationType = null;
         }
 
-        List<Long> userIdsInCategory =
-                categoryUserRepository.findAllUserIdsByCategoryIdExceptUser(categoryId, user.getId());
+        List<CategoryUser> categoryUsers =
+                categoryUserRepository.findAllByCategoryIdExceptUser(categoryId, user.getId());
 
-        for (Long userId : userIdsInCategory) {
-            notificationService.sendPostCommentNotification(
-                    commentReqDto.getUserId(),
-                    userId,
-                    commentId,
-                    post.getId(),
-                    categoryId,
-                    notificationService.makeMessage(user.getId(), post.getContent(), notificationType),
-                    notificationType
-            );
+        for (CategoryUser receivers : categoryUsers) {
+            Long receiverId = receivers.getUserId();
+            if (receivers.getIsAlert()) {
+                notificationService.sendPostCommentNotification(
+                        commentReqDto.getUserId(),
+                        receiverId,
+                        commentId,
+                        post.getId(),
+                        categoryId,
+                        notificationService.makeMessage(user.getId(), post.getContent(), notificationType),
+                        notificationType
+                );
+            }
         }
     }
 

@@ -36,6 +36,9 @@ public class CategoryUser {
     @Column(name = "is_read")
     private Boolean isRead;
 
+    @Column(name = "is_alert")
+    private Boolean isAlert;
+
     @Column(name = "last_viewed_at")
     private LocalDateTime lastViewedAt;
 
@@ -49,6 +52,7 @@ public class CategoryUser {
         this.customProfile = "";
         this.isPinned = false;
         this.isRead = false;
+        this.isAlert = true;
         this.lastViewedAt = null;
     }
 
@@ -59,6 +63,7 @@ public class CategoryUser {
         this.customProfile = "";
         this.isPinned = false;
         this.isRead = false;
+        this.isAlert = true;
         this.lastViewedAt = lastViewedAt;
     }
 
@@ -77,5 +82,9 @@ public class CategoryUser {
 
     public void setCustomProfile(String customProfile) {
         this.customProfile = customProfile;
+    }
+
+    public void setIsAlert() {
+        isAlert = !isAlert;
     }
 }

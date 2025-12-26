@@ -91,4 +91,12 @@ public class CategoryController {
         Boolean result = categorySetService.setProfile(categoryId, userId, profileImageKey);
         return ResponseEntity.ok(ApiResponseDto.success(result,"프로필 변경 완료"));
     }
+
+    @Operation(summary = "카테고리 알림설정", description = "유저아이디와 카테고리 아이디로 알림을 설정합니다.")
+    @PostMapping("/set/alert")
+    public ResponseEntity<ApiResponseDto<Boolean>> categoryAlert(@RequestParam Long categoryId,
+                                                                  @RequestParam Long userId) {
+        Boolean result = categorySetService.setIsAlert(categoryId, userId);
+        return ResponseEntity.ok(ApiResponseDto.success(result,"알림 여부 설정 변경 완료"));
+    }
 }
