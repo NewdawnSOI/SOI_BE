@@ -107,4 +107,15 @@ public class CategorySetService {
         // 커스텀 카테고리에 있는것도 삭제
         categoryUserRepository.clearCustomProfileByCategoryIdAndFileKey(category.getId(), post.getFileKey());
     }
+
+    @Transactional
+    public Boolean setIsAlert(Long categoryUserId, Long userId) {
+        CategoryUser categoryUser = categoryUserRepository.findByUserIdAndCategoryId(userId, categoryUserId)
+                .orElseThrow();
+
+        categoryUser.setIsAlert();
+        categoryUserRepository.save(categoryUser);
+        return true;
+    }
+
 }

@@ -231,7 +231,7 @@ public class CategoryService {
                     .orElseThrow(() -> new CustomException(categoryId + "번 카테고리를 찾을 수 없음",  HttpStatus.NOT_FOUND));
             CategoryUser categoryUser = categoryUserRepository.findByCategoryIdAndUserId(categoryId, userId)
                     .orElseThrow(() -> new CustomException(categoryId + "번 카테고리에 " + userId + " 유저가 속해있지 않음",  HttpStatus.NOT_FOUND));
-            List<User> users = categoryUserRepository.findAllUsersByCategoryId(categoryId, userId);
+            List<User> users = categoryUserRepository.findAllUsersByCategoryId(userId);
             List<String> nicknames = new ArrayList<>();
             for(User u : users) {
                 nicknames.add(u.getNickname());
