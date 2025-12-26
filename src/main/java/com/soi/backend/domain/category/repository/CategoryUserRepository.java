@@ -24,7 +24,7 @@ public interface CategoryUserRepository extends JpaRepository<CategoryUser, Long
         JOIN User u ON cu.userId = u.id
         WHERE cu.categoryId = :categoryId
     """)
-    List<User> findAllUsersByCategoryId(Long userId);
+    List<User> findAllUsersByCategoryId(Long categoryId);
 
     @Query("""
         SELECT cu
