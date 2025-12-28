@@ -1,8 +1,12 @@
 package com.soi.backend.domain.comment.service;
 
+import com.soi.backend.domain.category.entity.CategoryUser;
+import com.soi.backend.domain.category.repository.CategoryRepository;
+import com.soi.backend.domain.category.repository.CategoryUserRepository;
 import com.soi.backend.domain.comment.dto.CommentReqDto;
 import com.soi.backend.domain.comment.dto.CommentRespDto;
 import com.soi.backend.domain.comment.entity.Comment;
+import com.soi.backend.domain.comment.entity.CommentType;
 import com.soi.backend.domain.comment.repository.CommentRepository;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.entity.NotificationType;
@@ -25,6 +29,7 @@ import java.util.List;
 public class CommentService {
 
     private final CommentRepository commentRepository;
+    private final CategoryUserRepository categoryUserRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final PostRepository postRepository;
@@ -34,23 +39,37 @@ public class CommentService {
     public void addComment(CommentReqDto commentReqDto) {
         User user = userRepository.findById(commentReqDto.getUserId())
                 .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
-
-        Long commentId = createComment(commentReqDto);
-        String audioFileKey = commentReqDto.getAudioKey();
         Post post = postRepository.findById(commentReqDto.getPostId())
                         .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        Long commentId = createComment(commentReqDto);
+        CommentType commentType = commentReqDto.getCommentType();
+        NotificationType notificationType;
         Long categoryId = post.getCategoryId();
 
-        if (!post.getUserId().equals(commentReqDto.getUserId())) {
-            notificationService.sendPostCommentNotification(
-                    commentReqDto.getUserId(),
-                    post.getUserId(),
-                    commentId,
-                    post.getId(),
-                    categoryId,
-                    notificationService.makeMessage(user.getId(), post.getContent(),
-                            audioFileKey.isEmpty() ? NotificationType.COMMENT_AUDIO_ADDED : NotificationType.COMMENT_ADDED)
-            );
+        switch (commentType) {
+            case TEXT -> notificationType = NotificationType.COMMENT_ADDED;
+            case AUDIO -> notificationType = NotificationType.COMMENT_AUDIO_ADDED;
+            case EMOJI -> notificationType = NotificationType.COMMENT_REACT_ADDED;
+            default -> notificationType = null;
+        }
+
+        List<CategoryUser> categoryUsers =
+                categoryUserRepository.findAllByCategoryIdExceptUser(categoryId, user.getId());
+
+        for (CategoryUser receivers : categoryUsers) {
+            Long receiverId = receivers.getUserId();
+            if (receivers.getIsAlert()) {
+                notificationService.sendPostCommentNotification(
+                        commentReqDto.getUserId(),
+                        receiverId,
+                        commentId,
+                        post.getId(),
+                        categoryId,
+                        notificationService.makeMessage(user.getId(), post.getContent(), notificationType),
+                        notificationType
+                );
+            }
         }
     }
 

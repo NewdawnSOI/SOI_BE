@@ -27,7 +27,7 @@ public class SMSAuthService {
 //            return false;
 //        } -> 인증 보낼때는 중복체크 X
 
-        String verificationCode = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+        String verificationCode = String.valueOf(10000 + new java.security.SecureRandom().nextInt(90000));
 
         messageService.sendMessage(verificationCode, phoneNum);
         smsAuthRepository.save(new SMSAuth(phoneNum, verificationCode));

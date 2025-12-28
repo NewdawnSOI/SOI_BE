@@ -37,16 +37,9 @@ public class FriendService {
     private final NotificationRepository notificationRepository;
     private final MediaService mediaService;
 
+
     @Transactional
-    public FriendRespDto createFriendRequest(FriendCreateReqDto friendCreateReqDto) {
-        /*
-        생각정리
-        friendCreateReqDto에는 친구요청하는 유저의 Id랑, 요청받을 유저의 phoneNumber가 들어온다.
-        요청하는 유저 Id -> 있는지 없는지 검사함, 없으면 예외 던짐
-        요청받는 유저 전화번호 -> 유저 DB에 있는지 없는지 검사함
-            만약 DB에 있으면 -> 앱을 설치한 사용자임 -> 그냥 친구추가 로직 실행
-            만약 DB에 없으면 -> 앱을 설치하지 않은 사용자임 -> 대기열 테이블에 요청한 유저 id랑 요청받은 유저의 전화번호를 등록하고 null 리턴
-         */
+    public FriendRespDto createFriendByPhoneNum(FriendCreateReqDto friendCreateReqDto) {
         userRepository.findById(friendCreateReqDto.getRequesterId())
                 .orElseThrow(() -> new CustomException("친구요청을 하는 유저를 찾을 수 없습니다.",HttpStatus.NOT_FOUND));
 
@@ -59,8 +52,33 @@ public class FriendService {
             return null;
         }
 
+        return createFriendRequest(friendCreateReqDto.getRequesterId(), receiver.get().getId());
+    }
+
+    @Transactional
+    public FriendRespDto createFriendByNickName(FriendCreateByNickNameReqDto dto) {
+        userRepository.findById(dto.getRequesterId())
+                .orElseThrow(() -> new CustomException("친구요청을 하는 유저를 찾을 수 없습니다.",HttpStatus.NOT_FOUND));
+
+        User receiver = userRepository.findByNickname(dto.getReceiverNickName())
+                .orElseThrow(() -> new CustomException("친구요청을 받는 유저를 찾을 수 없습니다.",HttpStatus.NOT_FOUND));
+
+        return createFriendRequest(dto.getRequesterId(), receiver.getId());
+    }
+
+    @Transactional
+    public FriendRespDto createFriendRequest(Long callRequesterId, Long callReceiverId) {
+        /*
+        생각정리
+        friendCreateReqDto에는 친구요청하는 유저의 Id랑, 요청받을 유저의 phoneNumber가 들어온다.
+        요청하는 유저 Id -> 있는지 없는지 검사함, 없으면 예외 던짐
+        요청받는 유저 전화번호 -> 유저 DB에 있는지 없는지 검사함
+            만약 DB에 있으면 -> 앱을 설치한 사용자임 -> 그냥 친구추가 로직 실행
+            만약 DB에 없으면 -> 앱을 설치하지 않은 사용자임 -> 대기열 테이블에 요청한 유저 id랑 요청받은 유저의 전화번호를 등록하고 null 리턴
+        */
+
         Optional<Friend> existing = friendRepository
-                .findByRequesterIdAndReceiverId(friendCreateReqDto.getRequesterId(), receiver.get().getId());
+                .findByRequesterIdAndReceiverId(callRequesterId, callReceiverId);
         Long receiverId = null;
         Long requesterId = null;
 
@@ -72,6 +90,19 @@ public class FriendService {
                 throw new CustomException("차단된 친구 관계입니다.", HttpStatus.FORBIDDEN);
             }
             if (!friend.getRequesterDeleted() && !friend.getReceiverDeleted()) {
+                if (friend.getStatus().equals(FriendStatus.PENDING)) { // 만약 요청을 보냈는데, 요청상대가 이미 유저한테 친구요청을 보낸상태
+                    friend.SetFriendStatus(FriendStatus.ACCEPTED);
+
+                    Long notificationId = notificationService.sendFriendNotification(
+                            friend.getReceiverId(),
+                            friend.getRequesterId(),
+                            friend.getId(),
+                            notificationService.makeMessage(friend.getReceiverId(), "", NotificationType.FRIEND_RESPOND),
+                            NotificationType.FRIEND_RESPOND
+                    );
+                    friendRepository.save(friend);
+                    return toDto(friend, notificationId);
+                }
                 throw new CustomException("이미 친구관계가 존재합니다.", HttpStatus.CONFLICT);
             }
 
@@ -89,7 +120,7 @@ public class FriendService {
             }
             friendRepository.save(friend);
         } else {
-            friend = new Friend(friendCreateReqDto.getRequesterId(), receiver.get().getId(), FriendStatus.PENDING);
+            friend = new Friend(callRequesterId, callReceiverId, FriendStatus.PENDING);
             requesterId = friend.getRequesterId();
             receiverId = friend.getReceiverId();
             friendRepository.save(friend);
@@ -142,10 +173,11 @@ public class FriendService {
                     receiverId = friend.getRequesterId();
                 }
                 friend.SetFriendStatus(friendUpdateRespDto.getStatus());
+                notificationRepository.deleteById(friendUpdateRespDto.getNotificationId());
                 break;
             case CANCELLED:
                 friendRepository.deleteById(friend.getId());
-                notificationRepository.deleteById(notificationRepository.findByFriendId(friend.getId()).get().getFriendId());
+                notificationRepository.deleteById(friendUpdateRespDto.getNotificationId());
                 return new FriendRespDto(friend.getId(), friend.getRequesterId(),
                     friend.getReceiverId(), null, friendUpdateRespDto.getStatus(), LocalDateTime.now());
 
@@ -309,8 +341,8 @@ public class FriendService {
 
         if (friendRequestQueues.isEmpty()) return;
         for (FriendRequestQueue friendRequestQueue : friendRequestQueues) {
-            FriendCreateReqDto friendCreateReqDto = new FriendCreateReqDto(friendRequestQueue.getRequesterId(), friendRequestQueue.getReceiverPhoneNum());
-            createFriendRequest(friendCreateReqDto);
+            Optional<User> receiver = userRepository.findByPhoneNum(friendRequestQueue.getReceiverPhoneNum());
+            createFriendRequest(friendRequestQueue.getRequesterId(), receiver.get().getId());
             friendRequestQueueRepository.deleteById(friendRequestQueue.getId());
         }
     }

@@ -51,4 +51,8 @@ public class Category {
     public void setIsPublic(Boolean isPublic) {
         this.isPublic = isPublic;
     }
+
+    public void setProfileKey(String categoryProfileKey) {
+        this.categoryProfileKey = categoryProfileKey;
+    }
 }

@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,8 +44,8 @@ public class CategoryService {
 
     @Transactional
     public Long initializeCategory(CategoryCreateReqDto dto) {
-        if (dto.getReceiverIds() == null && dto.getIsPublic() != false) {
-            throw new CustomException("비공계 카테고리는 ReceiverIds가 비어있고, isPublic이 false여야합니다.", HttpStatus.BAD_REQUEST);
+        if (dto.getReceiverIds().isEmpty() && dto.getIsPublic() != false) {
+            throw new CustomException("비공개 카테고리는 ReceiverIds가 비어있고, isPublic이 false여야합니다.", HttpStatus.BAD_REQUEST);
         }
         Long categoryId = createCategory(dto);
 //        createCategoryUser(categoryId, dto.getUsers());
@@ -120,23 +121,13 @@ public class CategoryService {
             if (category.getIsPublic() == false) {
                 category.setIsPublic(true);
             }
-//            sendCategoryNotification(categoryId, requesterId, filterOnlyNewUser, NotificationType.CATEGORY_ADDED, category.getCategoryPhotoKey());
             // receiver들에게도 알림
-//            receiverIds.forEach(receiverId ->
-//                    notificationService.createCategoryNotification(
-//                            requesterId,
-//                            receiverId,
-//                            NotificationType.CATEGORY_ADDED,
-//                            notificationService.makeMessage(requesterId, categoryName, NotificationType.CATEGORY_ADDED),
-//                            categoryId,
-//                            null
-//                    )
-//            );
+            sendCategoryAddedNotification(categoryId, requesterId, filterOnlyNewUser, category.getCategoryProfileKey());
             return true;
         }
 
         createCategoryInvite(categoryId, requesterId, filterOnlyNewUser);
-        sendCategoryNotification(categoryId, requesterId, filterOnlyNewUser, NotificationType.CATEGORY_INVITE, category.getCategoryProfileKey());
+        sendCategoryInvitedNotification(categoryId, requesterId, filterOnlyNewUser, category.getCategoryProfileKey());
 
         return true;
     }
@@ -151,9 +142,10 @@ public class CategoryService {
     }
 
     @Transactional
-    public void sendCategoryNotification(Long categoryId, Long requesterId, List<Long> receiverIds,  NotificationType type, String imageKey) {
-        String nickname = userRepository.findById(requesterId).get().getNickname();
+    public void sendCategoryInvitedNotification(Long categoryId, Long requesterId,
+                                                List<Long> receiverIds, String imageKey) {
         String categoryName = categoryRepository.findById(categoryId).get().getName();
+
         for (Long receiverId : receiverIds) {
             Long categoryInviteId = categoryInviteRepository.findByCategoryIdAndInvitedUserId(categoryId, receiverId)
                     .orElseThrow(() -> new CustomException("카테고리에 초대되어있지 않습니다.", HttpStatus.NOT_FOUND))
@@ -161,10 +153,28 @@ public class CategoryService {
             notificationService.createCategoryNotification(
                     requesterId,
                     receiverId,
-                    type,
-                    notificationService.makeMessage(requesterId, categoryName, type),
+                    NotificationType.CATEGORY_INVITE,
+                    notificationService.makeMessage(requesterId, categoryName, NotificationType.CATEGORY_INVITE),
                     categoryId,
                     categoryInviteId,
+                    imageKey
+            );
+        }
+    }
+
+    @Transactional
+    public void sendCategoryAddedNotification(Long categoryId, Long requesterId,
+                                              List<Long> receiverIds, String imageKey) {
+        String categoryName = categoryRepository.findById(categoryId).get().getName();
+
+        for (Long receiverId : receiverIds) {
+            notificationService.createCategoryNotification(
+                    requesterId,
+                    receiverId,
+                    NotificationType.CATEGORY_ADDED,
+                    notificationService.makeMessage(requesterId, categoryName, NotificationType.CATEGORY_ADDED),
+                    categoryId,
+                    null,
                     imageKey
             );
         }
@@ -221,7 +231,7 @@ public class CategoryService {
                     .orElseThrow(() -> new CustomException(categoryId + "번 카테고리를 찾을 수 없음",  HttpStatus.NOT_FOUND));
             CategoryUser categoryUser = categoryUserRepository.findByCategoryIdAndUserId(categoryId, userId)
                     .orElseThrow(() -> new CustomException(categoryId + "번 카테고리에 " + userId + " 유저가 속해있지 않음",  HttpStatus.NOT_FOUND));
-            List<User> users = categoryUserRepository.findAllUsersByCategoryId(categoryId, userId);
+            List<User> users = categoryUserRepository.findAllUsersByCategoryId(userId);
             List<String> nicknames = new ArrayList<>();
             for(User u : users) {
                 nicknames.add(u.getNickname());
@@ -250,7 +260,8 @@ public class CategoryService {
                 ? ""
                 : mediaService.getPresignedUrlByKey(key);
 
-        return new CategoryRespDto(category, categoryUser, nicknames, userProfiles, categoryPhotoKey, users.size(), categoryUser.getPinnedAt());
+        return new CategoryRespDto(category, categoryUser, nicknames, userProfiles,
+                categoryPhotoKey, users.size(), categoryUser.getPinnedAt(), category.getLastPhotoUploadedAt());
     }
 
     private void sortCategories(List<CategoryRespDto> categories) {
@@ -273,7 +284,9 @@ public class CategoryService {
         // 2) pinned=false 그룹 (순서 유지)
         List<CategoryRespDto> notPinned = categories.stream()
                 .filter(c -> !Boolean.TRUE.equals(c.getIsPinned()))
-                .toList(); // 정렬 X 원래순서
+                .filter(c -> c.getLastPhotoUploadedAt() != null)
+                .sorted(Comparator.comparing(CategoryRespDto::getLastPhotoUploadedAt).reversed())
+                .toList(); // 고정 안된건, 최신 게시물 업데이트된 순서대로 나오게
 
         // 3) 두 그룹을 합쳐 리스트 갱신
         categories.clear();

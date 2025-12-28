@@ -57,7 +57,7 @@ public class PostController {
     @GetMapping("/find-by/category")
     public ResponseEntity<ApiResponseDto<List<PostRespDto>>> findByCategoryId(@RequestParam Long categoryId,
                                                                               @RequestParam Long userId,
-                                                                              @RequestParam Long notificationId,
+                                                                              @RequestParam(required = false) Long notificationId,
                                                                               @RequestParam(defaultValue = "0") int page) {
         List<PostRespDto> postRespDtos = postService.findByCategoryId(categoryId, userId, notificationId, page);
         return ResponseEntity.ok(ApiResponseDto.success(postRespDtos,"게시물 조회 완료"));

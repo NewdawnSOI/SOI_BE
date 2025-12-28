@@ -24,7 +24,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -61,8 +60,8 @@ public class PostService {
 
             Long postId = createPost(postCreateReqDto, categoryId, fileKey, audioFileKey);
 
-            List<Long> receivers =
-                    categoryUserRepository.findAllUserIdsByCategoryIdExceptUser(categoryId, postCreateReqDto.getUserId());
+            List<CategoryUser> categoryUsers =
+                    categoryUserRepository.findAllByCategoryIdExceptUser(categoryId, postCreateReqDto.getUserId());
 
             CategoryUser categoryUser = categoryUserRepository.findByCategoryIdAndUserId(categoryId, postCreateReqDto.getUserId())
                     .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없음", HttpStatus.NOT_FOUND));
@@ -75,15 +74,19 @@ public class PostService {
 
             categorySetService.setLastUploadedAndProfile(categoryId, postCreateReqDto.getUserId(), fileKey);
 
-            for (Long receiverId : receivers) {
-                notificationService.sendCategoryPostNotification(
-                        postCreateReqDto.getUserId(),
-                        postId,
-                        receiverId,
-                        categoryId,
-                        notificationService.makeMessage(postCreateReqDto.getUserId(), categoryName, NotificationType.PHOTO_ADDED),
-                        fileKey
-                );
+            for (CategoryUser receivers : categoryUsers) {
+                Long receiverId = receivers.getUserId();
+
+                if (receivers.getIsAlert()) {
+                    notificationService.sendCategoryPostNotification(
+                            postCreateReqDto.getUserId(),
+                            receiverId,
+                            postId,
+                            categoryId,
+                            notificationService.makeMessage(postCreateReqDto.getUserId(), categoryName, NotificationType.PHOTO_ADDED),
+                            fileKey
+                    );
+                }
             }
         }
         return true;
@@ -131,6 +134,9 @@ public class PostService {
 
         postRepository.save(originalPost);
 
+        if (postStatus == PostStatus.DELETED) {
+            categorySetService.setCategoryProfile(originalPost);
+        }
         return originalPost.getStatus();
     }
 
@@ -142,8 +148,12 @@ public class PostService {
         commentService.deleteComments(post.getId());
 
         // s3파일 삭제
-        mediaService.removeMedia(post.getFileKey());
-        mediaService.removeMedia(post.getAudioKey());
+        if (post.getFileKey() != null && !post.getFileKey().isEmpty()) {
+            mediaService.removeMedia(post.getFileKey());
+        }
+        if (post.getAudioKey() != null && !post.getAudioKey().isEmpty()) {
+            mediaService.removeMedia(post.getAudioKey());
+        }
 
         postRepository.deleteById(post.getId());
     }

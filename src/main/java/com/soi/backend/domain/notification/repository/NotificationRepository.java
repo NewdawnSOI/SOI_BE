@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     Optional<Notification> findByFriendId(Long friendId);
 
-    List<Notification> getAllByReceiverIdOrderByCreatedAt(Long receiverId, Pageable pageable);
+    List<Notification> getAllByReceiverIdOrderByCreatedAtDesc(Long receiverId, Pageable pageable);
 
     @Query("""
         SELECT n.id
