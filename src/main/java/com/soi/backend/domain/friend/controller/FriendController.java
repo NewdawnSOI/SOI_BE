@@ -22,10 +22,17 @@ public class FriendController {
 
     private final FriendService friendService;
 
-    @Operation(summary = "친구 추가", description = "사용자 id를 통해 친구추가를 합니다.")
+    @Operation(summary = "친구 추가", description = "사용자 전화번호를 통해 친구추가를 합니다.")
     @PostMapping("/create")
     public ResponseEntity<ApiResponseDto<FriendRespDto>> create(@RequestBody FriendCreateReqDto friendCreateReqDto) {
-        FriendRespDto friendRespDto = friendService.createFriendRequest(friendCreateReqDto);
+        FriendRespDto friendRespDto = friendService.createFriendByPhoneNum(friendCreateReqDto);
+        return ResponseEntity.ok(ApiResponseDto.success(friendRespDto,"친구 요청 성공"));
+    }
+
+    @Operation(summary = "nickname으로 친구 추가", description = "사용자 nickName을 통해 친구추가를 합니다.")
+    @PostMapping("/create/by-nickname")
+    public ResponseEntity<ApiResponseDto<FriendRespDto>> createByNickName(@RequestBody FriendCreateByNickNameReqDto dto) {
+        FriendRespDto friendRespDto = friendService.createFriendByNickName(dto);
         return ResponseEntity.ok(ApiResponseDto.success(friendRespDto,"친구 요청 성공"));
     }
 
