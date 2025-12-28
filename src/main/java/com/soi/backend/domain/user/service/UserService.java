@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,7 +43,7 @@ public class UserService {
 
         User user = new User(
                 userCreateReqDto.getName(),
-                userCreateReqDto.getPhoneNum(),
+                userCreateReqDto.getPhoneNum() == "" ? "" :  userCreateReqDto.getPhoneNum(),
                 userCreateReqDto.getNickname(),
                 userCreateReqDto.getProfileImageKey(),
                 userCreateReqDto.getBirthDate(),
@@ -98,9 +99,9 @@ public class UserService {
         }
     }
 
-    public UserRespDto loginByPhone(String phone) {
-        if (userRepository.findByPhoneNum(phone).isPresent()) {
-            User user = userRepository.findByPhoneNum(phone).get();
+    public UserRespDto loginByPhone(String nickName) {
+        if (userRepository.findByNickname(nickName).isPresent()) {
+            User user = userRepository.findByNickname(nickName).get();
             return toDto(user);
         } else {
             throw new CustomException("로그인 에러 : 로그인 에러 : 해당 번호로 등록된 유저가 없습니다.", HttpStatus.NOT_FOUND);
