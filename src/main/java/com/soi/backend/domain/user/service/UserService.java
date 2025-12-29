@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,7 +44,7 @@ public class UserService {
 
         User user = new User(
                 userCreateReqDto.getName(),
-                userCreateReqDto.getPhoneNum() == "" ? "" :  userCreateReqDto.getPhoneNum(),
+                userCreateReqDto.getPhoneNum() == "" ? userCreateReqDto.getNickname() + UUID.randomUUID() :  userCreateReqDto.getPhoneNum(),
                 userCreateReqDto.getNickname(),
                 userCreateReqDto.getProfileImageKey(),
                 userCreateReqDto.getBirthDate(),
