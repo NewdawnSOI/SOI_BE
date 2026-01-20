@@ -252,7 +252,7 @@ public class NotificationService {
         switch (notification.getType()) {
             case FRIEND_REQUEST, FRIEND_RESPOND -> id = notification.getFriendId();
             case CATEGORY_INVITE, CATEGORY_ADDED -> id =notification.getCategoryId();
-            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED -> id = notification.getPostId();
+            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_REACT_ADDED -> id = notification.getPostId();
             default -> id = null;
         }
         return id;
@@ -261,7 +261,7 @@ public class NotificationService {
     private Long parseCategoryId(Notification notification) {
         Long id;
         switch (notification.getType()) {
-            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED -> id = notification.getCategoryId();
+            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_REACT_ADDED -> id = notification.getCategoryId();
             default -> id = null;
         }
         return id;
