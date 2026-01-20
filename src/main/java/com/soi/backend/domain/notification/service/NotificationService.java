@@ -242,6 +242,7 @@ public class NotificationService {
             case PHOTO_ADDED -> requesterName + " 님이 카테고리에 게시물을 추가하였습니다.";
             case COMMENT_ADDED -> requesterName + " 님이 게시물에 댓글을 남겼습니다.";
             case COMMENT_AUDIO_ADDED -> requesterName + " 님이 게시물에 음성 댓글을 남겼습니다.";
+            case COMMENT_REACT_ADDED -> requesterName + " 님이 게시물에 반응을 남겼습니다.";
             default -> "";
         };
     }
