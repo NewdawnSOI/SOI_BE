@@ -51,7 +51,11 @@ public class CategorySetService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomException("카테고리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        category.setLastPhotoUploadedByAndProfile(userId, postFileKey);
+        if (category.getCategoryProfileKey().isEmpty()) {
+            category.setLastPhotoUploadedByAndProfile(userId, postFileKey);
+        } else {
+            category.setLastPhotoUploadedAt(userId);
+        }
         categoryRepository.save(category);
     }
 
