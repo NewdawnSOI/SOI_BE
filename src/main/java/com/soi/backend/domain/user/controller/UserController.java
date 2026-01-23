@@ -45,9 +45,16 @@ public class UserController {
     }
 
     @Operation(summary = "사용자 로그인(전화번호로)", description = "인증이 완료된 전화번호로 로그인을 합니다.")
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponseDto<UserRespDto>> login(@RequestParam String phoneNum) {
+    @PostMapping("/login/by-phone")
+    public ResponseEntity<ApiResponseDto<UserRespDto>> loginByPhone(@RequestParam String phoneNum) {
         UserRespDto userRespDto = userService.loginByPhone(phoneNum);
+        return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "로그인 성공"));
+    }
+
+    @Operation(summary = "사용자 로그인(전화번호로)", description = "인증이 완료된 전화번호로 로그인을 합니다.")
+    @PostMapping("/login/by-nickname")
+    public ResponseEntity<ApiResponseDto<UserRespDto>> loginByNickname(@RequestParam String nickName) {
+        UserRespDto userRespDto = userService.loginByNickname(nickName);
         return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "로그인 성공"));
     }
 
