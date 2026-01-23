@@ -6,8 +6,6 @@ import com.soi.backend.domain.post.dto.PostUpdateReqDto;
 import com.soi.backend.domain.post.entity.PostStatus;
 import com.soi.backend.domain.post.service.PostService;
 import com.soi.backend.global.ApiResponseDto;
-import com.soi.backend.global.exception.CustomException;
-import com.solapi.shadow.retrofit2.http.DELETE;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
