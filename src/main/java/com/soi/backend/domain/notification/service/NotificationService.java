@@ -78,24 +78,35 @@ public class NotificationService {
     public List<NotificationRespDto> bindNotificationDtos(
             Long userId, NotificationType filterType, boolean isInclude, int page) {
 
-        Pageable pageable = PageRequest.of(page,10);
-        List<NotificationRespDto> notificationRespDtos = new ArrayList<>();
-        List<Notification> notifications = notificationRepository.getAllByReceiverIdOrderByCreatedAtDesc(userId, pageable);
+        Pageable pageable = PageRequest.of(page, 10);
 
-        // requesterId들 뽑기
-        Set<Long> requesterIds = notifications.stream()
+        // 알림 조회
+        List<Notification> notifications =
+                notificationRepository.getAllByReceiverIdOrderByCreatedAtDesc(userId, pageable);
+
+        // 타입 필터 먼저 적용
+        List<Notification> filteredNotifications = notifications.stream()
+                .filter(n -> isInclude
+                        ? n.getType() == filterType
+                        : n.getType() != filterType)
+                .toList();
+
+        // requesterId 수집
+        Set<Long> requesterIds = filteredNotifications.stream()
                 .map(Notification::getRequesterId)
                 .collect(Collectors.toSet());
 
-        // Category_invite의 notification categoryId 수집
-        Set<Long> categoryIds = notifications.stream()
+        // CATEGORY_INVITE categoryId 수집
+        Set<Long> categoryIds = filteredNotifications.stream()
                 .filter(n -> n.getType() == NotificationType.CATEGORY_INVITE)
                 .map(Notification::getCategoryId)
                 .collect(Collectors.toSet());
 
-        // 카테고리 Id로 카테고리 초대내역 한번에 가져오고, 해당되는 유저 id 다 가져오기
-        List<CategoryInvite> allInvites = categoryInviteRepository.findAllByCategoryIdIn(categoryIds);
+        // CategoryInvite 한 번에 조회
+        List<CategoryInvite> allInvites =
+                categoryInviteRepository.findAllByCategoryIdIn(categoryIds);
 
+        // CategoryInvite에 등장한 모든 userId 수집
         Set<Long> inviteUserIds = allInvites.stream()
                 .flatMap(invite ->
                         Stream.of(invite.getInviterUserId(), invite.getInvitedUserId()))
@@ -105,47 +116,40 @@ public class NotificationService {
         Set<Long> allUserIds = new HashSet<>(requesterIds);
         allUserIds.addAll(inviteUserIds);
 
-
+        // User 한 번에 조회
         Map<Long, User> userMap = userRepository.findAllById(allUserIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
 
-
+        // categoryId → CategoryInvite Map
         Map<Long, List<CategoryInvite>> inviteMap =
-                categoryInviteRepository.findAllByCategoryIdIn(categoryIds).stream()
+                allInvites.stream()
                         .collect(Collectors.groupingBy(CategoryInvite::getCategoryId));
 
-        for (Notification notification : notifications) {
+        List<NotificationRespDto> result = new ArrayList<>();
 
-            if (isInclude) { // isInclude == true 면 해당 타입만 포함해서 가져옴,
-                            // isInclude == false 면 해당 타입만 제외하고 가져옴
-                if (notification.getType() != filterType) {
-                    continue;
-                }
-            } else {
-                if (notification.getType() == filterType) {
-                    continue;
-                }
-            }
+        // 알림 DTO 조립
+        for (Notification notification : filteredNotifications) {
 
             User requester = userMap.get(notification.getRequesterId());
 
-            List<NotificationUserRespDto> notificationUserRespDtoList = null;
+            List<NotificationUserRespDto> relatedUsers = null;
 
-            if (notification.getType().equals(NotificationType.CATEGORY_INVITE)) {
+            if (notification.getType() == NotificationType.CATEGORY_INVITE) {
+
                 List<CategoryInvite> invites =
                         inviteMap.getOrDefault(notification.getCategoryId(), List.of());
 
                 Set<Long> relatedUserIds = new HashSet<>();
 
-                for (CategoryInvite categoryInvite : invites) {
-                    if (categoryInvite.getStatus() == CategoryInviteStatus.ACCEPTED
-                    || categoryInvite.getStatus() == CategoryInviteStatus.PENDING) {
+                for (CategoryInvite invite : invites) {
+                    if (invite.getStatus() == CategoryInviteStatus.ACCEPTED
+                            || invite.getStatus() == CategoryInviteStatus.PENDING) {
 
-                        if (!categoryInvite.getInvitedUserId().equals(userId)) {
-                            relatedUserIds.add(categoryInvite.getInvitedUserId());
+                        if (!invite.getInvitedUserId().equals(userId)) {
+                            relatedUserIds.add(invite.getInvitedUserId());
                         }
-                        if (!categoryInvite.getInviterUserId().equals(userId)) {
-                            relatedUserIds.add(categoryInvite.getInviterUserId());
+                        if (!invite.getInviterUserId().equals(userId)) {
+                            relatedUserIds.add(invite.getInviterUserId());
                         }
                     }
                 }
@@ -155,38 +159,37 @@ public class NotificationService {
                         .filter(Objects::nonNull)
                         .toList();
 
-                notificationUserRespDtoList = NotificationUserRespDto.toDto(users);
+                relatedUsers = users.isEmpty()
+                        ? null
+                        : NotificationUserRespDto.toDto(users);
             }
 
-            String imageKey =  notification.getImageKey();
-            String profileKey = userRepository.getProfileImageByUserId(notification.getRequesterId());
-            Long id = parseId(notification);
-            NotificationType type = notification.getType();
-
-            String imageUrl = (imageKey == null || imageKey.isEmpty())
+            String imageUrl =
+                    (notification.getImageKey() == null || notification.getImageKey().isBlank())
                     ? null
-                    : mediaService.getPresignedUrlByKey(imageKey);
+                    : mediaService.getPresignedUrlByKey(notification.getImageKey());
 
-            String profileUrl = (profileKey == null || profileKey.isEmpty())
+            String profileUrl =
+                    (notification.getImageKey() == null || notification.getImageKey().isBlank())
                     ? null
-                    : mediaService.getPresignedUrlByKey(profileKey);
+                    : mediaService.getPresignedUrlByKey(requester.getProfileImageKey());
 
-            NotificationRespDto notificationRespDto = new NotificationRespDto(
+            result.add(new NotificationRespDto(
                     notification.getId(),
                     notification.getTitle(),
                     requester.getName(),
                     requester.getNickname(),
                     profileUrl,
                     imageUrl,
-                    type,
+                    notification.getType(),
                     notification.getIsRead(),
                     parseCategoryId(notification),
-                    id,
-                    notificationUserRespDtoList
-            );
-            notificationRespDtos.add(notificationRespDto);
+                    parseId(notification),
+                    relatedUsers
+            ));
         }
-        return notificationRespDtos;
+
+        return result;
     }
 
     public NotificationGetAllRespDto getAllNotifications(Long userId, int page) {
