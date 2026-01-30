@@ -1,5 +1,10 @@
 package com.soi.backend.domain.notification.service;
 
+import com.soi.backend.domain.category.entity.Category;
+import com.soi.backend.domain.category.entity.CategoryInvite;
+import com.soi.backend.domain.category.entity.CategoryInviteStatus;
+import com.soi.backend.domain.category.repository.CategoryInviteRepository;
+import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.dto.NotificationGetAllRespDto;
 import com.soi.backend.domain.notification.dto.NotificationReqDto;
@@ -7,6 +12,7 @@ import com.soi.backend.domain.notification.dto.NotificationRespDto;
 import com.soi.backend.domain.notification.entity.Notification;
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.notification.repository.NotificationRepository;
+import com.soi.backend.domain.user.dto.NotificationUserRespDto;
 import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
@@ -18,8 +24,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +38,7 @@ public class NotificationService {
     private final MediaService mediaService;
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final CategoryInviteRepository categoryInviteRepository;
 
     @Transactional
     public Long createNotification(NotificationReqDto dto) {
@@ -73,10 +82,39 @@ public class NotificationService {
         List<NotificationRespDto> notificationRespDtos = new ArrayList<>();
         List<Notification> notifications = notificationRepository.getAllByReceiverIdOrderByCreatedAtDesc(userId, pageable);
 
+        // requesterId들 뽑기
+        Set<Long> requesterIds = notifications.stream()
+                .map(Notification::getRequesterId)
+                .collect(Collectors.toSet());
+
+        // Category_invite의 notification categoryId 수집
+        Set<Long> categoryIds = notifications.stream()
+                .filter(n -> n.getType() == NotificationType.CATEGORY_INVITE)
+                .map(Notification::getCategoryId)
+                .collect(Collectors.toSet());
+
+        // 카테고리 Id로 카테고리 초대내역 한번에 가져오고, 해당되는 유저 id 다 가져오기
+        List<CategoryInvite> allInvites = categoryInviteRepository.findAllByCategoryIdIn(categoryIds);
+
+        Set<Long> inviteUserIds = allInvites.stream()
+                .flatMap(invite ->
+                        Stream.of(invite.getInviterUserId(), invite.getInvitedUserId()))
+                .collect(Collectors.toSet());
+
+        // User 조회 대상 ID 합치기
+        Set<Long> allUserIds = new HashSet<>(requesterIds);
+        allUserIds.addAll(inviteUserIds);
+
+
+        Map<Long, User> userMap = userRepository.findAllById(allUserIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+
+
+        Map<Long, List<CategoryInvite>> inviteMap =
+                categoryInviteRepository.findAllByCategoryIdIn(categoryIds).stream()
+                        .collect(Collectors.groupingBy(CategoryInvite::getCategoryId));
 
         for (Notification notification : notifications) {
-            User user = userRepository.findById(notification.getRequesterId())
-                    .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
 
             if (isInclude) { // isInclude == true 면 해당 타입만 포함해서 가져옴,
                             // isInclude == false 면 해당 타입만 제외하고 가져옴
@@ -87,6 +125,37 @@ public class NotificationService {
                 if (notification.getType() == filterType) {
                     continue;
                 }
+            }
+
+            User requester = userMap.get(notification.getRequesterId());
+
+            List<NotificationUserRespDto> notificationUserRespDtoList = null;
+
+            if (notification.getType().equals(NotificationType.CATEGORY_INVITE)) {
+                List<CategoryInvite> invites =
+                        inviteMap.getOrDefault(notification.getCategoryId(), List.of());
+
+                Set<Long> relatedUserIds = new HashSet<>();
+
+                for (CategoryInvite categoryInvite : invites) {
+                    if (categoryInvite.getStatus() == CategoryInviteStatus.ACCEPTED
+                    || categoryInvite.getStatus() == CategoryInviteStatus.PENDING) {
+
+                        if (!categoryInvite.getInvitedUserId().equals(userId)) {
+                            relatedUserIds.add(categoryInvite.getInvitedUserId());
+                        }
+                        if (!categoryInvite.getInviterUserId().equals(userId)) {
+                            relatedUserIds.add(categoryInvite.getInviterUserId());
+                        }
+                    }
+                }
+
+                List<User> users = relatedUserIds.stream()
+                        .map(userMap::get)
+                        .filter(Objects::nonNull)
+                        .toList();
+
+                notificationUserRespDtoList = NotificationUserRespDto.toDto(users);
             }
 
             String imageKey =  notification.getImageKey();
@@ -105,14 +174,15 @@ public class NotificationService {
             NotificationRespDto notificationRespDto = new NotificationRespDto(
                     notification.getId(),
                     notification.getTitle(),
-                    user.getName(),
-                    user.getNickname(),
+                    requester.getName(),
+                    requester.getNickname(),
                     profileUrl,
                     imageUrl,
                     type,
                     notification.getIsRead(),
                     parseCategoryId(notification),
-                    id
+                    id,
+                    notificationUserRespDtoList
             );
             notificationRespDtos.add(notificationRespDto);
         }
