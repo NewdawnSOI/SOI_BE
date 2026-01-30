@@ -21,5 +21,5 @@ public class NotificationRespDto {
     private Boolean isRead;
     private Long categoryIdForPost; // 게시물 알림일때 넣을 카테고리 id
     private Long relatedId; // 뭐든 관련된거의 id
-    private List<NotificationUserRespDto> notificationUserRespDtoList;
+    private List<NotificationUserRespDto> categoryInvitedUsers;
 }
