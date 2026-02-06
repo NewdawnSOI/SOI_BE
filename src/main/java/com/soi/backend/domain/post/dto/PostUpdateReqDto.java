@@ -14,4 +14,6 @@ public class PostUpdateReqDto {
     private String audioFileKey; // S3에 업로드된 audio Key 값
     private String waveformData; // 음성파일 파형 데이터
     private int duration; // 음성파일 시간
+    private Boolean isFromGallery;
+    private Float savedAspectRatio;
 }

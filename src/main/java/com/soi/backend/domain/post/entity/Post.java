@@ -33,6 +33,12 @@ public class Post {
     @Column(name = "category_id", nullable = false)
     private Long categoryId;
 
+    @Column(name = "saved_aspect_ratio")
+    private Float savedAspectRatio;
+
+    @Column(name = "is_from_gallery", nullable = false)
+    private Boolean isFromGallery;
+
     @Column(name = "is_active")
     private Boolean isActive;
 
@@ -52,7 +58,7 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private PostStatus status;
 
-    public Post (Long userId, String content, String fileKey, String audioKey, Long categoryId, String waveformData, int duration) {
+    public Post (Long userId, String content, String fileKey, String audioKey, Long categoryId, String waveformData, int duration, Boolean isFromGallery, Float savedAspectRatio) {
         this.userId = userId;
         this.content = content;
         this.fileKey = fileKey;
@@ -63,14 +69,18 @@ public class Post {
         this.status = PostStatus.ACTIVE;
         this.isActive = true;
         this.createdAt = LocalDateTime.now();
+        this.isFromGallery = isFromGallery;
+        this.savedAspectRatio = savedAspectRatio;
     }
 
-    public void update(String content, String fileKey, String audioKey, String waveformData, int duration) {
+    public void update(String content, String fileKey, String audioKey, String waveformData, int duration, Boolean isFromGallery, Float savedAspectRatio) {
         this.content = content;
         this.fileKey = fileKey;
         this.audioKey = audioKey;
         this.waveformData = waveformData;
         this.duration = duration;
+        this.isFromGallery = isFromGallery;
+        this.savedAspectRatio = savedAspectRatio;
     }
 
     public void setStatus(PostStatus status, Boolean isActive) {
