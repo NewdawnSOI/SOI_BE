@@ -2,13 +2,16 @@ package com.soi.backend.domain.notification.dto;
 
 import com.soi.backend.domain.notification.entity.NotificationType;
 import com.soi.backend.domain.user.dto.NotificationUserRespDto;
+import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 
 public class NotificationRespDto {
     private Long id;

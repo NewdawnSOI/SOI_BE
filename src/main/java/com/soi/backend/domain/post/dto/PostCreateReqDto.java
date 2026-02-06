@@ -1,11 +1,15 @@
 package com.soi.backend.domain.post.dto;
 
 import jakarta.persistence.Column;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 
 public class PostCreateReqDto {
     private Long userId; // 생성한 유저의 id

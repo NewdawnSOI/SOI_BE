@@ -2,11 +2,13 @@ package com.soi.backend.domain.post.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 
 public class PostRespDto {
     private Long id;

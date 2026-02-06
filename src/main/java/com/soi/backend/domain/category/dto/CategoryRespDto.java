@@ -2,12 +2,16 @@ package com.soi.backend.domain.category.dto;
 
 import com.soi.backend.domain.category.entity.Category;
 import com.soi.backend.domain.category.entity.CategoryUser;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 
 public class CategoryRespDto {
     private Long id; // 카테고리 id
