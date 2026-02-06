@@ -191,7 +191,7 @@ public class PostService {
 
 
         // 카테고리에 있는 게시물 가져오기
-        Pageable pageable = PageRequest.of(page,10);
+        Pageable pageable = PageRequest.of(page,6);
         List<Post> posts = postRepository.findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtDesc(categoryId, PostStatus.ACTIVE, true,pageable);
 
         categorySetService.setLastViewed(categoryId, userId);
@@ -212,7 +212,7 @@ public class PostService {
         List<Long> categoryIds = categoryUserRepository.findCategoriesByUserId(userId);
 
         // 10개씩 페이징하기
-        Pageable pageable = PageRequest.of(page,10);
+        Pageable pageable = PageRequest.of(page,6);
 
         List<Post> posts = new ArrayList<>(postRepository.findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtDesc(
                 categoryIds,
