@@ -326,6 +326,12 @@ public class NotificationService {
         };
     }
 
+    @Transactional
+    public void deleteNotification(Long userId, Long notificationId) {
+        Long id = notificationRepository.findByReceiverIdAndCategoryId(userId, notificationId);
+        notificationRepository.deleteById(id);
+    }
+
     private Long parseId(Notification notification) {
         Long id;
         switch (notification.getType()) {
@@ -345,7 +351,5 @@ public class NotificationService {
         }
         return id;
     }
-
-//    private List<Long>
 
 }

@@ -40,4 +40,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
         WHERE n.receiverId = :userId AND n.commentId = :commentId
     """)
     List<Long> findAllIdByCommentId(Long userId, Long commentId);
+
+    Long findByReceiverIdAndCategoryId(Long userId, Long categoryId);
 }
