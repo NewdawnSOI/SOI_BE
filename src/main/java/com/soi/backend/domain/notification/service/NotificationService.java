@@ -130,9 +130,15 @@ public class NotificationService {
         // 알림 DTO 조립
         for (Notification notification : filteredNotifications) {
 
-            User requester = userMap.get(notification.getRequesterId());
+            Long requesterId = notification.getRequesterId();
+            if (requesterId == null) continue;
+
+            User requester = userMap.get(requesterId);
+            if (requester == null) continue;
 
             List<NotificationUserRespDto> relatedUsers = null;
+
+//            requester = userMap.get(notification.getRequesterId());
 
             if (notification.getType() == NotificationType.CATEGORY_INVITE) {
 
@@ -170,7 +176,7 @@ public class NotificationService {
                     : mediaService.getPresignedUrlByKey(notification.getImageKey());
 
             String profileUrl =
-                    (notification.getImageKey() == null || notification.getImageKey().isBlank())
+                    (requester.getProfileImageKey() == null || requester.getProfileImageKey().isBlank())
                     ? null
                     : mediaService.getPresignedUrlByKey(requester.getProfileImageKey());
 
