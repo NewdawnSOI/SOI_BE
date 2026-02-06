@@ -247,9 +247,16 @@ public class CategoryService {
     public CategoryRespDto toDto(Category category, CategoryUser categoryUser, List<User> users, List<String> nicknames) {
         List<String> userProfiles = users.stream()
                 .map(user -> {
-                    return user.getProfileImageKey();
+                    return  user.getProfileImageKey();
 //                    String image = user.getProfileImageKey();
 //                    return image.isEmpty() ? "" : mediaService.getPresignedUrlByKey(image);
+                })
+                .toList();
+
+        List<String> userProfilesUrl = users.stream()
+                .map(user -> {
+                    String image = user.getProfileImageKey();
+                    return image.isEmpty() ? "" : mediaService.getPresignedUrlByKey(image);
                 })
                 .toList();
 
@@ -257,12 +264,12 @@ public class CategoryService {
                 ? categoryUser.getCustomProfile()
                 : category.getCategoryProfileKey();
 
-        String categoryPhotoKey = key.isEmpty()
+        String categoryPhotoUrl = key.isEmpty()
                 ? ""
                 : mediaService.getPresignedUrlByKey(key);
 
-        return new CategoryRespDto(category, categoryUser, nicknames, userProfiles,
-                categoryPhotoKey, users.size(), categoryUser.getPinnedAt(), category.getLastPhotoUploadedAt());
+        return new CategoryRespDto(category, categoryUser, nicknames, userProfiles, userProfilesUrl,
+                categoryPhotoUrl, users.size(), categoryUser.getPinnedAt(), category.getLastPhotoUploadedAt());
     }
 
     private void sortCategories(List<CategoryRespDto> categories) {
