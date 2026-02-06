@@ -206,6 +206,7 @@ public class CategoryService {
                 categoryInvite.setStatus(CategoryInviteStatus.EXPIRED);
                 break;
         }
+        notificationService.deleteCategoryNotification(inviteResponseDto.getResponserId(), inviteResponseDto.getCategoryId());
 //        categoryInviteRepository.deleteById(categoryInvite.getId());
         return true;
     }
