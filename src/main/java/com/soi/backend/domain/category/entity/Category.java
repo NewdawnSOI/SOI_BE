@@ -48,6 +48,11 @@ public class Category {
         this.lastPhotoUploadedAt = LocalDateTime.now();
     }
 
+    public void setLastPhotoUploadedAt(Long lastPhotoUploadedBy) {
+        this.lastPhotoUploadedBy = lastPhotoUploadedBy;
+        this.lastPhotoUploadedAt = LocalDateTime.now();
+    }
+
     public void setIsPublic(Boolean isPublic) {
         this.isPublic = isPublic;
     }

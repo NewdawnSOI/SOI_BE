@@ -1,11 +1,15 @@
 package com.soi.backend.domain.notification.dto;
 
 import com.soi.backend.domain.notification.entity.NotificationType;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Builder
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 
 public class NotificationReqDto {
     private Long requesterId;

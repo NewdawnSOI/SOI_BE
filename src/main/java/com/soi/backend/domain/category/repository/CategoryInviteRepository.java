@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface CategoryInviteRepository extends JpaRepository<CategoryInvite, Long> {
     Optional<CategoryInvite> findByCategoryIdAndInvitedUserId(Long categoryId, Long invitedUserId);
@@ -16,4 +17,8 @@ public interface CategoryInviteRepository extends JpaRepository<CategoryInvite, 
         WHERE c.invitedUserId = :userId AND c.categoryId = :categoryId
     """)
     Optional<Long> findIdByCategoryIdAndUserId(Long userId, Long categoryId);
+
+    List<CategoryInvite> findAllByCategoryId(Long categoryId);
+
+    List<CategoryInvite> findAllByCategoryIdIn(Set<Long> categoryIds);
 }

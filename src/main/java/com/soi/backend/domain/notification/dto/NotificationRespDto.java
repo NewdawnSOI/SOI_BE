@@ -1,11 +1,17 @@
 package com.soi.backend.domain.notification.dto;
 
 import com.soi.backend.domain.notification.entity.NotificationType;
+import com.soi.backend.domain.user.dto.NotificationUserRespDto;
+import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 
 public class NotificationRespDto {
     private Long id;
@@ -18,4 +24,5 @@ public class NotificationRespDto {
     private Boolean isRead;
     private Long categoryIdForPost; // 게시물 알림일때 넣을 카테고리 id
     private Long relatedId; // 뭐든 관련된거의 id
+    private List<NotificationUserRespDto> categoryInvitedUsers;
 }

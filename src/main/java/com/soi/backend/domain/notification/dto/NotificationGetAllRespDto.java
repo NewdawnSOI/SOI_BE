@@ -1,10 +1,12 @@
 package com.soi.backend.domain.notification.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.List;
 
 @Getter
+@AllArgsConstructor
 
 public class NotificationGetAllRespDto {
     private final Integer friendReqCount; // 친구요청온거 갯수

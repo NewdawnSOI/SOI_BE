@@ -1,10 +1,15 @@
 package com.soi.backend.domain.post.dto;
 
+import jakarta.persistence.Column;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 
 public class PostCreateReqDto {
     private Long userId; // 생성한 유저의 id
@@ -15,4 +20,6 @@ public class PostCreateReqDto {
     private List<Long> categoryId; // 등록될 카테고리 id
     private String waveformData; // 음성파일 파형 데이터
     private int duration; // 음성파일 시간
+    private Float savedAspectRatio; // 사진 비율
+    private Boolean isFromGallery; // 찍은건지, 사진첩에서 가져온건지
 }

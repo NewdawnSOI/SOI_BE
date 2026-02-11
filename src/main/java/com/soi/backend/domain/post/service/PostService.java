@@ -101,7 +101,9 @@ public class PostService {
                 audioFileKey,
                 categoryId,
                 postCreateReqDto.getWaveformData(),
-                postCreateReqDto.getDuration()
+                postCreateReqDto.getDuration(),
+                postCreateReqDto.getIsFromGallery(),
+                postCreateReqDto.getSavedAspectRatio()
         );
 
         postRepository.save(post);
@@ -119,7 +121,9 @@ public class PostService {
                 postUpdateReqDto.getPostFileKey(),
                 postUpdateReqDto.getAudioFileKey(),
                 postUpdateReqDto.getWaveformData(),
-                postUpdateReqDto.getDuration()
+                postUpdateReqDto.getDuration(),
+                postUpdateReqDto.getIsFromGallery(),
+                postUpdateReqDto.getSavedAspectRatio()
         );
 
         postRepository.save(originalPost);
@@ -241,12 +245,16 @@ public class PostService {
                 user.getNickname(),
                 post.getContent(),
                 user.getProfileImageKey(),
+                user.getProfileImageKey().isBlank() ? null : mediaService.getPresignedUrlByKey(user.getProfileImageKey()),
                 post.getFileKey(),
+                post.getFileKey().isBlank() ? null : mediaService.getPresignedUrlByKey(post.getFileKey()),
                 post.getAudioKey(),
                 post.getWaveformData(),
                 post.getDuration(),
                 post.getIsActive(),
-                post.getCreatedAt()
+                post.getCreatedAt(),
+                post.getSavedAspectRatio(),
+                post.getIsFromGallery()
         );
     }
 
