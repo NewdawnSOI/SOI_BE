@@ -252,7 +252,9 @@ public class PostService {
                 post.getWaveformData(),
                 post.getDuration(),
                 post.getIsActive(),
-                post.getCreatedAt()
+                post.getCreatedAt(),
+                post.getSavedAspectRatio(),
+                post.getIsFromGallery()
         );
     }
 

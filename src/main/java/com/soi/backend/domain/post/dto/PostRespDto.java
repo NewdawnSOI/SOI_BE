@@ -23,4 +23,6 @@ public class PostRespDto {
     private int duration;
     private Boolean is_active;
     private LocalDateTime createdAt;
+    private Float savedAspectRatio; // 사진 비율
+    private Boolean isFromGallery; // 찍은건지, 사진첩에서 가져온건지
 }
