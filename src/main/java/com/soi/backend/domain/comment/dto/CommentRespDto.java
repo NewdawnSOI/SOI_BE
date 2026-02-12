@@ -14,6 +14,7 @@ import java.util.List;
 public class CommentRespDto {
     private Long id;
     private String userProfile;
+    private Long userId;
     private String nickname;
     private String text;
     private Long emojiId;
