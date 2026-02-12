@@ -16,6 +16,7 @@ public class CommentReqDto {
     Long postId;
     String text;
     String audioKey;
+    String fileKey;
     String waveformData;
     Integer duration;
     Double locationX;

@@ -48,7 +48,7 @@ public class CommentService {
         Long categoryId = post.getCategoryId();
 
         switch (commentType) {
-            case TEXT -> notificationType = NotificationType.COMMENT_ADDED;
+            case TEXT, PHOTO -> notificationType = NotificationType.COMMENT_ADDED;
             case AUDIO -> notificationType = NotificationType.COMMENT_AUDIO_ADDED;
             case EMOJI -> notificationType = NotificationType.COMMENT_REACT_ADDED;
             default -> notificationType = null;
