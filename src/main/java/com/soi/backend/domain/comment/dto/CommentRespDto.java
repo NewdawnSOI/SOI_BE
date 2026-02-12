@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,6 +17,7 @@ public class CommentRespDto {
     private String nickname;
     private String text;
     private Long emojiId;
+    private String replyUserName;
     private String audioUrl;
     private String waveFormData;
     private Integer duration;
@@ -23,4 +26,5 @@ public class CommentRespDto {
     private CommentType commentType;
     private String fileUrl;
     private String fileKey;
+    private List<CommentRespDto> children;
 }

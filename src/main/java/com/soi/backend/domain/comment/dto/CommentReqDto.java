@@ -14,6 +14,8 @@ public class CommentReqDto {
     Long userId;
     Long emojiId;
     Long postId;
+    Long parentId;
+    Long replyUserId;
     String text;
     String audioKey;
     String fileKey;
