@@ -127,6 +127,7 @@ public class CommentService {
                     String audioUrl =  comment.getAudioKey() == null || comment.getAudioKey().isEmpty()
                             ? ""
                             : mediaService.getPresignedUrlByKey(comment.getAudioKey());
+                    String fileUrl = comment.getFileKey().isBlank() ? "" : mediaService.getPresignedUrlByKey(comment.getFileKey());
                     return new CommentRespDto(
                             comment.getId(),
                             userProfileUrl,
@@ -138,7 +139,9 @@ public class CommentService {
                             comment.getDuration(),
                             comment.getLocationX(),
                             comment.getLocationY(),
-                            comment.getCommentType()
+                            comment.getCommentType(),
+                            fileUrl,
+                            comment.getFileKey()
                     );
                 })
                 .toList();
