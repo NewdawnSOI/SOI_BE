@@ -1,5 +1,6 @@
 package com.soi.backend.domain.post.dto;
 
+import com.soi.backend.domain.post.entity.PostType;
 import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,4 +23,5 @@ public class PostCreateReqDto {
     private int duration; // 음성파일 시간
     private Float savedAspectRatio; // 사진 비율
     private Boolean isFromGallery; // 찍은건지, 사진첩에서 가져온건지
+    private PostType postType;
 }

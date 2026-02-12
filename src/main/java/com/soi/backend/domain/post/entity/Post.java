@@ -58,7 +58,11 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private PostStatus status;
 
-    public Post (Long userId, String content, String fileKey, String audioKey, Long categoryId, String waveformData, int duration, Boolean isFromGallery, Float savedAspectRatio) {
+    @Column(name = "type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private PostType postType;
+
+    public Post (Long userId, String content, String fileKey, String audioKey, Long categoryId, String waveformData, int duration, Boolean isFromGallery, Float savedAspectRatio, PostType postType) {
         this.userId = userId;
         this.content = content;
         this.fileKey = fileKey;
@@ -71,9 +75,10 @@ public class Post {
         this.createdAt = LocalDateTime.now();
         this.isFromGallery = isFromGallery;
         this.savedAspectRatio = savedAspectRatio;
+        this.postType = postType;
     }
 
-    public void update(String content, String fileKey, String audioKey, String waveformData, int duration, Boolean isFromGallery, Float savedAspectRatio) {
+    public void update(String content, String fileKey, String audioKey, String waveformData, int duration, Boolean isFromGallery, Float savedAspectRatio, PostType postType) {
         this.content = content;
         this.fileKey = fileKey;
         this.audioKey = audioKey;
@@ -81,6 +86,7 @@ public class Post {
         this.duration = duration;
         this.isFromGallery = isFromGallery;
         this.savedAspectRatio = savedAspectRatio;
+        this.postType = postType;
     }
 
     public void setStatus(PostStatus status, Boolean isActive) {
