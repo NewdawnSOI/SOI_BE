@@ -21,4 +21,6 @@ public class CommentRespDto {
     private Double locationX;
     private Double locationY;
     private CommentType commentType;
+    private String fileUrl;
+    private String fileKey;
 }

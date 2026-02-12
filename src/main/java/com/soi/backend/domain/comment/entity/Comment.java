@@ -45,6 +45,9 @@ public class Comment {
     @Column(name = "location_y", nullable = false)
     private Double locationY;
 
+    @Column(name = "file_url", nullable = false)
+    private String fileKey;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     CommentType commentType;
