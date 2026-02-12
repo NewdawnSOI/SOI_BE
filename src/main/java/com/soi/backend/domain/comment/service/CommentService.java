@@ -144,9 +144,9 @@ public class CommentService {
         Set<Long> userIds = comments.stream()
                 .flatMap(c -> {
                     if (c.getReplyUserId() != null) {
-                        return Arrays.stream(new Long[]{c.getReplyUserId(), c.getReplyUserId()});
+                        return Arrays.stream(new Long[]{c.getUserId(), c.getReplyUserId()});
                     }
-                    return Arrays.stream(new Long[]{c.getReplyUserId()});
+                    return Arrays.stream(new Long[]{c.getUserId()});
                 })
                 .collect(Collectors.toSet());
 
