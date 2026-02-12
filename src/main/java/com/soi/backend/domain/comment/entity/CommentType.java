@@ -4,5 +4,6 @@ public enum CommentType {
     EMOJI,
     TEXT,
     AUDIO,
-    PHOTO
+    PHOTO,
+    REPLY
 }
