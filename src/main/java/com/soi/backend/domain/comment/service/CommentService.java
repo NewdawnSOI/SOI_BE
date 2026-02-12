@@ -142,7 +142,12 @@ public class CommentService {
                 .collect(Collectors.groupingBy(Comment::getParentId));
 
         Set<Long> userIds = comments.stream()
-                .map(Comment::getUserId)
+                .flatMap(c -> {
+                    if (c.getReplyUserId() != null) {
+                        return Arrays.stream(new Long[]{c.getReplyUserId(), c.getReplyUserId()});
+                    }
+                    return Arrays.stream(new Long[]{c.getReplyUserId()});
+                })
                 .collect(Collectors.toSet());
 
         Map<Long, User> userMap = userRepository.findAllById(userIds)
@@ -150,7 +155,7 @@ public class CommentService {
                 .collect(Collectors.toMap(User::getId, u -> u));
 
         return comments.stream()
-                .filter(c -> c.getParentId() == null)
+                .filter(c -> c.getParentId() == null || c.getParentId() == 0)
                 .map(parent -> buildParentDto(parent, childMap, userMap))
                 .toList();
     }
@@ -162,14 +167,14 @@ public class CommentService {
                 .map(child -> buildChildDto(child, userMap))
                 .toList();
 
-        return buildBaseDto(parent, userMap.get(parent.getUserId()), children);
+        return buildBaseDto(parent, userMap.get(parent.getUserId()), children, userMap);
     }
 
     private CommentRespDto buildChildDto(Comment child, Map<Long, User> userMap) {
-        return buildBaseDto(child, userMap.get(child.getUserId()), List.of());
+        return buildBaseDto(child, userMap.get(child.getUserId()), List.of(), userMap);
     }
 
-    private CommentRespDto buildBaseDto(Comment comment, User user, List<CommentRespDto> children) {
+    private CommentRespDto buildBaseDto(Comment comment, User user, List<CommentRespDto> children, Map<Long, User> userMap) {
 
         String userProfileUrl = (user.getProfileImageKey() == null || user.getProfileImageKey().isEmpty())
                 ? ""
@@ -183,13 +188,17 @@ public class CommentService {
                 ? ""
                 : mediaService.getPresignedUrlByKey(comment.getFileKey());
 
-        String replyUserNickName = (comment.getReplyUserId() == null)
-                ? null
-                : userRepository.findById(comment.getReplyUserId()).get().getNickname();
+        String replyUserNickName = null;
+
+        if (comment.getReplyUserId() != null) {
+            User replyUser = userMap.get(comment.getReplyUserId());
+            replyUserNickName = replyUser.getNickname();
+        }
 
         return new CommentRespDto(
                 comment.getId(),
                 userProfileUrl,
+                user.getId(),
                 user.getNickname(),
                 comment.getText(),
                 comment.getEmojiId(),
