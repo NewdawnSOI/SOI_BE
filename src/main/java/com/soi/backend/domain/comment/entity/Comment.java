@@ -55,13 +55,14 @@ public class Comment {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public Comment(Long userId, Long emojiId, Long postId, String text, String audioKey,
+    public Comment(Long userId, Long emojiId, Long postId, String text, String audioKey, String fileKey,
                     String waveformData, Integer duration, Double locationX, Double locationY, CommentType commentType) {
         this.userId = userId;
         this.emojiId = emojiId;
         this.postId = postId;
         this.text = text;
         this.audioKey = audioKey;
+        this.fileKey = fileKey;
         this.waveformData = waveformData;
         this.duration = duration;
         this.locationX = locationX;

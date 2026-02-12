@@ -81,6 +81,7 @@ public class CommentService {
                 commentReqDto.getPostId(),
                 commentReqDto.getText(),
                 commentReqDto.getAudioKey(),
+                commentReqDto.getFileKey(),
                 commentReqDto.getWaveformData(),
                 commentReqDto.getDuration(),
                 commentReqDto.getLocationX(),
