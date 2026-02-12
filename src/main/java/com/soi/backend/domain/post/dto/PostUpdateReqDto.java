@@ -1,5 +1,6 @@
 package com.soi.backend.domain.post.dto;
 
+import com.soi.backend.domain.post.entity.PostType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,4 +21,5 @@ public class PostUpdateReqDto {
     private int duration; // 음성파일 시간
     private Boolean isFromGallery;
     private Float savedAspectRatio;
+    private PostType postType;
 }

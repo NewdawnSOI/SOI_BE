@@ -1,5 +1,6 @@
 package com.soi.backend.domain.post.dto;
 
+import com.soi.backend.domain.post.entity.PostType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,4 +26,5 @@ public class PostRespDto {
     private LocalDateTime createdAt;
     private Float savedAspectRatio; // 사진 비율
     private Boolean isFromGallery; // 찍은건지, 사진첩에서 가져온건지
+    private PostType postType;
 }
