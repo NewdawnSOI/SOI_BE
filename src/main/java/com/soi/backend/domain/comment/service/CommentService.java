@@ -198,6 +198,7 @@ public class CommentService {
         return new CommentRespDto(
                 comment.getId(),
                 userProfileUrl,
+                user.getProfileImageKey(),
                 user.getId(),
                 user.getNickname(),
                 comment.getText(),
