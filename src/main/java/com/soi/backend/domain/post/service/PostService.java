@@ -16,6 +16,7 @@ import com.soi.backend.domain.post.dto.PostRespDto;
 import com.soi.backend.domain.post.dto.PostUpdateReqDto;
 import com.soi.backend.domain.post.entity.Post;
 import com.soi.backend.domain.post.entity.PostStatus;
+import com.soi.backend.domain.post.entity.PostType;
 import com.soi.backend.domain.post.repository.PostRepository;
 import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
@@ -103,7 +104,8 @@ public class PostService {
                 postCreateReqDto.getWaveformData(),
                 postCreateReqDto.getDuration(),
                 postCreateReqDto.getIsFromGallery(),
-                postCreateReqDto.getSavedAspectRatio()
+                postCreateReqDto.getSavedAspectRatio(),
+                postCreateReqDto.getPostType()
         );
 
         postRepository.save(post);
@@ -123,7 +125,8 @@ public class PostService {
                 postUpdateReqDto.getWaveformData(),
                 postUpdateReqDto.getDuration(),
                 postUpdateReqDto.getIsFromGallery(),
-                postUpdateReqDto.getSavedAspectRatio()
+                postUpdateReqDto.getSavedAspectRatio(),
+                postUpdateReqDto.getPostType()
         );
 
         postRepository.save(originalPost);
@@ -254,7 +257,8 @@ public class PostService {
                 post.getIsActive(),
                 post.getCreatedAt(),
                 post.getSavedAspectRatio(),
-                post.getIsFromGallery()
+                post.getIsFromGallery(),
+                post.getPostType()
         );
     }
 
