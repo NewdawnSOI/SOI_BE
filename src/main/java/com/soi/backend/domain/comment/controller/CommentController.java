@@ -47,6 +47,14 @@ public class CommentController {
                 ApiResponseDto.success(commentRespDtos,"대댓글 조회 완료"));
     }
 
+    @Operation(summary = "사용자가 작성한 댓글 조회", description = "사용자가 작성한 모든 댓글을 조회합니다.")
+    @GetMapping("/get/by-user-id")
+    public ResponseEntity<ApiResponseDto<Slice<CommentRespDto>>> getAllCommentByUserId(@RequestParam Long userId, @RequestParam int page) {
+        Slice<CommentRespDto> commentRespDtos = commentService.getAllCommentByUserId(userId, page);
+        return ResponseEntity.ok(
+                ApiResponseDto.success(commentRespDtos,"대댓글 조회 완료"));
+    }
+
     @Operation(summary = "댓글 삭제", description = "id를 통해서 댓글을 삭제합니다.")
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponseDto<List<?>>> deleteComment(@RequestParam Long postId) {

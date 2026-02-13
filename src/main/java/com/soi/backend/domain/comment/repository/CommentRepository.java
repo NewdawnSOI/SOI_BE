@@ -49,4 +49,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             @Param("parentId") Long parentId,
             Pageable pageable
     );
+
+    Slice<Comment> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 }
