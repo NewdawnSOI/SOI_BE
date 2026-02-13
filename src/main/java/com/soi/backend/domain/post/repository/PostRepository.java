@@ -2,9 +2,11 @@ package com.soi.backend.domain.post.repository;
 
 import com.soi.backend.domain.post.entity.Post;
 import com.soi.backend.domain.post.entity.PostStatus;
+import com.soi.backend.domain.post.entity.PostType;
 import com.soi.backend.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -89,4 +91,19 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     WHERE p.id = :postId
     """)
     Optional<Object[]> findPostWithUser(@Param("postId") Long postId);
+
+    @Query("""
+        SELECT p, u
+        FROM Post p
+        JOIN User u ON p.userId = u.id
+        WHERE p.userId = :userId
+          AND p.postType = :postType
+          AND p.status = 'ACTIVE'
+        ORDER BY p.createdAt DESC
+    """)
+    Slice<Object[]> findUserPostsWithUser(
+            @Param("userId") Long userId,
+            @Param("postType") PostType postType,
+            Pageable pageable
+    );
 }

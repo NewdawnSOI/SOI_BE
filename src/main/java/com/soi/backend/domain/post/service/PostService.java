@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
@@ -281,6 +282,26 @@ public class PostService {
         Map<Long, Integer> commentCount = commentService.getCommentCountsForPostIds(List.of(postId));
 
         return toDto(post, user, commentCount.getOrDefault(postId, 0));
+    }
+
+    // 유저 id, 타입에 따라서 게시물 조회
+    public Slice<PostRespDto> findByUserId(Long userId, PostType postType, int page) {
+        Pageable pageable = PageRequest.of(page,6);
+
+        Slice<Object[]> rows = postRepository.findUserPostsWithUser(userId, postType, pageable);
+
+        List<Long> postIds = rows.getContent().stream()
+                .map(row -> ((Post) row[0]).getId())
+                .toList();
+
+        Map<Long, Integer> commentCounts = commentService.getCommentCountsForPostIds(postIds);
+
+        return rows.map(row -> {
+            Post post = (Post) row[0];
+            User user = (User) row[1];
+            int count = commentCounts.getOrDefault(post.getId(), 0);
+            return toDto(post, user, count);
+        });
     }
 
     private PostRespDto toDto(Post post, User user, int commentCount) {

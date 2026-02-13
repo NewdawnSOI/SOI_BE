@@ -172,31 +172,23 @@ public class CommentService {
         );
     }
 
-    private List<CommentRespDto> toDto(List<Comment> comments) {
+    public Slice<CommentRespDto> getAllCommentByUserId(Long userId, int page) {
+        Pageable pageable = PageRequest.of(page, 6);
 
-        comments.sort(Comparator.comparing(Comment::getCreatedAt));
+        Slice<Comment> comments = commentRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
 
-        Map<Long, List<Comment>> childMap = comments.stream()
-                .filter(c -> c.getParentId() != null)
-                .collect(Collectors.groupingBy(Comment::getParentId));
-
-        Set<Long> userIds = comments.stream()
-                .flatMap(c -> {
-                    if (c.getReplyUserId() != null) {
-                        return Arrays.stream(new Long[]{c.getUserId(), c.getReplyUserId()});
-                    }
-                    return Arrays.stream(new Long[]{c.getUserId()});
-                })
+        Set<Long> userIds = comments.getContent().stream()
+                .flatMap(c -> c.getReplyUserId() != null
+                        ? Stream.of(c.getUserId(), c.getReplyUserId())
+                        : Stream.of(c.getUserId()))
                 .collect(Collectors.toSet());
 
         Map<Long, User> userMap = userRepository.findAllById(userIds)
                 .stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
+                .collect(Collectors.toMap(User::getId, user -> user));
 
-        return comments.stream()
-                .filter(c -> c.getParentId() == null || c.getParentId() == 0)
-                .map(parent -> buildParentDto(parent, childMap, userMap))
-                .toList();
+        return comments.map(comment ->
+                buildBaseDto(comment, userMap.get(comment.getUserId()), List.of(), userMap));
     }
 
     private CommentRespDto buildParentDto(Comment parent, Map<Long, List<Comment>> childMap, Map<Long, User> userMap) {

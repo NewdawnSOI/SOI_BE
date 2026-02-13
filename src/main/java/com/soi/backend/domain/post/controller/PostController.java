@@ -4,11 +4,13 @@ import com.soi.backend.domain.post.dto.PostCreateReqDto;
 import com.soi.backend.domain.post.dto.PostRespDto;
 import com.soi.backend.domain.post.dto.PostUpdateReqDto;
 import com.soi.backend.domain.post.entity.PostStatus;
+import com.soi.backend.domain.post.entity.PostType;
 import com.soi.backend.domain.post.service.PostService;
 import com.soi.backend.global.ApiResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -74,5 +76,14 @@ public class PostController {
     public ResponseEntity<ApiResponseDto<PostRespDto>> showDetail(@RequestParam Long postId) {
         PostRespDto postRespDto = postService.showPostDetail(postId);
         return ResponseEntity.ok(ApiResponseDto.success(postRespDto,"게시물 조회 완료"));
+    }
+
+    @Operation(summary = "유저 id로 게시물 조회", description = "유저 id와 type으로 게시물을 조회합니다.")
+    @GetMapping("/find/by-user-id")
+    public ResponseEntity<ApiResponseDto<Slice<PostRespDto>>> findMediaByUserId(@RequestParam Long userId,
+                                                                                @RequestParam PostType postType,
+                                                                                @RequestParam int page) {
+        Slice<PostRespDto> postRespDtos = postService.findByUserId(userId, postType, page);
+        return ResponseEntity.ok(ApiResponseDto.success(postRespDtos,"게시물 조회 완료"));
     }
 }
