@@ -8,6 +8,7 @@ import com.soi.backend.global.ApiResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,12 +31,20 @@ public class CommentController {
                 ApiResponseDto.success(null,"댓글 추가 완료"));
     }
 
-    @Operation(summary = "댓글 조회", description = "게시물에 달린 댓글을 조회합니다.")
-    @GetMapping("/get")
-    public ResponseEntity<ApiResponseDto<List<CommentRespDto>>> getComment(@RequestParam Long postId) {
-        List<CommentRespDto> commentRespDtos = commentService.getComments(postId);
+    @Operation(summary = "원댓글 조회", description = "게시물에 달린 댓글을 조회합니다.")
+    @GetMapping("/get-parent")
+    public ResponseEntity<ApiResponseDto<Slice<CommentRespDto>>> getParentComment(@RequestParam Long postId, @RequestParam int page) {
+        Slice<CommentRespDto> commentRespDtos = commentService.getParentComments(postId, page);
         return ResponseEntity.ok(
                 ApiResponseDto.success(commentRespDtos,"댓글 조회 완료"));
+    }
+
+    @Operation(summary = "대댓글 조회", description = "댓글에 달린 대댓글을 조회합니다.")
+    @GetMapping("/get-child")
+    public ResponseEntity<ApiResponseDto<Slice<CommentRespDto>>> getChildComment(@RequestParam Long parentCommentId, @RequestParam int page) {
+        Slice<CommentRespDto> commentRespDtos = commentService.getChildComments(parentCommentId, page);
+        return ResponseEntity.ok(
+                ApiResponseDto.success(commentRespDtos,"대댓글 조회 완료"));
     }
 
     @Operation(summary = "댓글 삭제", description = "id를 통해서 댓글을 삭제합니다.")
