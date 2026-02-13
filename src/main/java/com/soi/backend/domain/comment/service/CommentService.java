@@ -215,4 +215,14 @@ public class CommentService {
                 children
         );
     }
+
+    public Map<Long, Integer> getCommentCountsForPostIds(List<Long> postIds) {
+        List<Object[]> results = commentRepository.countCommentByPostIds(postIds);
+
+        return results.stream()
+                        .collect(Collectors.toMap(
+                                row -> (Long) row[0],
+                                row -> ((Long) row[1]).intValue()
+                        ));
+    }
 }

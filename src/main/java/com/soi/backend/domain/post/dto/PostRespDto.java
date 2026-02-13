@@ -21,6 +21,7 @@ public class PostRespDto {
     private String postFileUrl;
     private String audioFileKey;
     private String waveformData;
+    private int commentCount;
     private int duration;
     private Boolean is_active;
     private LocalDateTime createdAt;
