@@ -30,10 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -207,8 +204,21 @@ public class PostService {
 
         categorySetService.setLastViewed(categoryId, userId);
 
+        // 댓글수 조회
+        List<Long> postIds = rows.stream()
+                .map(row -> ((Post) row[0]).getId())
+                .toList();
+
+        Map<Long, Integer> commentCounts = commentService.getCommentCountsForPostIds(postIds);
+
+
         return rows.stream()
-                .map(row -> toDto((Post) row[0], (User) row[1]))
+                .map(row -> {
+                    Post post = (Post) row[0];
+                    User user = (User) row[1];
+                    int count = commentCounts.getOrDefault(post.getId(), 0);
+                    return toDto(post, user, count);
+                })
                 .toList();
     }
 
@@ -230,8 +240,16 @@ public class PostService {
                 pageable
         );
 
+        // 댓글 갯수 카운트
+        Map<Long, Integer> commentCounts = commentService.getCommentCountsForPostIds(categoryIds);
+
         return rows.stream()
-                .map(row -> toDto((Post) row[0], (User) row[1]))
+                .map(row -> {
+                    Post post = (Post) row[0];
+                    User postUser = (User) row[1];
+                    int count = commentCounts.getOrDefault(post.getId(), 0);
+                    return toDto(post, postUser, count);
+                })
                 .toList();
     }
 
@@ -239,12 +257,33 @@ public class PostService {
     public PostRespDto showPostDetail(Long postId) {
 //        Post post = postRepository.findById(postId)
 //                .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
-        Object[] row = postRepository.findPostWithUser(postId)
+        Object[] outer = postRepository.findPostWithUser(postId)
                 .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
-        return toDto((Post) row[0], (User) row[1]);
+
+
+        if (outer.length == 0) {
+            throw new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+        }
+
+        Object[] row;
+        if (outer[0] instanceof Object[]) {
+            row = (Object[]) outer[0];
+        } else {
+            row = outer;
+        }
+
+        if (row.length < 2) {
+            throw new CustomException("게시물 사용자 정보를 찾을 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        Post post = (Post) row[0];
+        User user = (User) row[1];
+        Map<Long, Integer> commentCount = commentService.getCommentCountsForPostIds(List.of(postId));
+
+        return toDto(post, user, commentCount.getOrDefault(postId, 0));
     }
 
-    private PostRespDto toDto(Post post, User user) {
+    private PostRespDto toDto(Post post, User user, int commentCount) {
 //        User user = userRepository.findById(post.getUserId())
 //                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
@@ -261,6 +300,7 @@ public class PostService {
                 post.getFileKey().isBlank() ? null : mediaService.getPresignedUrlByKey(post.getFileKey()),
                 post.getAudioKey(),
                 post.getWaveformData(),
+                commentCount,
                 post.getDuration(),
                 post.getIsActive(),
                 post.getCreatedAt(),

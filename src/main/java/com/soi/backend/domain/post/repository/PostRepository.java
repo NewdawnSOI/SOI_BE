@@ -86,10 +86,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     SELECT p, u
     FROM Post p
     JOIN User u ON p.userId = u.id
-    WHERE p.categoryId IN :categoryIds
-    AND p.status = :status
-    AND p.isActive = :isActive
-    ORDER BY p.createdAt DESC
+    WHERE p.id = :postId
     """)
     Optional<Object[]> findPostWithUser(@Param("postId") Long postId);
 }
