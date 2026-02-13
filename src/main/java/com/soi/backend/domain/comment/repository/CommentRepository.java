@@ -19,7 +19,9 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @Query("""
         SELECT c.postId, COUNT(c)
-        FROM Comment c WHERE c.postId IN :postIds GROUP BY c.postId
+        FROM Comment c
+        WHERE c.postId IN :postIds
+        GROUP BY c.postId
     """)
     List<Object[]> countCommentByPostIds(@Param("postIds") List<Long> postIds);
 }
