@@ -194,7 +194,7 @@ public class PostService {
 
 
         // 카테고리에 있는 게시물 가져오기
-        Pageable pageable = PageRequest.of(page,10);
+        Pageable pageable = PageRequest.of(page,6);
 
         Page<Object[]> rows = postRepository.findCategoryPosts(
                 categoryId,
@@ -230,7 +230,7 @@ public class PostService {
         List<Long> categoryIds = categoryUserRepository.findCategoriesByUserId(userId);
 
         // 10개씩 페이징하기
-        Pageable pageable = PageRequest.of(page,10);
+        Pageable pageable = PageRequest.of(page,3);
 
         Page<Object[]> rows = postRepository.findFeedPosts(
                 categoryIds,
