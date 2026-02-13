@@ -23,13 +23,16 @@ import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -195,16 +198,18 @@ public class PostService {
 
         // 카테고리에 있는 게시물 가져오기
         Pageable pageable = PageRequest.of(page,10);
-        List<Post> posts = postRepository.findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtDesc(categoryId, PostStatus.ACTIVE, true,pageable);
+
+        Page<Object[]> rows = postRepository.findCategoryPosts(
+                categoryId,
+                userId,
+                pageable
+        );
 
         categorySetService.setLastViewed(categoryId, userId);
 
-        // 차단 관계의 사용자 게시물 필터링하기
-        List<Post> filteredPosts = filterBlockedPosts(posts, userId);
-
-        return filteredPosts.stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+        return rows.stream()
+                .map(row -> toDto((Post) row[0], (User) row[1]))
+                .toList();
     }
 
     // 게시물 출력하기
@@ -217,39 +222,42 @@ public class PostService {
         // 10개씩 페이징하기
         Pageable pageable = PageRequest.of(page,10);
 
-        List<Post> posts = new ArrayList<>(postRepository.findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtDesc(
+        Page<Object[]> rows = postRepository.findFeedPosts(
                 categoryIds,
                 postStatus,
                 postStatus == PostStatus.ACTIVE,
-                pageable));
+                user.getId(),
+                pageable
+        );
 
-        // 차단 관계의 사용자 게시물 필터링하기
-        List<Post> filteredPosts = filterBlockedPosts(posts, userId);
-
-        return filteredPosts.stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+        return rows.stream()
+                .map(row -> toDto((Post) row[0], (User) row[1]))
+                .toList();
     }
 
     // 단일 게시물 상세페이지 정보
     public PostRespDto showPostDetail(Long postId) {
-        Post post = postRepository.findById(postId)
+//        Post post = postRepository.findById(postId)
+//                .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+        Object[] row = postRepository.findPostWithUser(postId)
                 .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
-
-        return toDto(post);
+        return toDto((Post) row[0], (User) row[1]);
     }
 
-    private PostRespDto toDto(Post post) {
-        User user = userRepository.findById(post.getUserId())
-                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+    private PostRespDto toDto(Post post, User user) {
+//        User user = userRepository.findById(post.getUserId())
+//                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        String profileKey = user.getProfileImageKey();
+        String fileKey = post.getFileKey();
 
         return new PostRespDto(
                 post.getId(),
                 user.getNickname(),
                 post.getContent(),
-                user.getProfileImageKey(),
+                profileKey,
                 user.getProfileImageKey().isBlank() ? null : mediaService.getPresignedUrlByKey(user.getProfileImageKey()),
-                post.getFileKey(),
+                fileKey,
                 post.getFileKey().isBlank() ? null : mediaService.getPresignedUrlByKey(post.getFileKey()),
                 post.getAudioKey(),
                 post.getWaveformData(),
