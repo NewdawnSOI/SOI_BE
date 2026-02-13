@@ -217,7 +217,7 @@ public class CategoryService {
             case PRIVATE -> false;
         };
 
-        Pageable pageable = PageRequest.of(page,10);
+        Pageable pageable = PageRequest.of(page,6);
         List<Object[]> rows = categoryRepository.findCategoriesWithUser(userId, isPublic, pageable);;
 
         List<Long> categoryIds = rows.stream()

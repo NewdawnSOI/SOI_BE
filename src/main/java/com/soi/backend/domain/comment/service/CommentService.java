@@ -1,7 +1,6 @@
 package com.soi.backend.domain.comment.service;
 
 import com.soi.backend.domain.category.entity.CategoryUser;
-import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.category.repository.CategoryUserRepository;
 import com.soi.backend.domain.comment.dto.CommentReqDto;
 import com.soi.backend.domain.comment.dto.CommentRespDto;
@@ -18,11 +17,15 @@ import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -125,12 +128,48 @@ public class CommentService {
         }
     }
 
-    public List<CommentRespDto> getComments(Long postId) {
+    public Slice<CommentRespDto> getParentComments(Long postId, int page) {
         postRepository.findById(postId)
-                .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다."));
+        Pageable pageable = PageRequest.of(page, 5);
 
-        List<Comment> comments = commentRepository.findAllByPostId(postId);
-        return toDto(comments);
+        Slice<Comment> parentComments =
+                commentRepository.findParentCommentsByPostId(postId, pageable);
+
+        Set<Long> userIds = parentComments.stream()
+                .map(Comment::getUserId)
+                .collect(Collectors.toSet());
+
+        Map<Long, User> userMap = userRepository.findAllById(userIds)
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
+        return parentComments.map(comment ->
+                buildBaseDto(comment, userMap.get(comment.getUserId()), List.of(), userMap));
+    }
+
+    public Slice<CommentRespDto> getChildComments(Long parentCommentId, int page) {
+        Pageable pageable = PageRequest.of(page, 5);
+
+        Slice<Comment> childComments =
+                commentRepository.findChildCommentsByParentId(parentCommentId, pageable);
+
+        Set<Long> userIds = childComments.stream()
+                .flatMap(c -> {
+                    if (c.getReplyUserId() != null) {
+                        return Stream.of(c.getUserId(), c.getReplyUserId());
+                    }
+                    return Stream.of(c.getUserId());
+                })
+                .collect(Collectors.toSet());
+
+        Map<Long, User> userMap = userRepository.findAllById(userIds)
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
+        return childComments.map(comment ->
+                buildBaseDto(comment, userMap.get(comment.getUserId()), List.of(), userMap)
+        );
     }
 
     private List<CommentRespDto> toDto(List<Comment> comments) {
@@ -190,7 +229,7 @@ public class CommentService {
 
         String replyUserNickName = null;
 
-        if (comment.getReplyUserId() != null) {
+        if (comment.getReplyUserId() != null && comment.getReplyUserId() != 0) {
             User replyUser = userMap.get(comment.getReplyUserId());
             replyUserNickName = replyUser.getNickname();
         }
