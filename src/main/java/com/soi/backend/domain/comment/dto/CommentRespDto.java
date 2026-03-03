@@ -28,5 +28,6 @@ public class CommentRespDto {
     private CommentType commentType;
     private String fileUrl;
     private String fileKey;
-    private List<CommentRespDto> children;
+// 대댓글 위한 정보
+    private Long replyUserCount;
 }

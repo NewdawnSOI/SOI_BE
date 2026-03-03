@@ -145,7 +145,7 @@ public class CommentService {
                 .collect(Collectors.toMap(User::getId, user -> user));
 
         return parentComments.map(comment ->
-                buildBaseDto(comment, userMap.get(comment.getUserId()), List.of(), userMap));
+                buildBaseDto(comment, userMap.get(comment.getUserId()), userMap));
     }
 
     public Slice<CommentRespDto> getChildComments(Long parentCommentId, int page) {
@@ -168,7 +168,7 @@ public class CommentService {
                 .collect(Collectors.toMap(User::getId, user -> user));
 
         return childComments.map(comment ->
-                buildBaseDto(comment, userMap.get(comment.getUserId()), List.of(), userMap)
+                buildBaseDto(comment, userMap.get(comment.getUserId()), userMap)
         );
     }
 
@@ -188,24 +188,10 @@ public class CommentService {
                 .collect(Collectors.toMap(User::getId, user -> user));
 
         return comments.map(comment ->
-                buildBaseDto(comment, userMap.get(comment.getUserId()), List.of(), userMap));
+                buildBaseDto(comment, userMap.get(comment.getUserId()), userMap));
     }
 
-    private CommentRespDto buildParentDto(Comment parent, Map<Long, List<Comment>> childMap, Map<Long, User> userMap) {
-        List<CommentRespDto> children = childMap
-                .getOrDefault(parent.getId(), List.of())
-                .stream()
-                .map(child -> buildChildDto(child, userMap))
-                .toList();
-
-        return buildBaseDto(parent, userMap.get(parent.getUserId()), children, userMap);
-    }
-
-    private CommentRespDto buildChildDto(Comment child, Map<Long, User> userMap) {
-        return buildBaseDto(child, userMap.get(child.getUserId()), List.of(), userMap);
-    }
-
-    private CommentRespDto buildBaseDto(Comment comment, User user, List<CommentRespDto> children, Map<Long, User> userMap) {
+    private CommentRespDto buildBaseDto(Comment comment, User user, Map<Long, User> userMap) {
 
         String userProfileUrl = (user.getProfileImageKey() == null || user.getProfileImageKey().isEmpty())
                 ? ""
@@ -220,10 +206,14 @@ public class CommentService {
                 : mediaService.getPresignedUrlByKey(comment.getFileKey());
 
         String replyUserNickName = null;
+        Long replyUserCount = 0L;
 
         if (comment.getReplyUserId() != null && comment.getReplyUserId() != 0) {
             User replyUser = userMap.get(comment.getReplyUserId());
             replyUserNickName = replyUser.getNickname();
+        } else {
+            // comment중에 parent_id가 해당 comment의 id인경우를 카운트해야함
+            replyUserCount = commentRepository.countByParentId(comment.getId());
         }
 
         return new CommentRespDto(
@@ -243,7 +233,7 @@ public class CommentService {
                 comment.getCommentType(),
                 fileUrl,
                 comment.getFileKey(),
-                children
+                replyUserCount
         );
     }
 
