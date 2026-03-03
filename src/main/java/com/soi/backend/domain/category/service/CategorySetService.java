@@ -99,7 +99,7 @@ public class CategorySetService {
                 .orElseThrow(() -> new CustomException(post.getCategoryId() + "를 찾을 수 없습니다.",  HttpStatus.NOT_FOUND));
 
         // 카테고리 대표이미지 변경
-        if (category.getCategoryProfileKey().equals(post.getFileKey())) {
+        if (category.getCategoryProfileKey().equals(post.getFileKey()) && !post.getFileKey().isBlank()) {
             Optional<Post> topPost = postRepository.findTopByCategoryIdAndStatusOrderByCreatedAtDesc(category.getId(), PostStatus.ACTIVE);
             if (topPost.isPresent()) {
                 category.setProfileKey(topPost.get().getFileKey());
