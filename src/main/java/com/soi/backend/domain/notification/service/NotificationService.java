@@ -5,6 +5,7 @@ import com.soi.backend.domain.category.entity.CategoryInvite;
 import com.soi.backend.domain.category.entity.CategoryInviteStatus;
 import com.soi.backend.domain.category.repository.CategoryInviteRepository;
 import com.soi.backend.domain.category.repository.CategoryRepository;
+import com.soi.backend.domain.comment.service.CommentService;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.dto.NotificationGetAllRespDto;
 import com.soi.backend.domain.notification.dto.NotificationReqDto;
@@ -39,6 +40,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final CategoryInviteRepository categoryInviteRepository;
+    private final CommentService commentService;
 
     @Transactional
     public Long createNotification(NotificationReqDto dto) {
@@ -53,6 +55,7 @@ public class NotificationService {
                 dto.getCategoryInviteId(),
                 dto.getPostId(),
                 dto.getCommentId(),
+                dto.getReplyedCommentId(),
                 dto.getImageKey()
         );
 
@@ -191,6 +194,8 @@ public class NotificationService {
                     notification.getIsRead(),
                     parseCategoryId(notification),
                     parseId(notification),
+                    notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? notification.getReplyCommentId() : null,
+                    notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? commentService.getParentCommentIdOfReply(notification.getReplyCommentId()) : null,
                     relatedUsers
             ));
         }
@@ -333,7 +338,7 @@ public class NotificationService {
         Long id;
         switch (notification.getType()) {
             case FRIEND_REQUEST, FRIEND_RESPOND -> id = notification.getFriendId();
-            case CATEGORY_INVITE, CATEGORY_ADDED -> id =notification.getCategoryId();
+            case CATEGORY_INVITE, CATEGORY_ADDED -> id = notification.getCategoryId();
             case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_PHOTO_ADDED, COMMENT_VIDEO_ADDED, COMMENT_REPLY_ADDED -> id = notification.getPostId();
             // 여기는 추후에 대댓글 관련 id값을 어떻게 잡을지에 대해서 생각해야할지도
             default -> id = null;

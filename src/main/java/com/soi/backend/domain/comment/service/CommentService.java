@@ -246,4 +246,16 @@ public class CommentService {
                                 row -> ((Long) row[1]).intValue()
                         ));
     }
+
+    @Transactional
+    public Long getParentCommentIdOfReply(Long replyCommentId) {
+        Comment reply = commentRepository.findById(replyCommentId)
+                .orElseThrow(() -> new CustomException("댓글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        if (reply.getParentId() == null || reply.getParentId() == 0L) {
+            throw new CustomException("대댓글이 아닙니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        return reply.getParentId();
+    }
 }
