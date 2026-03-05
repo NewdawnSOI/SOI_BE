@@ -209,6 +209,45 @@ public class CategoryService {
         return true;
     }
 
+    public List<CategoryRespDto> findCategoriesByName(CategoryFilter filter, Long userId, String keyword, int page) {
+
+        String useKeyword = (keyword == null) ? "" : keyword.trim();
+        if (useKeyword.isEmpty()) {
+            return findCategories(filter, userId, page);
+        }
+
+        Boolean isPublic = switch (filter) {
+            case ALL -> null;
+            case PUBLIC -> true;
+            case PRIVATE -> false;
+        };
+
+        Pageable pageable = PageRequest.of(page,6);
+        List<Object[]> rows = categoryRepository.findCategoriesWithUserByName(userId, isPublic, useKeyword, pageable);
+
+        List<Long> categoryIds = rows.stream()
+                .map(row -> ((Category) row[0]).getId())
+                .toList();
+
+        List<Object[]> userRows = categoryUserRepository.findUsersByCategoryIds(categoryIds);
+
+        Map<Long, List<User>> usersByCategory = groupUsersByCategory(userRows);
+
+        List<CategoryRespDto> result = rows.stream()
+                .map(row -> {
+                    Category category = (Category) row[0];
+                    CategoryUser categoryUser = (CategoryUser) row[1];
+
+                    List<User> users = usersByCategory.getOrDefault(category.getId(), List.of());
+
+                    return toDto(category, categoryUser, users);
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        sortCategories(result);
+        return result;
+    }
+
     public List<CategoryRespDto> findCategories(CategoryFilter filter, Long userId, int page) {
 
         Boolean isPublic = switch (filter) {
@@ -218,7 +257,7 @@ public class CategoryService {
         };
 
         Pageable pageable = PageRequest.of(page,6);
-        List<Object[]> rows = categoryRepository.findCategoriesWithUser(userId, isPublic, pageable);;
+        List<Object[]> rows = categoryRepository.findCategoriesWithUser(userId, isPublic, pageable);
 
         List<Long> categoryIds = rows.stream()
                 .map(row -> ((Category) row[0]).getId())
