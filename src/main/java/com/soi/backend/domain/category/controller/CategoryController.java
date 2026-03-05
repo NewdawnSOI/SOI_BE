@@ -66,6 +66,16 @@ public class CategoryController {
         return ResponseEntity.ok(ApiResponseDto.success(categories, "카테고리 조회 완료"));
     }
 
+    @Operation(summary = "유저가 속한 카테고를 검색하는 API", description = "CategoryFilter : ALL, PUBLIC, PRIVATE -> 옵션에 따라서 전체, 그룹, 개인으로 가져올 수 있음,\nkeyword에 검색어 입력, 만약 검색어가 null이거나 빈문자열일경우 그냥 전체 카테고리를 가져옴")
+    @PostMapping("/find-by-keyword")
+    public ResponseEntity<ApiResponseDto<List<CategoryRespDto>>> getCategories(@RequestParam CategoryFilter categoryFilter,
+                                                                               @RequestParam Long userId,
+                                                                               @RequestParam(required = false) String keyword,
+                                                                               @RequestParam(defaultValue = "0") int page) {
+        List<CategoryRespDto> categories = categoryService.findCategoriesByName(categoryFilter, userId, keyword, page);
+        return ResponseEntity.ok(ApiResponseDto.success(categories, "카테고리 조회 완료"));
+    }
+
     @Operation(summary = "카테고리 고정", description = "카테고리 아이디, 유저 아이디로 카테고리를 고정 혹은 고정해제 시킵니다.")
     @PostMapping("/set/pinned")
     public ResponseEntity<ApiResponseDto<Boolean>> categoryPinned(@RequestParam Long categoryId,
