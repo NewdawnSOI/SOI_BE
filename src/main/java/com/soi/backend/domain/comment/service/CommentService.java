@@ -71,6 +71,7 @@ public class CommentService {
                     commentId,
                     post.getId(),
                     categoryId,
+                    commentId,
                     notificationService.makeMessage(user.getId(), post.getContent(), notificationType),
                     notificationType
             );
