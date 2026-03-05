@@ -1,12 +1,9 @@
 package com.soi.backend.domain.notification.service;
 
-import com.soi.backend.domain.category.entity.Category;
 import com.soi.backend.domain.category.entity.CategoryInvite;
 import com.soi.backend.domain.category.entity.CategoryInviteStatus;
 import com.soi.backend.domain.category.repository.CategoryInviteRepository;
-import com.soi.backend.domain.category.repository.CategoryRepository;
 import com.soi.backend.domain.comment.service.CommentReadService;
-import com.soi.backend.domain.comment.service.CommentService;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.dto.NotificationGetAllRespDto;
 import com.soi.backend.domain.notification.dto.NotificationReqDto;
@@ -56,7 +53,6 @@ public class NotificationService {
                 dto.getCategoryInviteId(),
                 dto.getPostId(),
                 dto.getCommentId(),
-                dto.getReplyedCommentId(),
                 dto.getImageKey()
         );
 
@@ -195,8 +191,8 @@ public class NotificationService {
                     notification.getIsRead(),
                     parseCategoryId(notification),
                     parseId(notification),
-                    notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? notification.getReplyCommentId() : null,
-                    notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? commentReadService.getParentCommentIdOfReply(notification.getReplyCommentId()) : null,
+                    notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? notification.getCommentId() : null,
+                    notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? commentReadService.getParentCommentIdOfReply(notification.getCommentId()) : null,
                     relatedUsers
             ));
         }
@@ -248,6 +244,23 @@ public class NotificationService {
     @Transactional
     public void sendPostCommentNotification(
             Long requesterId, Long receiverId, Long commentId, Long postId, Long categoryId, String title, NotificationType type) {
+
+        NotificationReqDto dto = NotificationReqDto.builder()
+                .requesterId(requesterId)
+                .receiverId(receiverId)
+                .type(type)
+                .title(title)
+                .postId(postId)
+                .categoryId(categoryId)
+                .commentId(commentId)
+                .imageKey("")
+                .build();
+        createNotification(dto);
+    }
+
+    @Transactional
+    public void sendPostCommentNotification(
+            Long requesterId, Long receiverId, Long commentId, Long replyCommentId, Long postId, Long categoryId, String title, NotificationType type) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
                 .requesterId(requesterId)

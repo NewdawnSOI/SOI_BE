@@ -42,9 +42,6 @@ public class Notification {
     @Column(name = "comment_id")
     private Long commentId; // 댓글 알람일떄 댓글 ID
 
-    @Column(name = "reply_comment_id")
-    private Long replyCommentId;
-
     @Column(name = "post_id")
     private Long postId; // 댓글달린 게시물의 ID
 
@@ -63,7 +60,7 @@ public class Notification {
     }
 
     public Notification(Long requesterId, Long receiverId, NotificationType type, String title,
-                        Long friendId, Long categoryId, Long categoryInviteId, Long postId, Long commentId, Long replyCommentId, String imageKey) {
+                        Long friendId, Long categoryId, Long categoryInviteId, Long postId, Long commentId, String imageKey) {
         this.requesterId = requesterId;
         this.receiverId = receiverId;
         this.friendId = friendId;
@@ -73,7 +70,6 @@ public class Notification {
         this.categoryInviteId = categoryInviteId;
         this.postId = postId;
         this.commentId = commentId;
-        this.replyCommentId = replyCommentId;
         this.createdAt = LocalDateTime.now();
         this.imageKey = imageKey;
         this.isRead = false;
