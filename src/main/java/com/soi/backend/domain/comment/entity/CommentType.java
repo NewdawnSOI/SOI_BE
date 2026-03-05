@@ -5,5 +5,6 @@ public enum CommentType {
     TEXT,
     AUDIO,
     PHOTO,
+    VIDEO,
     REPLY
 }
