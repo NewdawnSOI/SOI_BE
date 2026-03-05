@@ -313,15 +313,11 @@ public class NotificationService {
             case FRIEND_RESPOND -> requesterName + " 님이 친구요청을 수락하였습니다.";
             case CATEGORY_INVITE -> requesterName + " 님이 \"" + targetName + "\" 카테고리에 초대하였습니다.";
             case CATEGORY_ADDED -> requesterName + " 님의 \"" + targetName + "\" 카테고리에 추가되었습니다.";
-//            case PHOTO_ADDED -> requesterName + " 님이 " + targetName + " 카테고리에 게시물을 추가하였습니다.";
-//            case COMMENT_ADDED -> requesterName + " 님이" + targetName + " 게시물에 댓글을 남겼습니다.";
-//            case COMMENT_AUDIO_ADDED -> requesterName + " 님이" + targetName + " 게시물에 음성 댓글을 남겼습니다.";
-//            case CATEGORY_INVITE -> requesterName + " 님이 카테고리에 초대하였습니다.";
-//            case CATEGORY_ADDED -> requesterName + " 님의 카테고리에 추가되었습니다.";
             case PHOTO_ADDED -> requesterName + " 님이 카테고리에 게시물을 추가하였습니다.";
             case COMMENT_ADDED -> requesterName + " 님이 게시물에 댓글을 남겼습니다.";
             case COMMENT_AUDIO_ADDED -> requesterName + " 님이 게시물에 음성 댓글을 남겼습니다.";
-            case COMMENT_REACT_ADDED -> requesterName + " 님이 게시물에 반응을 남겼습니다.";
+            case COMMENT_PHOTO_ADDED -> requesterName + " 님이 게시물에 사진 댓글을 남겼습니다.";
+            case COMMENT_VIDEO_ADDED -> requesterName + " 님이 게시물에 영상 댓글을 남겼습니다.";
             case COMMENT_REPLY_ADDED -> requesterName + " 님이 댓글에 답장을 남겼습니다.";
             default -> "";
         };
@@ -338,7 +334,8 @@ public class NotificationService {
         switch (notification.getType()) {
             case FRIEND_REQUEST, FRIEND_RESPOND -> id = notification.getFriendId();
             case CATEGORY_INVITE, CATEGORY_ADDED -> id =notification.getCategoryId();
-            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_REACT_ADDED -> id = notification.getPostId();
+            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_PHOTO_ADDED, COMMENT_VIDEO_ADDED, COMMENT_REPLY_ADDED -> id = notification.getPostId();
+            // 여기는 추후에 대댓글 관련 id값을 어떻게 잡을지에 대해서 생각해야할지도
             default -> id = null;
         }
         return id;
@@ -347,7 +344,7 @@ public class NotificationService {
     private Long parseCategoryId(Notification notification) {
         Long id;
         switch (notification.getType()) {
-            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_REACT_ADDED -> id = notification.getCategoryId();
+            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_PHOTO_ADDED, COMMENT_VIDEO_ADDED, COMMENT_REPLY_ADDED -> id = notification.getCategoryId();
             default -> id = null;
         }
         return id;
