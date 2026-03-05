@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -28,6 +29,7 @@ public class CommentRespDto {
     private CommentType commentType;
     private String fileUrl;
     private String fileKey;
+    private LocalDateTime createdAt;
 // 대댓글 위한 정보
     private Long replyUserCount;
 }

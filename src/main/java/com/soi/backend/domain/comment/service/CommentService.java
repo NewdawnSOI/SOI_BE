@@ -232,6 +232,7 @@ public class CommentService {
                 comment.getCommentType(),
                 fileUrl,
                 comment.getFileKey(),
+                comment.getCreatedAt(),
                 replyUserCount
         );
     }
