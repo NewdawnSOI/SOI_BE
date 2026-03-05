@@ -54,7 +54,6 @@ public class CommentService {
         switch (commentType) {
             case TEXT, PHOTO -> notificationType = NotificationType.COMMENT_ADDED;
             case AUDIO -> notificationType = NotificationType.COMMENT_AUDIO_ADDED;
-            case EMOJI -> notificationType = NotificationType.COMMENT_REACT_ADDED;
             case REPLY ->  notificationType = NotificationType.COMMENT_REPLY_ADDED;
             default -> notificationType = null;
         }
