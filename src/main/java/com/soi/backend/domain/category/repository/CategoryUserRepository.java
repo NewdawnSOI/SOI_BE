@@ -44,7 +44,7 @@ public interface CategoryUserRepository extends JpaRepository<CategoryUser, Long
     @Modifying
     @Query("""
     UPDATE CategoryUser cu
-    SET cu.customProfile = null
+    SET cu.customProfile = ""
     WHERE cu.categoryId = :categoryId
       AND cu.customProfile = :fileKey
 """)
