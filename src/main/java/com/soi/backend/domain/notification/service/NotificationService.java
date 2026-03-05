@@ -5,6 +5,7 @@ import com.soi.backend.domain.category.entity.CategoryInvite;
 import com.soi.backend.domain.category.entity.CategoryInviteStatus;
 import com.soi.backend.domain.category.repository.CategoryInviteRepository;
 import com.soi.backend.domain.category.repository.CategoryRepository;
+import com.soi.backend.domain.comment.service.CommentReadService;
 import com.soi.backend.domain.comment.service.CommentService;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.dto.NotificationGetAllRespDto;
@@ -40,7 +41,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final CategoryInviteRepository categoryInviteRepository;
-    private final CommentService commentService;
+    private final CommentReadService commentReadService;
 
     @Transactional
     public Long createNotification(NotificationReqDto dto) {
@@ -195,7 +196,7 @@ public class NotificationService {
                     parseCategoryId(notification),
                     parseId(notification),
                     notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? notification.getReplyCommentId() : null,
-                    notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? commentService.getParentCommentIdOfReply(notification.getReplyCommentId()) : null,
+                    notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? commentReadService.getParentCommentIdOfReply(notification.getReplyCommentId()) : null,
                     relatedUsers
             ));
         }
