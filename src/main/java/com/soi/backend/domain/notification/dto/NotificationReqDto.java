@@ -22,6 +22,7 @@ public class NotificationReqDto {
     private Long categoryId;
     private Long categoryInviteId;
     private Long commentId;
+    private Long replyCommentId;
     private Long postId;
     private String imageKey;
 }

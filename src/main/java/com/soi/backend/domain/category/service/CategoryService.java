@@ -23,10 +23,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -211,40 +209,84 @@ public class CategoryService {
         return true;
     }
 
-    public List<CategoryRespDto> findCategories(CategoryFilter filter, Long userId, int page) {
+    public List<CategoryRespDto> findCategoriesByName(CategoryFilter filter, Long userId, String keyword, int page) {
 
-        List<CategoryRespDto> categories = new ArrayList<>();
+        String useKeyword = (keyword == null) ? "" : keyword.trim();
+        if (useKeyword.isEmpty()) {
+            return findCategories(filter, userId, page);
+        }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.",  HttpStatus.NOT_FOUND));
-
-        // 1차 : 필터 옵션에 따라서 유저가 속한 모든 카테고리의 id를 가져옴
-        Pageable pageable = PageRequest.of(page,10);
-        List<Long> categoryIds = switch (filter) {
-            case ALL -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,null, pageable);
-            case PUBLIC -> categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,true, pageable);
-            case PRIVATE ->  categoryRepository.findCategoriesByUserIdAndPublicFilter(userId,false, pageable);
+        Boolean isPublic = switch (filter) {
+            case ALL -> null;
+            case PUBLIC -> true;
+            case PRIVATE -> false;
         };
 
-        // 2차 : 카테고리 아이디랑 유저 아이디로 커스텀 내용 반영해서 Dto 만들기
-        for (Long categoryId : categoryIds) {
-            Category category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new CustomException(categoryId + "번 카테고리를 찾을 수 없음",  HttpStatus.NOT_FOUND));
-            CategoryUser categoryUser = categoryUserRepository.findByCategoryIdAndUserId(categoryId, userId)
-                    .orElseThrow(() -> new CustomException(categoryId + "번 카테고리에 " + userId + " 유저가 속해있지 않음",  HttpStatus.NOT_FOUND));
-            List<User> users = categoryUserRepository.findAllUsersByCategoryId(categoryId);
-            List<String> nicknames = new ArrayList<>();
-            for(User u : users) {
-                nicknames.add(u.getNickname());
-            }
+        Pageable pageable = PageRequest.of(page,6);
+        List<Object[]> rows = categoryRepository.findCategoriesWithUserByName(userId, isPublic, useKeyword, pageable);
 
-            categories.add(toDto(category, categoryUser, users, nicknames));
-        }
-        sortCategories(categories);
-        return categories;
+        List<Long> categoryIds = rows.stream()
+                .map(row -> ((Category) row[0]).getId())
+                .toList();
+
+        List<Object[]> userRows = categoryUserRepository.findUsersByCategoryIds(categoryIds);
+
+        Map<Long, List<User>> usersByCategory = groupUsersByCategory(userRows);
+
+        List<CategoryRespDto> result = rows.stream()
+                .map(row -> {
+                    Category category = (Category) row[0];
+                    CategoryUser categoryUser = (CategoryUser) row[1];
+
+                    List<User> users = usersByCategory.getOrDefault(category.getId(), List.of());
+
+                    return toDto(category, categoryUser, users);
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        sortCategories(result);
+        return result;
     }
 
-    public CategoryRespDto toDto(Category category, CategoryUser categoryUser, List<User> users, List<String> nicknames) {
+    public List<CategoryRespDto> findCategories(CategoryFilter filter, Long userId, int page) {
+
+        Boolean isPublic = switch (filter) {
+            case ALL -> null;
+            case PUBLIC -> true;
+            case PRIVATE -> false;
+        };
+
+        Pageable pageable = PageRequest.of(page,6);
+        List<Object[]> rows = categoryRepository.findCategoriesWithUser(userId, isPublic, pageable);
+
+        List<Long> categoryIds = rows.stream()
+                .map(row -> ((Category) row[0]).getId())
+                .toList();
+
+        List<Object[]> userRows = categoryUserRepository.findUsersByCategoryIds(categoryIds);
+
+        Map<Long, List<User>> usersByCategory = groupUsersByCategory(userRows);
+
+        List<CategoryRespDto> result = rows.stream()
+                .map(row -> {
+                    Category category = (Category) row[0];
+                    CategoryUser categoryUser = (CategoryUser) row[1];
+
+                    List<User> users = usersByCategory.getOrDefault(category.getId(), List.of());
+
+                    return toDto(category, categoryUser, users);
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        sortCategories(result);
+        return result;
+    }
+
+    public CategoryRespDto toDto(Category category, CategoryUser categoryUser, List<User> users) {
+        List<String> nicknames = users.stream()
+                .map(User::getNickname)
+                .toList();
+
         List<String> userProfiles = users.stream()
                 .map(user -> {
                     return  user.getProfileImageKey();
@@ -254,7 +296,7 @@ public class CategoryService {
                 .toList();
 
         List<String> userProfilesUrl = users.stream()
-                .map(user -> {
+                .map( user -> {
                     String image = user.getProfileImageKey();
                     return image.isEmpty() ? "" : mediaService.getPresignedUrlByKey(image);
                 })
@@ -270,6 +312,14 @@ public class CategoryService {
 
         return new CategoryRespDto(category, categoryUser, nicknames, userProfiles, userProfilesUrl,
                 categoryPhotoUrl, users.size(), categoryUser.getPinnedAt(), category.getLastPhotoUploadedAt());
+    }
+
+    private Map<Long, List<User>> groupUsersByCategory(List<Object[]> userRows) {
+        return userRows.stream()
+                .collect(Collectors.groupingBy(
+                        row -> (Long) row[0],
+                        Collectors.mapping(row -> (User) row[1], Collectors.toList())
+                ));
     }
 
     private void sortCategories(List<CategoryRespDto> categories) {

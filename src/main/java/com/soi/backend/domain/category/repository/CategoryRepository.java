@@ -24,4 +24,33 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
             Boolean isPublic,
             Pageable pageable
     );
+
+    @Query("""
+        SELECT c, cu
+        FROM Category c
+        JOIN CategoryUser cu ON cu.categoryId = c.id
+        WHERE cu.userId = :userId
+            AND (:isPublic IS NULL OR c.isPublic = : isPublic)
+            AND c.name LIKE CONCAT('%', LOWER(:keyword), '%')
+
+    """)
+    List<Object[]> findCategoriesWithUserByName(
+            @Param("userId") Long userId,
+            @Param("isPublic") Boolean isPublic,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT c, cu
+    FROM CategoryUser cu
+    JOIN Category c ON cu.categoryId = c.id
+    WHERE cu.userId = :userId
+    AND (:isPublic IS NULL OR c.isPublic = :isPublic)
+    """)
+    List<Object[]> findCategoriesWithUser(
+            @Param("userId") Long userId,
+            @Param("isPublic") Boolean isPublic,
+            Pageable pageable
+    );
 }

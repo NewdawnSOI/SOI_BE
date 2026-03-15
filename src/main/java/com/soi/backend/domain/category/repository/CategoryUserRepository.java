@@ -44,7 +44,7 @@ public interface CategoryUserRepository extends JpaRepository<CategoryUser, Long
     @Modifying
     @Query("""
     UPDATE CategoryUser cu
-    SET cu.customProfile = null
+    SET cu.customProfile = ""
     WHERE cu.categoryId = :categoryId
       AND cu.customProfile = :fileKey
 """)
@@ -52,4 +52,13 @@ public interface CategoryUserRepository extends JpaRepository<CategoryUser, Long
             Long categoryId,
             String fileKey
     );
+
+
+    @Query("""
+    SELECT cu.categoryId, u
+    FROM CategoryUser cu
+    JOIN User u ON cu.userId = u.id
+    WHERE cu.categoryId IN :categoryIds
+    """)
+    List<Object[]> findUsersByCategoryIds(@Param("categoryIds") List<Long> categoryIds);
 }

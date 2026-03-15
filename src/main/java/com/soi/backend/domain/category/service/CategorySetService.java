@@ -7,6 +7,7 @@ import com.soi.backend.domain.category.repository.CategoryUserRepository;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.post.entity.Post;
 import com.soi.backend.domain.post.entity.PostStatus;
+import com.soi.backend.domain.post.entity.PostType;
 import com.soi.backend.domain.post.repository.PostRepository;
 import com.soi.backend.domain.post.service.PostService;
 import com.soi.backend.global.exception.CustomException;
@@ -99,7 +100,7 @@ public class CategorySetService {
                 .orElseThrow(() -> new CustomException(post.getCategoryId() + "를 찾을 수 없습니다.",  HttpStatus.NOT_FOUND));
 
         // 카테고리 대표이미지 변경
-        if (category.getCategoryProfileKey().equals(post.getFileKey())) {
+        if (category.getCategoryProfileKey().equals(post.getFileKey()) && !post.getFileKey().isBlank()) {
             Optional<Post> topPost = postRepository.findTopByCategoryIdAndStatusOrderByCreatedAtDesc(category.getId(), PostStatus.ACTIVE);
             if (topPost.isPresent()) {
                 category.setProfileKey(topPost.get().getFileKey());
@@ -109,7 +110,10 @@ public class CategorySetService {
         }
 
         // 커스텀 카테고리에 있는것도 삭제
-        categoryUserRepository.clearCustomProfileByCategoryIdAndFileKey(category.getId(), post.getFileKey());
+//        if (post.getFileKey() == null || post.getFileKey().isBlank()) return;
+        if (post.getPostType() != PostType.TEXT_ONLY) {
+            categoryUserRepository.clearCustomProfileByCategoryIdAndFileKey(category.getId(), post.getFileKey());
+        }
     }
 
     @Transactional

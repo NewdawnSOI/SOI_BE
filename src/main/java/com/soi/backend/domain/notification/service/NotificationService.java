@@ -1,10 +1,9 @@
 package com.soi.backend.domain.notification.service;
 
-import com.soi.backend.domain.category.entity.Category;
 import com.soi.backend.domain.category.entity.CategoryInvite;
 import com.soi.backend.domain.category.entity.CategoryInviteStatus;
 import com.soi.backend.domain.category.repository.CategoryInviteRepository;
-import com.soi.backend.domain.category.repository.CategoryRepository;
+import com.soi.backend.domain.comment.service.CommentReadService;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.domain.notification.dto.NotificationGetAllRespDto;
 import com.soi.backend.domain.notification.dto.NotificationReqDto;
@@ -39,6 +38,8 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final CategoryInviteRepository categoryInviteRepository;
+    private final CommentReadService commentReadService;
+    private final NotificationOutboxService notificationOutboxService;
 
     @Transactional
     public Long createNotification(NotificationReqDto dto) {
@@ -57,6 +58,7 @@ public class NotificationService {
         );
 
         notificationRepository.save(notification);
+        notificationOutboxService.enqueue(notification.getId(), notification.getReceiverId());
         return notification.getId();
     }
     @Transactional
@@ -191,6 +193,8 @@ public class NotificationService {
                     notification.getIsRead(),
                     parseCategoryId(notification),
                     parseId(notification),
+                    notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? notification.getCommentId() : null,
+                    notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? commentReadService.getParentCommentIdOfReply(notification.getCommentId()) : null,
                     relatedUsers
             ));
         }
@@ -242,6 +246,23 @@ public class NotificationService {
     @Transactional
     public void sendPostCommentNotification(
             Long requesterId, Long receiverId, Long commentId, Long postId, Long categoryId, String title, NotificationType type) {
+
+        NotificationReqDto dto = NotificationReqDto.builder()
+                .requesterId(requesterId)
+                .receiverId(receiverId)
+                .type(type)
+                .title(title)
+                .postId(postId)
+                .categoryId(categoryId)
+                .commentId(commentId)
+                .imageKey("")
+                .build();
+        createNotification(dto);
+    }
+
+    @Transactional
+    public void sendPostCommentNotification(
+            Long requesterId, Long receiverId, Long commentId, Long replyCommentId, Long postId, Long categoryId, String title, NotificationType type) {
 
         NotificationReqDto dto = NotificationReqDto.builder()
                 .requesterId(requesterId)
@@ -313,15 +334,12 @@ public class NotificationService {
             case FRIEND_RESPOND -> requesterName + " 님이 친구요청을 수락하였습니다.";
             case CATEGORY_INVITE -> requesterName + " 님이 \"" + targetName + "\" 카테고리에 초대하였습니다.";
             case CATEGORY_ADDED -> requesterName + " 님의 \"" + targetName + "\" 카테고리에 추가되었습니다.";
-//            case PHOTO_ADDED -> requesterName + " 님이 " + targetName + " 카테고리에 게시물을 추가하였습니다.";
-//            case COMMENT_ADDED -> requesterName + " 님이" + targetName + " 게시물에 댓글을 남겼습니다.";
-//            case COMMENT_AUDIO_ADDED -> requesterName + " 님이" + targetName + " 게시물에 음성 댓글을 남겼습니다.";
-//            case CATEGORY_INVITE -> requesterName + " 님이 카테고리에 초대하였습니다.";
-//            case CATEGORY_ADDED -> requesterName + " 님의 카테고리에 추가되었습니다.";
             case PHOTO_ADDED -> requesterName + " 님이 카테고리에 게시물을 추가하였습니다.";
             case COMMENT_ADDED -> requesterName + " 님이 게시물에 댓글을 남겼습니다.";
             case COMMENT_AUDIO_ADDED -> requesterName + " 님이 게시물에 음성 댓글을 남겼습니다.";
-            case COMMENT_REACT_ADDED -> requesterName + " 님이 게시물에 반응을 남겼습니다.";
+            case COMMENT_PHOTO_ADDED -> requesterName + " 님이 게시물에 사진 댓글을 남겼습니다.";
+            case COMMENT_VIDEO_ADDED -> requesterName + " 님이 게시물에 영상 댓글을 남겼습니다.";
+            case COMMENT_REPLY_ADDED -> requesterName + " 님이 댓글에 답장을 남겼습니다.";
             default -> "";
         };
     }
@@ -336,8 +354,9 @@ public class NotificationService {
         Long id;
         switch (notification.getType()) {
             case FRIEND_REQUEST, FRIEND_RESPOND -> id = notification.getFriendId();
-            case CATEGORY_INVITE, CATEGORY_ADDED -> id =notification.getCategoryId();
-            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_REACT_ADDED -> id = notification.getPostId();
+            case CATEGORY_INVITE, CATEGORY_ADDED -> id = notification.getCategoryId();
+            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_PHOTO_ADDED, COMMENT_VIDEO_ADDED, COMMENT_REPLY_ADDED -> id = notification.getPostId();
+            // 여기는 추후에 대댓글 관련 id값을 어떻게 잡을지에 대해서 생각해야할지도
             default -> id = null;
         }
         return id;
@@ -346,7 +365,7 @@ public class NotificationService {
     private Long parseCategoryId(Notification notification) {
         Long id;
         switch (notification.getType()) {
-            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_REACT_ADDED -> id = notification.getCategoryId();
+            case PHOTO_ADDED, COMMENT_AUDIO_ADDED, COMMENT_ADDED, COMMENT_PHOTO_ADDED, COMMENT_VIDEO_ADDED, COMMENT_REPLY_ADDED -> id = notification.getCategoryId();
             default -> id = null;
         }
         return id;

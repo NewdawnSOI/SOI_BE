@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,14 +55,14 @@ public class FriendController {
 
     @Operation(summary = "모든 친구 조회", description = "유저의 id (user_id 말고 그냥 id)를 통해 모든 친구를 조회합니다.")
     @GetMapping("/get-all")
-    public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllFriend(@RequestParam Long id, @RequestParam FriendStatus friendStatus) {
+    public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllFriend(@AuthenticationPrincipal Long id, @RequestParam FriendStatus friendStatus) {
         List<UserFindRespDto> friends = friendService.getAllFriends(id, friendStatus);
         return ResponseEntity.ok(ApiResponseDto.success(friends, "모든 친구 조회 완료"));
     }
 
     @Operation(summary = "연락처에 있는 친구들 관계확인", description = "유저의 id와 연락처에 있는 친구들 전화번호를 List로 받아서 관계를 리턴합니다.")
     @GetMapping("/check-friend-relation")
-    public ResponseEntity<ApiResponseDto<List<FriendCheckRespDto>>> getAllFriend(@RequestParam Long id, @RequestParam List<String> friendPhoneNums) {
+    public ResponseEntity<ApiResponseDto<List<FriendCheckRespDto>>> getAllFriend(@AuthenticationPrincipal Long id, @RequestParam List<String> friendPhoneNums) {
         List<FriendCheckRespDto> friends = friendService.checkIsFriend(id,friendPhoneNums);
         return ResponseEntity.ok(ApiResponseDto.success(friends, "모든 친구 조회 완료"));
     }

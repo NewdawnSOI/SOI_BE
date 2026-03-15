@@ -47,8 +47,13 @@ services:
       SMS_SERVICE_KEY: ${SMS_SERVICE_KEY}
       SMS_SERVICE_SECRET: ${SMS_SERVICE_SECRET}
       SMS_SERVICE_PHONE: ${SMS_SERVICE_PHONE}
+      APP_FCM_ENABLED: ${APP_FCM_ENABLED:-false}
+      APP_FCM_CREDENTIALS_PATH: ${APP_FCM_CREDENTIALS_PATH:-/opt/secrets/firebase-admin.json}
+      APP_FCM_PROJECT_ID: ${APP_FCM_PROJECT_ID}
 
     restart: unless-stopped
+    volumes:
+      - ./secrets:/opt/secrets:ro
 
 volumes:
   mysql_data:

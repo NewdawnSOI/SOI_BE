@@ -7,12 +7,12 @@ import com.soi.backend.domain.category.dto.CategoryRespDto;
 import com.soi.backend.domain.category.entity.CategoryFilter;
 import com.soi.backend.domain.category.service.CategoryService;
 import com.soi.backend.domain.category.service.CategorySetService;
-import com.soi.backend.domain.post.dto.PostRespDto;
 import com.soi.backend.global.ApiResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,7 +36,7 @@ public class CategoryController {
 
     @Operation(summary = "카테고리 나가기 (삭제)", description = "카테고리를 나갑니다. (만약 카테고리에 속한 유저가 본인밖에 없으면 관련 데이터 다 삭제)")
     @PostMapping("/delete")
-    public ResponseEntity<ApiResponseDto<?>> delete(@RequestParam Long userId, Long categoryId) {
+    public ResponseEntity<ApiResponseDto<?>> delete(@AuthenticationPrincipal Long userId, Long categoryId) {
         categoryService.deleteCategory(userId, categoryId);
         return ResponseEntity.ok(ApiResponseDto.success(null,"카테고리 나가기(삭제) 완료"));
     }
@@ -60,16 +60,26 @@ public class CategoryController {
     @Operation(summary = "유저가 속한 카테고리 리스트를 가져오는 API", description = "CategoryFilter : ALL, PUBLIC, PRIVATE -> 옵션에 따라서 전체, 그룹, 개인으로 가져올 수 있음")
     @PostMapping("/find")
     public ResponseEntity<ApiResponseDto<List<CategoryRespDto>>> getCategories(@RequestParam CategoryFilter categoryFilter,
-                                                                               @RequestParam Long userId,
+                                                                               @AuthenticationPrincipal Long userId,
                                                                                @RequestParam(defaultValue = "0") int page) {
         List<CategoryRespDto> categories = categoryService.findCategories(categoryFilter, userId, page);
+        return ResponseEntity.ok(ApiResponseDto.success(categories, "카테고리 조회 완료"));
+    }
+
+    @Operation(summary = "유저가 속한 카테고를 검색하는 API", description = "CategoryFilter : ALL, PUBLIC, PRIVATE -> 옵션에 따라서 전체, 그룹, 개인으로 가져올 수 있음,\nkeyword에 검색어 입력, 만약 검색어가 null이거나 빈문자열일경우 그냥 전체 카테고리를 가져옴")
+    @PostMapping("/find-by-keyword")
+    public ResponseEntity<ApiResponseDto<List<CategoryRespDto>>> getCategories(@RequestParam CategoryFilter categoryFilter,
+                                                                               @AuthenticationPrincipal Long userId,
+                                                                               @RequestParam(required = false) String keyword,
+                                                                               @RequestParam(defaultValue = "0") int page) {
+        List<CategoryRespDto> categories = categoryService.findCategoriesByName(categoryFilter, userId, keyword, page);
         return ResponseEntity.ok(ApiResponseDto.success(categories, "카테고리 조회 완료"));
     }
 
     @Operation(summary = "카테고리 고정", description = "카테고리 아이디, 유저 아이디로 카테고리를 고정 혹은 고정해제 시킵니다.")
     @PostMapping("/set/pinned")
     public ResponseEntity<ApiResponseDto<Boolean>> categoryPinned(@RequestParam Long categoryId,
-                                                                  @RequestParam Long userId) {
+                                                                  @AuthenticationPrincipal Long userId) {
         Boolean result = categorySetService.setPinned(categoryId, userId);
         return ResponseEntity.ok(ApiResponseDto.success(result,"상단고정값 변경 완료"));
     }
@@ -77,7 +87,7 @@ public class CategoryController {
     @Operation(summary = "카테고리 이름수정", description = "카테고리 아이디, 유저 아이디, 수정할 이름을 받아 카테고리 이름을 수정합니다.\n커스텀한 이름을 삭제하길 원하면 name에 그냥 빈값 \"\" 을 넣으면 커스텀 이름이 삭제됩니다.")
     @PostMapping("/set/name")
     public ResponseEntity<ApiResponseDto<Boolean>> customName(@RequestParam Long categoryId,
-                                                              @RequestParam Long userId,
+                                                              @AuthenticationPrincipal Long userId,
                                                               @RequestParam(required = false) String name) {
         Boolean result = categorySetService.setName(categoryId, userId, name);
         return ResponseEntity.ok(ApiResponseDto.success(result,"이름 변경 완료"));
@@ -86,7 +96,7 @@ public class CategoryController {
     @Operation(summary = "카테고리 프로필 수정", description = "카테고리 아이디, 유저 아이디, 수정할 프로필 사진을 받아 프로필을 수정합니다.\n기본 프로필로 변경하고싶으면 profileImageKey에 \"\" 을 넣으면 됩니다.")
     @PostMapping("/set/profile")
     public ResponseEntity<ApiResponseDto<Boolean>> customProfile(@RequestParam Long categoryId,
-                                                                  @RequestParam Long userId,
+                                                                  @AuthenticationPrincipal Long userId,
                                                                  @RequestParam(required = false) String profileImageKey) {
         Boolean result = categorySetService.setProfile(categoryId, userId, profileImageKey);
         return ResponseEntity.ok(ApiResponseDto.success(result,"프로필 변경 완료"));
@@ -95,7 +105,7 @@ public class CategoryController {
     @Operation(summary = "카테고리 알림설정", description = "유저아이디와 카테고리 아이디로 알림을 설정합니다.")
     @PostMapping("/set/alert")
     public ResponseEntity<ApiResponseDto<Boolean>> categoryAlert(@RequestParam Long categoryId,
-                                                                  @RequestParam Long userId) {
+                                                                  @AuthenticationPrincipal Long userId) {
         Boolean result = categorySetService.setIsAlert(categoryId, userId);
         return ResponseEntity.ok(ApiResponseDto.success(result,"알림 여부 설정 변경 완료"));
     }

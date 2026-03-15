@@ -16,20 +16,22 @@ import com.soi.backend.domain.post.dto.PostRespDto;
 import com.soi.backend.domain.post.dto.PostUpdateReqDto;
 import com.soi.backend.domain.post.entity.Post;
 import com.soi.backend.domain.post.entity.PostStatus;
+import com.soi.backend.domain.post.entity.PostType;
 import com.soi.backend.domain.post.repository.PostRepository;
 import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -103,7 +105,8 @@ public class PostService {
                 postCreateReqDto.getWaveformData(),
                 postCreateReqDto.getDuration(),
                 postCreateReqDto.getIsFromGallery(),
-                postCreateReqDto.getSavedAspectRatio()
+                postCreateReqDto.getSavedAspectRatio(),
+                postCreateReqDto.getPostType()
         );
 
         postRepository.save(post);
@@ -123,7 +126,8 @@ public class PostService {
                 postUpdateReqDto.getWaveformData(),
                 postUpdateReqDto.getDuration(),
                 postUpdateReqDto.getIsFromGallery(),
-                postUpdateReqDto.getSavedAspectRatio()
+                postUpdateReqDto.getSavedAspectRatio(),
+                postUpdateReqDto.getPostType()
         );
 
         postRepository.save(originalPost);
@@ -191,17 +195,32 @@ public class PostService {
 
 
         // 카테고리에 있는 게시물 가져오기
-        Pageable pageable = PageRequest.of(page,10);
-        List<Post> posts = postRepository.findAllByCategoryIdAndStatusAndIsActiveOrderByCreatedAtDesc(categoryId, PostStatus.ACTIVE, true,pageable);
+        Pageable pageable = PageRequest.of(page,6);
+
+        Page<Object[]> rows = postRepository.findCategoryPosts(
+                categoryId,
+                userId,
+                pageable
+        );
 
         categorySetService.setLastViewed(categoryId, userId);
 
-        // 차단 관계의 사용자 게시물 필터링하기
-        List<Post> filteredPosts = filterBlockedPosts(posts, userId);
+        // 댓글수 조회
+        List<Long> postIds = rows.stream()
+                .map(row -> ((Post) row[0]).getId())
+                .toList();
 
-        return filteredPosts.stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+        Map<Long, Integer> commentCounts = commentService.getCommentCountsForPostIds(postIds);
+
+
+        return rows.stream()
+                .map(row -> {
+                    Post post = (Post) row[0];
+                    User user = (User) row[1];
+                    int count = commentCounts.getOrDefault(post.getId(), 0);
+                    return toDto(post, user, count);
+                })
+                .toList();
     }
 
     // 게시물 출력하기
@@ -212,49 +231,103 @@ public class PostService {
         List<Long> categoryIds = categoryUserRepository.findCategoriesByUserId(userId);
 
         // 10개씩 페이징하기
-        Pageable pageable = PageRequest.of(page,10);
+        Pageable pageable = PageRequest.of(page,3);
 
-        List<Post> posts = new ArrayList<>(postRepository.findAllByCategoryIdInAndStatusAndIsActiveOrderByCreatedAtDesc(
+        Page<Object[]> rows = postRepository.findFeedPosts(
                 categoryIds,
                 postStatus,
                 postStatus == PostStatus.ACTIVE,
-                pageable));
+                user.getId(),
+                pageable
+        );
 
-        // 차단 관계의 사용자 게시물 필터링하기
-        List<Post> filteredPosts = filterBlockedPosts(posts, userId);
+        // 댓글 갯수 카운트
+        Map<Long, Integer> commentCounts = commentService.getCommentCountsForPostIds(categoryIds);
 
-        return filteredPosts.stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+        return rows.stream()
+                .map(row -> {
+                    Post post = (Post) row[0];
+                    User postUser = (User) row[1];
+                    int count = commentCounts.getOrDefault(post.getId(), 0);
+                    return toDto(post, postUser, count);
+                })
+                .toList();
     }
 
     // 단일 게시물 상세페이지 정보
     public PostRespDto showPostDetail(Long postId) {
-        Post post = postRepository.findById(postId)
+//        Post post = postRepository.findById(postId)
+//                .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+        Object[] outer = postRepository.findPostWithUser(postId)
                 .orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        return toDto(post);
+
+        if (outer.length == 0) {
+            throw new CustomException("게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+        }
+
+        Object[] row;
+        if (outer[0] instanceof Object[]) {
+            row = (Object[]) outer[0];
+        } else {
+            row = outer;
+        }
+
+        if (row.length < 2) {
+            throw new CustomException("게시물 사용자 정보를 찾을 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        Post post = (Post) row[0];
+        User user = (User) row[1];
+        Map<Long, Integer> commentCount = commentService.getCommentCountsForPostIds(List.of(postId));
+
+        return toDto(post, user, commentCount.getOrDefault(postId, 0));
     }
 
-    private PostRespDto toDto(Post post) {
-        User user = userRepository.findById(post.getUserId())
-                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+    // 유저 id, 타입에 따라서 게시물 조회
+    public Slice<PostRespDto> findByUserId(Long userId, PostType postType, int page) {
+        Pageable pageable = PageRequest.of(page,6);
+
+        Slice<Object[]> rows = postRepository.findUserPostsWithUser(userId, postType, pageable);
+
+        List<Long> postIds = rows.getContent().stream()
+                .map(row -> ((Post) row[0]).getId())
+                .toList();
+
+        Map<Long, Integer> commentCounts = commentService.getCommentCountsForPostIds(postIds);
+
+        return rows.map(row -> {
+            Post post = (Post) row[0];
+            User user = (User) row[1];
+            int count = commentCounts.getOrDefault(post.getId(), 0);
+            return toDto(post, user, count);
+        });
+    }
+
+    private PostRespDto toDto(Post post, User user, int commentCount) {
+//        User user = userRepository.findById(post.getUserId())
+//                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        String profileKey = user.getProfileImageKey();
+        String fileKey = post.getFileKey();
 
         return new PostRespDto(
                 post.getId(),
                 user.getNickname(),
                 post.getContent(),
-                user.getProfileImageKey(),
+                profileKey,
                 user.getProfileImageKey().isBlank() ? null : mediaService.getPresignedUrlByKey(user.getProfileImageKey()),
-                post.getFileKey(),
+                fileKey,
                 post.getFileKey().isBlank() ? null : mediaService.getPresignedUrlByKey(post.getFileKey()),
                 post.getAudioKey(),
                 post.getWaveformData(),
+                commentCount,
                 post.getDuration(),
                 post.getIsActive(),
                 post.getCreatedAt(),
                 post.getSavedAspectRatio(),
-                post.getIsFromGallery()
+                post.getIsFromGallery(),
+                post.getPostType()
         );
     }
 

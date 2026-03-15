@@ -27,6 +27,12 @@ public class Comment {
     @Column(name = "post_id", nullable = false)
     private Long postId;
 
+    @Column(name = "parent_id")
+    private Long parentId;
+
+    @Column(name = "reply_user_id")
+    private Long replyUserId;
+
     @Column(name = "text", nullable = false)
     private String text;
 
@@ -45,6 +51,9 @@ public class Comment {
     @Column(name = "location_y", nullable = false)
     private Double locationY;
 
+    @Column(name = "file_url", nullable = false)
+    private String fileKey;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     CommentType commentType;
@@ -52,13 +61,16 @@ public class Comment {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public Comment(Long userId, Long emojiId, Long postId, String text, String audioKey,
+    public Comment(Long userId, Long emojiId, Long postId, Long parentId, Long replyUserId, String text, String audioKey, String fileKey,
                     String waveformData, Integer duration, Double locationX, Double locationY, CommentType commentType) {
         this.userId = userId;
         this.emojiId = emojiId;
         this.postId = postId;
+        this.parentId = parentId;
+        this.replyUserId = replyUserId;
         this.text = text;
         this.audioKey = audioKey;
+        this.fileKey = fileKey;
         this.waveformData = waveformData;
         this.duration = duration;
         this.locationX = locationX;

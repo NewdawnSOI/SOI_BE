@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,7 +31,7 @@ public class MediaController {
     public ResponseEntity<ApiResponseDto<List<String>>> uploadMedia(
             @RequestParam("types") List<String> types,
             @RequestParam("usageTypes") List<String> useageTypes,
-            @RequestParam("userId") Long userId,
+            @AuthenticationPrincipal Long userId,
             @RequestParam("refId") Long refId,
             @RequestParam("usageCount") Long usageCount,
             @RequestPart("files") List<MultipartFile> files) throws IOException {
