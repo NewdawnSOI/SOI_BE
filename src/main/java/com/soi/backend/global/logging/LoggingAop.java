@@ -31,6 +31,12 @@ public class LoggingAop {
 
     @Before("appLayer()")
     public void logBefore(JoinPoint jp) {
+        String declaringTypeName = jp.getSignature().getDeclaringTypeName();
+        String methodName = jp.getSignature().getName();
+
+        if (isNotificationSchedulerPolling(declaringTypeName, methodName)) {
+            return;
+        }
 
         String requestId = "no-req";
         try {
@@ -52,8 +58,8 @@ public class LoggingAop {
 
         log.info("[{}] CALL {}.{} args={}",
                 requestId,
-                jp.getSignature().getDeclaringTypeName(),
-                jp.getSignature().getName(),
+                declaringTypeName,
+                methodName,
                 argsString
         );
     }
@@ -71,5 +77,12 @@ public class LoggingAop {
                 jp.getSignature().getName(),
                 ex.getMessage()
         );
+    }
+
+    private boolean isNotificationSchedulerPolling(String declaringTypeName, String methodName) {
+        return ("com.soi.backend.domain.notification.service.NotificationPushService".equals(declaringTypeName)
+                && "sendPending".equals(methodName))
+                || ("com.soi.backend.domain.notification.service.NotificationOutboxService".equals(declaringTypeName)
+                && "findDispatchTargets".equals(methodName));
     }
 }

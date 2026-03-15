@@ -38,6 +38,12 @@ public class NotificationPushService {
         }
 
         List<NotificationOutbox> dispatchTargets = notificationOutboxService.findDispatchTargets(batchSize);
+        if (dispatchTargets.isEmpty()) {
+            return;
+        }
+
+        log.info("알림 outbox 발송 시작. count={}, batchSize={}", dispatchTargets.size(), batchSize);
+
         for (NotificationOutbox outbox : dispatchTargets) {
             try {
                 sendSingle(fcmClient, outbox);
