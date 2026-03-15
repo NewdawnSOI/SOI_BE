@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,8 +40,8 @@ public class UserController {
 
     @Operation(summary = "특정유저 조회", description = "유저의 id값(Long)으로 유저를 조회합니다.")
     @GetMapping("/get")
-    public ResponseEntity<ApiResponseDto<UserRespDto>> getUser(@RequestParam Long id) {
-        UserRespDto user = userService.getUserById(id);
+    public ResponseEntity<ApiResponseDto<UserRespDto>> getUser(@AuthenticationPrincipal Long userId) {
+        UserRespDto user = userService.getUserById(userId);
         return ResponseEntity.ok(ApiResponseDto.success(user, "사용자 조회 완료"));
     }
 
@@ -106,7 +107,7 @@ public class UserController {
 
     @Operation(summary = "유저 프로필 업데이트", description = "유저의 프로필을 업데이트 합니다.\n기본 프로필로 변경하고싶으면 profileImageKey에 \"\" 을 넣으면 됩니다.")
     @PatchMapping("/update-profile")
-    public ResponseEntity<ApiResponseDto<UserRespDto>> updateProfile(@RequestParam Long userId,
+    public ResponseEntity<ApiResponseDto<UserRespDto>> updateProfile(@AuthenticationPrincipal Long userId,
                                                                      @RequestParam(required = false) String profileImageKey) {
         UserRespDto userRespDto = userService.updateUserProfile(userId, profileImageKey);
         return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "유저 프로필 업데이트 성공"));
