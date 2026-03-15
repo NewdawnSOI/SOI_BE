@@ -39,6 +39,7 @@ public class NotificationService {
     private final UserRepository userRepository;
     private final CategoryInviteRepository categoryInviteRepository;
     private final CommentReadService commentReadService;
+    private final NotificationOutboxService notificationOutboxService;
 
     @Transactional
     public Long createNotification(NotificationReqDto dto) {
@@ -57,6 +58,7 @@ public class NotificationService {
         );
 
         notificationRepository.save(notification);
+        notificationOutboxService.enqueue(notification.getId(), notification.getReceiverId());
         return notification.getId();
     }
     @Transactional

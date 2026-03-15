@@ -100,8 +100,9 @@ public class UserController {
 
     @Operation(summary = "유저정보 업데이트", description = "새로운 데이터로 유저정보를 업데이트합니다.")
     @PatchMapping("/update")
-    public ResponseEntity<ApiResponseDto<UserRespDto>> update(@RequestBody UserUpdateReqDto userUpdateReqDto) {
-        UserRespDto userRespDto = userService.update(userUpdateReqDto);
+    public ResponseEntity<ApiResponseDto<UserRespDto>> update(@AuthenticationPrincipal Long userId,
+                                                              @RequestBody UserUpdateReqDto userUpdateReqDto) {
+        UserRespDto userRespDto = userService.update(userId, userUpdateReqDto);
         return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "유저 정보 업데이트 성공"));
     }
 

@@ -103,3 +103,5 @@ application.properties
 *.env
 env.local
 env.prod
+/secrets
+/secrets/firebase-admin.json
