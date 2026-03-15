@@ -154,8 +154,8 @@ public class UserService {
 
 
     @Transactional
-    public UserRespDto update(UserUpdateReqDto userUpdateReqDto) {
-        User user = userRepository.findById(userUpdateReqDto.getId())
+    public UserRespDto update(Long userId, UserUpdateReqDto userUpdateReqDto) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         user.update(userUpdateReqDto.getName(),

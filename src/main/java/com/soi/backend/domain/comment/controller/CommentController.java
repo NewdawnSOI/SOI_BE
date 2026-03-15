@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,7 +50,7 @@ public class CommentController {
 
     @Operation(summary = "사용자가 작성한 댓글 조회", description = "사용자가 작성한 모든 댓글을 조회합니다.")
     @GetMapping("/get/by-user-id")
-    public ResponseEntity<ApiResponseDto<Slice<CommentRespDto>>> getAllCommentByUserId(@RequestParam Long userId, @RequestParam int page) {
+    public ResponseEntity<ApiResponseDto<Slice<CommentRespDto>>> getAllCommentByUserId(@AuthenticationPrincipal Long userId, @RequestParam int page) {
         Slice<CommentRespDto> commentRespDtos = commentService.getAllCommentByUserId(userId, page);
         return ResponseEntity.ok(
                 ApiResponseDto.success(commentRespDtos,"대댓글 조회 완료"));

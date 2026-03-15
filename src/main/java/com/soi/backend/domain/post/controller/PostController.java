@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -56,7 +57,7 @@ public class PostController {
     @Operation(summary = "카테고리에 해당하는 게시물 조회", description = "카테고리 아이디, 유저아이디로 해당 카테고리에 속한 게시물을 조회합니다.\n page에 원하는 페이지 번호를 입력 0부터 시작")
     @GetMapping("/find-by/category")
     public ResponseEntity<ApiResponseDto<List<PostRespDto>>> findByCategoryId(@RequestParam Long categoryId,
-                                                                              @RequestParam Long userId,
+                                                                              @AuthenticationPrincipal Long userId,
                                                                               @RequestParam(required = false) Long notificationId,
                                                                               @RequestParam(defaultValue = "0") int page) {
         List<PostRespDto> postRespDtos = postService.findByCategoryId(categoryId, userId, notificationId, page);
@@ -65,7 +66,7 @@ public class PostController {
 
     @Operation(summary = "전체 게시물 조회", description = "사용자가 포함된 카테고리의 모든 게시물을 상태 (활성화, 삭제됨, 비활성화)에따라 리턴해줌\n page에 원하는 페이지 번호를 입력 0부터 시작")
     @GetMapping("/find-all")
-    public ResponseEntity<ApiResponseDto<List<PostRespDto>>> findAllByUserId(@RequestParam Long userId, @RequestParam PostStatus postStatus,
+    public ResponseEntity<ApiResponseDto<List<PostRespDto>>> findAllByUserId(@AuthenticationPrincipal Long userId, @RequestParam PostStatus postStatus,
                                                                              @RequestParam(defaultValue = "0") int page) {
         List<PostRespDto> postRespDtos = postService.findPostToShowMainPage(userId, postStatus, page);
         return ResponseEntity.ok(ApiResponseDto.success(postRespDtos,"전체 게시물 조회 완료"));
@@ -80,7 +81,7 @@ public class PostController {
 
     @Operation(summary = "유저 id로 게시물 조회", description = "유저 id와 type으로 게시물을 조회합니다.")
     @GetMapping("/find/by-user-id")
-    public ResponseEntity<ApiResponseDto<Slice<PostRespDto>>> findMediaByUserId(@RequestParam Long userId,
+    public ResponseEntity<ApiResponseDto<Slice<PostRespDto>>> findMediaByUserId(@AuthenticationPrincipal Long userId,
                                                                                 @RequestParam PostType postType,
                                                                                 @RequestParam int page) {
         Slice<PostRespDto> postRespDtos = postService.findByUserId(userId, postType, page);
