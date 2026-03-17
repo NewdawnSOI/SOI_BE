@@ -5,8 +5,6 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-
 import static com.soi.backend.global.logging.RequestIdFilter.REQUEST_ID;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.context.request.RequestAttributes;
@@ -18,49 +16,33 @@ import org.springframework.web.context.request.RequestContextHolder;
 public class LoggingAop {
 
     private final HttpServletRequest req;
+    private final RequestUserLogResolver requestUserLogResolver;
 
-    public LoggingAop(HttpServletRequest req) {
+    public LoggingAop(HttpServletRequest req, RequestUserLogResolver requestUserLogResolver) {
         this.req = req;
+        this.requestUserLogResolver = requestUserLogResolver;
     }
 
     /**
-     * Controller + Service만 로깅
+     * Controller 요청만 로깅
      */
-    @Pointcut("execution(* com.soi.backend..controller..*(..)) || execution(* com.soi.backend..service..*(..))")
-    public void appLayer() {}
+    @Pointcut("execution(* com.soi.backend..controller..*(..))")
+    public void controllerLayer() {}
 
-    @Before("appLayer()")
+    @Before("controllerLayer()")
     public void logBefore(JoinPoint jp) {
-        String declaringTypeName = jp.getSignature().getDeclaringTypeName();
-        String methodName = jp.getSignature().getName();
-
-        if (isNotificationSchedulerPolling(declaringTypeName, methodName)) {
+        String httpMethod = req.getMethod();
+        if ("GET".equalsIgnoreCase(httpMethod)) {
             return;
         }
 
-        String requestId = "no-req";
-        try {
-            Object reqId = RequestContextHolder.currentRequestAttributes()
-                    .getAttribute(REQUEST_ID, RequestAttributes.SCOPE_REQUEST);
-
-            if (reqId != null) {
-                requestId = reqId.toString();
-            }
-        } catch (IllegalStateException ignored) {
-            // 요청 외부(스케줄러 등)
-        }
-
-        // args 길어지면 일부만 출력
-        String argsString = Arrays.toString(jp.getArgs());
-        if (argsString.length() > 200) {
-            argsString = argsString.substring(0, 200) + "...";
-        }
-
-        log.info("[{}] CALL {}.{} args={}",
-                requestId,
-                declaringTypeName,
-                methodName,
-                argsString
+        log.info("[{}] {} {} user={} handler={}.{}",
+                resolveRequestId(),
+                httpMethod,
+                resolveRequestUri(),
+                requestUserLogResolver.resolveCurrentUserLabel(),
+                jp.getSignature().getDeclaringTypeName(),
+                jp.getSignature().getName()
         );
     }
 
@@ -68,7 +50,7 @@ public class LoggingAop {
      * EXCEPTION은 AOP에서는 남기지 않음 (중복 방지)
      * → GlobalExceptionHandler에서만 출력
      */
-    @AfterThrowing(pointcut = "appLayer()", throwing = "ex")
+    @AfterThrowing(pointcut = "controllerLayer()", throwing = "ex")
     public void logException(JoinPoint jp, Throwable ex) {
         // 필요 시 debug로 남길 수 있음
         log.debug("[{}] DEBUG-EX {}.{}: {}",
@@ -79,10 +61,27 @@ public class LoggingAop {
         );
     }
 
-    private boolean isNotificationSchedulerPolling(String declaringTypeName, String methodName) {
-        return ("com.soi.backend.domain.notification.service.NotificationPushService".equals(declaringTypeName)
-                && "sendPending".equals(methodName))
-                || ("com.soi.backend.domain.notification.service.NotificationOutboxService".equals(declaringTypeName)
-                && "findDispatchTargets".equals(methodName));
+    private String resolveRequestId() {
+        try {
+            Object reqId = RequestContextHolder.currentRequestAttributes()
+                    .getAttribute(REQUEST_ID, RequestAttributes.SCOPE_REQUEST);
+
+            if (reqId != null) {
+                return reqId.toString();
+            }
+        } catch (IllegalStateException ignored) {
+            return "no-req";
+        }
+
+        return "no-req";
+    }
+
+    private String resolveRequestUri() {
+        String queryString = req.getQueryString();
+        if (queryString == null || queryString.isBlank()) {
+            return req.getRequestURI();
+        }
+
+        return req.getRequestURI() + "?" + queryString;
     }
 }

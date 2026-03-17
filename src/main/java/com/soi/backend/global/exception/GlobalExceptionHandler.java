@@ -1,7 +1,9 @@
 package com.soi.backend.global.exception;
 
 import com.soi.backend.global.ApiResponseDto;
+import com.soi.backend.global.logging.RequestUserLogResolver;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -11,7 +13,10 @@ import static com.soi.backend.global.logging.RequestIdFilter.REQUEST_ID;
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final RequestUserLogResolver requestUserLogResolver;
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponseDto<?>> handleCustomException(
@@ -22,8 +27,11 @@ public class GlobalExceptionHandler {
             throw ex; // Swagger는 직접 처리하도록 예외 재던짐
         }
 
-        log.error("[{}] CustomException | message={} | status={} | location={}",
+        log.error("[{}] {} {} user={} CustomException | message={} | status={} | location={}",
                 req.getAttribute(REQUEST_ID),
+                req.getMethod(),
+                resolveRequestUri(req),
+                requestUserLogResolver.resolveCurrentUserLabel(),
                 ex.getMessage(),
                 ex.getHttpStatus(),
                 ex.getStackTrace()[0]
@@ -43,8 +51,11 @@ public class GlobalExceptionHandler {
             throw ex;
         }
 
-        log.error("[{}] UnhandledException | message={} | location={}",
+        log.error("[{}] {} {} user={} UnhandledException | message={} | location={}",
                 req.getAttribute(REQUEST_ID),
+                req.getMethod(),
+                resolveRequestUri(req),
+                requestUserLogResolver.resolveCurrentUserLabel(),
                 ex.getMessage(),
                 ex.getStackTrace()[0]
         );
@@ -59,5 +70,14 @@ public class GlobalExceptionHandler {
         return uri.startsWith("/v3/api-docs") ||
                 uri.startsWith("/swagger-ui") ||
                 uri.startsWith("/swagger-resources");
+    }
+
+    private String resolveRequestUri(HttpServletRequest req) {
+        String queryString = req.getQueryString();
+        if (queryString == null || queryString.isBlank()) {
+            return req.getRequestURI();
+        }
+
+        return req.getRequestURI() + "?" + queryString;
     }
 }
