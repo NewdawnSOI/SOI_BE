@@ -5,6 +5,7 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.SendResponse;
 import com.soi.backend.domain.notification.dto.NotificationSendPayloadDto;
+import com.soi.backend.domain.notification.entity.DevicePlatform;
 import com.soi.backend.domain.notification.entity.Notification;
 import com.soi.backend.domain.notification.entity.NotificationOutbox;
 import com.soi.backend.domain.notification.entity.UserDeviceToken;
@@ -16,7 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -71,21 +75,48 @@ public class NotificationPushService {
             return;
         }
 
-        List<String> tokens = deviceTokens.stream()
-                .map(UserDeviceToken::getToken)
-                .toList();
+        log.info("FCM 대상 조회 완료. outboxId={}, receiverId={}, targets={}, platforms={}",
+                outbox.getId(),
+                outbox.getReceiverId(),
+                deviceTokens.size(),
+                summarizePlatforms(deviceTokens));
 
         NotificationSendPayloadDto payload = notificationMessageFactory.create(notification);
-        BatchResponse batchResponse = fcmClient.sendMulticast(tokens, payload);
+        Map<DevicePlatform, List<UserDeviceToken>> tokensByPlatform = deviceTokens.stream()
+                .collect(Collectors.groupingBy(
+                        UserDeviceToken::getPlatform,
+                        () -> new EnumMap<>(DevicePlatform.class),
+                        Collectors.toList()
+                ));
 
-        disableInvalidTokens(deviceTokens, batchResponse);
+        boolean hasSuccess = false;
+        String failureMessage = "FCM 발송 실패";
 
-        if (batchResponse.getSuccessCount() > 0) {
+        for (Map.Entry<DevicePlatform, List<UserDeviceToken>> entry : tokensByPlatform.entrySet()) {
+            DevicePlatform platform = entry.getKey();
+            List<UserDeviceToken> platformTokens = entry.getValue();
+            List<String> tokens = platformTokens.stream()
+                    .map(UserDeviceToken::getToken)
+                    .toList();
+
+            BatchResponse batchResponse = fcmClient.sendMulticast(platform, tokens, payload);
+
+            logBatchResponses(outbox, platformTokens, batchResponse);
+            disableInvalidTokens(platformTokens, batchResponse);
+
+            if (batchResponse.getSuccessCount() > 0) {
+                hasSuccess = true;
+            } else {
+                failureMessage = extractFailureMessage(batchResponse);
+            }
+        }
+
+        if (hasSuccess) {
             notificationOutboxService.markSent(outbox.getId());
             return;
         }
 
-        notificationOutboxService.markRetry(outbox.getId(), extractFailureMessage(batchResponse));
+        notificationOutboxService.markRetry(outbox.getId(), failureMessage);
     }
 
     private void disableInvalidTokens(List<UserDeviceToken> deviceTokens, BatchResponse batchResponse) {
@@ -103,6 +134,40 @@ public class NotificationPushService {
         }
     }
 
+    private void logBatchResponses(
+            NotificationOutbox outbox,
+            List<UserDeviceToken> deviceTokens,
+            BatchResponse batchResponse
+    ) {
+        List<SendResponse> responses = batchResponse.getResponses();
+        for (int i = 0; i < responses.size(); i++) {
+            SendResponse response = responses.get(i);
+            UserDeviceToken deviceToken = deviceTokens.get(i);
+
+            if (response.isSuccessful()) {
+                log.info("FCM token 발송 성공. outboxId={}, platform={}, tokenSuffix={}",
+                        outbox.getId(),
+                        deviceToken.getPlatform(),
+                        maskToken(deviceToken.getToken()));
+                continue;
+            }
+
+            String errorCode = response.getException() == null || response.getException().getMessagingErrorCode() == null
+                    ? "UNKNOWN"
+                    : response.getException().getMessagingErrorCode().name();
+            String errorMessage = response.getException() == null
+                    ? "unknown error"
+                    : response.getException().getMessage();
+
+            log.warn("FCM token 발송 실패. outboxId={}, platform={}, tokenSuffix={}, errorCode={}, message={}",
+                    outbox.getId(),
+                    deviceToken.getPlatform(),
+                    maskToken(deviceToken.getToken()),
+                    errorCode,
+                    errorMessage);
+        }
+    }
+
     private String extractFailureMessage(BatchResponse batchResponse) {
         for (SendResponse response : batchResponse.getResponses()) {
             if (!response.isSuccessful() && response.getException() != null) {
@@ -111,5 +176,22 @@ public class NotificationPushService {
         }
 
         return "FCM 발송 실패";
+    }
+
+    private Map<DevicePlatform, Integer> summarizePlatforms(List<UserDeviceToken> deviceTokens) {
+        Map<DevicePlatform, Integer> platformCounts = new EnumMap<>(DevicePlatform.class);
+        for (UserDeviceToken deviceToken : deviceTokens) {
+            platformCounts.merge(deviceToken.getPlatform(), 1, Integer::sum);
+        }
+        return platformCounts;
+    }
+
+    private String maskToken(String token) {
+        if (token == null || token.isBlank()) {
+            return "empty";
+        }
+
+        int start = Math.max(0, token.length() - 8);
+        return token.substring(start);
     }
 }

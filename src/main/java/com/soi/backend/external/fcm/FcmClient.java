@@ -4,6 +4,7 @@ import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.soi.backend.domain.notification.dto.NotificationSendPayloadDto;
+import com.soi.backend.domain.notification.entity.DevicePlatform;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,10 +17,14 @@ public class FcmClient {
     private final FirebaseMessaging firebaseMessaging;
     private final FcmMessageFactory fcmMessageFactory;
 
-    public BatchResponse sendMulticast(List<String> tokens, NotificationSendPayloadDto payload)
+    public BatchResponse sendMulticast(
+            DevicePlatform platform,
+            List<String> tokens,
+            NotificationSendPayloadDto payload
+    )
             throws FirebaseMessagingException {
         return firebaseMessaging.sendEachForMulticast(
-                fcmMessageFactory.create(tokens, payload)
+                fcmMessageFactory.create(platform, tokens, payload)
         );
     }
 }
