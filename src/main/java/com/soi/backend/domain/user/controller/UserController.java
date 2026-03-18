@@ -24,13 +24,6 @@ public class UserController {
     private final UserService userService;
     private final SMSAuthService smsAuthService;
 
-    @Operation(summary = "사용자 생성", description = "새로운 사용자를 등록합니다.")
-    @PostMapping("/create")
-    public ResponseEntity<ApiResponseDto<UserRespDto>> createUser(@RequestBody UserCreateReqDto UserCreateReqDto) {
-        UserRespDto userRespDto = userService.createUser(UserCreateReqDto);
-        return ResponseEntity.ok(ApiResponseDto.success(userRespDto,"사용자 생성 성공"));
-    }
-
     @Operation(summary = "모든유저 조회", description = "모든유저를 조회합니다.")
     @GetMapping("/get-all")
     public ResponseEntity<ApiResponseDto<List<UserFindRespDto>>> getAllUsers() {
@@ -57,31 +50,6 @@ public class UserController {
     public ResponseEntity<ApiResponseDto<UserRespDto>> loginByNickname(@RequestParam String nickName) {
         UserRespDto userRespDto = userService.loginByNickname(nickName);
         return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "로그인 성공"));
-    }
-
-    // SMS 전송 서비스 찾을때까지 사용 X
-    @Operation(summary = "전화번호 인증", description = "사용자가 입력한 전화번호로 인증을 발송합니다.")
-    @PostMapping("/auth")
-    public ResponseEntity<Boolean> authSMS(@RequestParam String phoneNum) {
-        return ResponseEntity.ok(smsAuthService.sendSMStoAuth(phoneNum
-        ));
-    }
-
-    @Operation(summary = "전화번호 인증확인", description = "사용자 전화번호와 사용자가 입력한 인증코드를 보내서 인증확인을 진행합니다.")
-    @PostMapping("/auth/check")
-    public ResponseEntity<Boolean> checkAuthSMS(@RequestBody AuthCheckReqDto authCheckReqDto) {
-        return ResponseEntity.ok(smsAuthService.checkCode(authCheckReqDto));
-    }
-
-    @Operation(summary = "사용자 id 중복 체크", description = "사용자 id 중복 체크합니다. 사용가능 : true, 사용불가(중복) : false")
-    @GetMapping("/id-check")
-    public ResponseEntity<ApiResponseDto<Boolean>> idCheck(@RequestParam String userId) {
-        Boolean isDup = userService.isDuplicateUserId(userId);
-        if (!isDup) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(ApiResponseDto.fail(" id가 중복입니다."));
-        }
-        return ResponseEntity.ok(ApiResponseDto.success(true, "사용가능한 id입니다."));
     }
 
     @Operation(summary = "Id로 사용자 삭제", description = "Id 로 사용자를 삭제합니다.")
