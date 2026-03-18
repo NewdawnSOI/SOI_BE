@@ -17,7 +17,6 @@ import java.util.UUID;
 
 public class SMSAuthService {
     private final SMSAuthRepository smsAuthRepository;
-    private final UserService userService;
     private final MessageService messageService;
 
     // 전화번호 인증 메시지 보내기
