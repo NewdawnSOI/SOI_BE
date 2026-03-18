@@ -22,8 +22,16 @@ public class NotificationDataPayloadDto {
     private String categoryInviteId;
     private String postId;
     private String commentId;
+    private String nickname;
+    private String body;
+    private String imageUrl;
 
-    public static NotificationDataPayloadDto from(Notification notification) {
+    public static NotificationDataPayloadDto from(
+            Notification notification,
+            String nickname,
+            String body,
+            String imageUrl
+    ) {
         return NotificationDataPayloadDto.builder()
                 .notificationId(stringify(notification.getId()))
                 .type(notification.getType().name())
@@ -32,6 +40,9 @@ public class NotificationDataPayloadDto {
                 .categoryInviteId(stringify(notification.getCategoryInviteId()))
                 .postId(stringify(notification.getPostId()))
                 .commentId(stringify(notification.getCommentId()))
+                .nickname(nickname)
+                .body(body)
+                .imageUrl(imageUrl)
                 .build();
     }
 
@@ -44,6 +55,9 @@ public class NotificationDataPayloadDto {
         putIfPresent(data, "categoryInviteId", categoryInviteId);
         putIfPresent(data, "postId", postId);
         putIfPresent(data, "commentId", commentId);
+        putIfPresent(data, "nickname", nickname);
+        putIfPresent(data, "body", body);
+        putIfPresent(data, "imageUrl", imageUrl);
         return data;
     }
 

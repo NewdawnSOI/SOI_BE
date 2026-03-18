@@ -4,16 +4,32 @@ import com.soi.backend.domain.notification.dto.NotificationDataPayloadDto;
 import com.soi.backend.domain.notification.dto.NotificationSendPayloadDto;
 import com.soi.backend.domain.notification.entity.Notification;
 import com.soi.backend.domain.notification.entity.NotificationType;
+import com.soi.backend.domain.media.service.MediaService;
+import com.soi.backend.domain.user.entity.User;
+import com.soi.backend.domain.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class NotificationMessageFactory {
 
+    private final UserRepository userRepository;
+    private final MediaService mediaService;
+
     public NotificationSendPayloadDto create(Notification notification) {
+        User requester = notification.getRequesterId() == null
+                ? null
+                : userRepository.findById(notification.getRequesterId()).orElse(null);
+
+        String nickname = requester == null ? null : requester.getNickname();
+        String body = notification.getTitle();
+        String imageUrl = resolveImageUrl(notification.getImageKey());
+
         return NotificationSendPayloadDto.builder()
                 .title(makeTitle(notification.getType()))
-                .body(notification.getTitle())
-                .data(NotificationDataPayloadDto.from(notification).toMap())
+                .body(body)
+                .data(NotificationDataPayloadDto.from(notification, nickname, body, imageUrl).toMap())
                 .build();
     }
 
@@ -28,5 +44,13 @@ public class NotificationMessageFactory {
                  COMMENT_PHOTO_ADDED,
                  COMMENT_REPLY_ADDED -> "게시물 알림";
         };
+    }
+
+    private String resolveImageUrl(String imageKey) {
+        if (imageKey == null || imageKey.isBlank()) {
+            return null;
+        }
+
+        return mediaService.getPresignedUrlByKey(imageKey);
     }
 }
