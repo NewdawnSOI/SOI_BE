@@ -99,6 +99,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE p.userId = :userId
           AND p.postType = :postType
           AND p.status = 'ACTIVE'
+          AND EXISTS (
+              SELECT 1
+              FROM CategoryUser cu
+              WHERE cu.categoryId = p.categoryId
+              AND cu.userId = p.userId
+              )
         ORDER BY p.createdAt DESC
     """)
     Slice<Object[]> findUserPostsWithUser(
