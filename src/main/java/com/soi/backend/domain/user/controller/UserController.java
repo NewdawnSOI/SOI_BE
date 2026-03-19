@@ -82,4 +82,12 @@ public class UserController {
         return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "유저 프로필 업데이트 성공"));
     }
 
+    @Operation(summary = "유저 배경사진 업데이트", description = "유저의 배경사진을 업데이트 합니다.\n기본 배경화면으로 변경하고싶으면 profileImageKey에 \"\" 을 넣으면 됩니다.")
+    @PatchMapping("/update-cover-image")
+    public ResponseEntity<ApiResponseDto<UserRespDto>> updateCoverImage(@AuthenticationPrincipal Long userId,
+                                                                     @RequestParam(required = false) String coverImageKey) {
+        UserRespDto userRespDto = userService.updateCoverImage(userId, coverImageKey);
+        return ResponseEntity.ok(ApiResponseDto.success(userRespDto, "유저 프로필 배경사진 업데이트 성공"));
+    }
+
 }

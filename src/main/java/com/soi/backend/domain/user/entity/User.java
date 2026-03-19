@@ -30,6 +30,9 @@ public class User {
     @Column(name = "profile_image", nullable = false)
     private String profileImageKey;
 
+    @Column(name = "profile_cover_image")
+    private String profileCoverImageKey;
+
     @Column(name = "birth_date", nullable = false)
     private String birthDate;
 
@@ -77,6 +80,9 @@ public class User {
 
     public void setProfileImage(String profileImageKey) {
         this.profileImageKey = profileImageKey;
+    }
+    public void setProfileCoverImageKey(String coverImageKey) {
+        this.profileCoverImageKey = coverImageKey;
     }
 
     public void update(String name, String phoneNum, String nickname,  String profileImageKey, String birthDate,
