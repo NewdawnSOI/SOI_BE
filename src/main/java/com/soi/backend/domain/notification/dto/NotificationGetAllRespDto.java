@@ -9,11 +9,11 @@ import java.util.List;
 @AllArgsConstructor
 
 public class NotificationGetAllRespDto {
-    private final Integer friendReqCount; // 친구요청온거 갯수
+    private final Long friendReqCount; // 친구요청온거 갯수
     private final List<NotificationRespDto> notifications;
 
-    public NotificationGetAllRespDto(List<NotificationRespDto>  notifications) {
-        this.friendReqCount = notifications.size();
+    public NotificationGetAllRespDto(List<NotificationRespDto>  notifications, Long count) {
+        this.friendReqCount = count;
         this.notifications = notifications;
     }
 }
