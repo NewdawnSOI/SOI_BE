@@ -204,11 +204,16 @@ public class NotificationService {
 
     public NotificationGetAllRespDto getAllNotifications(Long userId, int page) {
         return new NotificationGetAllRespDto(
-                bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, false, page));
+                bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, false, page),
+                getFriendRequestCount(userId));
     }
 
     public List<NotificationRespDto> getAllFriendNotifications(Long userId, int page) {
         return bindNotificationDtos(userId, NotificationType.FRIEND_REQUEST, true, page);
+    }
+
+    public Long getFriendRequestCount(Long userId) {
+        return notificationRepository.countByReceiverIdAndType(userId, NotificationType.FRIEND_REQUEST);
     }
 
     @Transactional

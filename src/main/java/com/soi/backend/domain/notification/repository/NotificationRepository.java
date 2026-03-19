@@ -1,6 +1,7 @@
 package com.soi.backend.domain.notification.repository;
 
 import com.soi.backend.domain.notification.entity.Notification;
+import com.soi.backend.domain.notification.entity.NotificationType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -42,4 +43,13 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Long> findAllIdByCommentId(Long userId, Long commentId);
 
     Long findByReceiverIdAndCategoryId(Long userId, Long categoryId);
+
+    @Query("""
+    SELECT COUNT(n)
+    FROM Notification n
+    WHERE n.receiverId = :userId
+      AND n.type = :type
+    """)
+    long countByReceiverIdAndType(Long userId, NotificationType type);
+
 }
