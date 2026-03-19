@@ -31,5 +31,5 @@ public class CommentRespDto {
     private String fileKey;
     private LocalDateTime createdAt;
 // 대댓글 위한 정보
-    private Long replyUserCount;
+    private Long replyCommentCount;
 }
