@@ -189,4 +189,23 @@ public class UserService {
         return toDto(user);
     }
 
+    @Transactional
+    public UserRespDto updateCoverImage(Long userId, String coverImageKey) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        if (!user.getProfileCoverImageKey().isEmpty()) {
+            mediaService.removeMedia(user.getProfileCoverImageKey());
+        }
+
+        if (coverImageKey == null || coverImageKey.isEmpty()) {
+            user.setProfileCoverImageKey("");
+        } else {
+            user.setProfileCoverImageKey(coverImageKey);
+        }
+        userRepository.save(user);
+
+        return toDto(user);
+    }
+
 }
