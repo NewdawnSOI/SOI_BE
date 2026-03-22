@@ -117,7 +117,19 @@ public class CommentService {
 
     @Transactional
     public void deleteComment(Long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                        .orElseThrow(() -> new CustomException("댓글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        if (comment.getParentId() == 0) {
+            // 댓글이 원댓글인 경우
+            List<Comment> targetComments = commentRepository.findAllByParentId(commentId);
+            if (!targetComments.isEmpty()) {
+                commentRepository.deleteAll(targetComments);
+            }
+        }
+
         commentRepository.deleteById(commentId);
+
     }
 
     @Transactional
