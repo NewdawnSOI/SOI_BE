@@ -53,4 +53,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     Slice<Comment> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     Long countByParentId(Long parentId);
+
+    List<Comment> findAllByParentId(Long parentId);
 }
