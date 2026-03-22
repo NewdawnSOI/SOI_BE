@@ -85,12 +85,13 @@ public class User {
         this.profileCoverImageKey = coverImageKey;
     }
 
-    public void update(String name, String phoneNum, String nickname,  String profileImageKey, String birthDate,
-                       Boolean marketingAgreed) {
+    public void update(String name, String phoneNum, String nickname,  String profileImageKey, String profileCoverImageKey,
+                       String birthDate, Boolean marketingAgreed) {
         this.name = name;
         this.phoneNum = phoneNum;
         this.nickname = nickname;
         this.profileImageKey = profileImageKey;
+        this.profileCoverImageKey = profileCoverImageKey;
         this.birthDate = birthDate;
         this.isActive = true;
         this.marketingAgreed = marketingAgreed;

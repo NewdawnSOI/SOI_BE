@@ -162,6 +162,7 @@ public class UserService {
                 userUpdateReqDto.getPhoneNum(),
                 userUpdateReqDto.getNickname(),
                 userUpdateReqDto.getProfileImageKey(),
+                userUpdateReqDto.getProfileCoverImage(),
                 userUpdateReqDto.getBirthDate(),
                 userUpdateReqDto.getMarketingAgreed());
 
