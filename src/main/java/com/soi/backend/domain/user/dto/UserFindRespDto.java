@@ -14,5 +14,6 @@ public class UserFindRespDto {
     private String name;
     private String nickname;
     private String profileImageKey;
+    private String profileCoverImageKey;
     private boolean isActive;
 }

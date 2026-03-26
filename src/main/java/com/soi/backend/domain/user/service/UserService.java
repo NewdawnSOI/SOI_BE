@@ -66,6 +66,7 @@ public class UserService {
                         user.getName(),
                         user.getNickname(),
                         user.getProfileImageKey(),
+                        user.getProfileCoverImageKey(),
                         user.isActive()
                 ))
                 .collect(Collectors.toList());
@@ -148,6 +149,7 @@ public class UserService {
                 user.getNickname(),
                 user.getName(),
                 user.getProfileImageKey(),
+                user.getProfileCoverImageKey(),
                 user.getBirthDate(),
                 user.getPhoneNum());
     }

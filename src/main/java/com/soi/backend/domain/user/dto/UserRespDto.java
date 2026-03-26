@@ -14,6 +14,7 @@ public class UserRespDto {
     private String nickname;
     private String name;
     private String profileImageKey;
+    private String profileCoverImageKey;
     private String birthDate;
     private String phoneNum;
 }

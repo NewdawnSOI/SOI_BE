@@ -30,7 +30,7 @@ public class User {
     @Column(name = "profile_image", nullable = false)
     private String profileImageKey;
 
-    @Column(name = "profile_cover_image")
+    @Column(name = "profile_cover_image", nullable = false)
     private String profileCoverImageKey;
 
     @Column(name = "birth_date", nullable = false)
