@@ -14,6 +14,7 @@ public class UserCreateReqDto {
     private String phoneNum;
     private String birthDate;
     private String profileImageKey;
+    private String profileCoverImageKey;
     private Boolean serviceAgreed;
     private Boolean privacyPolicyAgreed;
     private Boolean marketingAgreed;
