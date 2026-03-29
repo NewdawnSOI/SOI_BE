@@ -187,6 +187,7 @@ public class NotificationService {
                     notification.getTitle(),
                     requester.getName(),
                     requester.getNickname(),
+                    requester.getProfileImageKey(),
                     profileUrl,
                     imageUrl,
                     notification.getType(),
