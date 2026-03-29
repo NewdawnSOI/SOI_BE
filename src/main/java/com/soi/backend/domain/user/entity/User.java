@@ -63,12 +63,13 @@ public class User {
         this.lastLogin = lastLogin;
     }
 
-    public User (String name, String phoneNum, String nickname,  String profileImageKey, String birthDate,
+    public User (String name, String phoneNum, String nickname,  String profileImageKey, String profileCoverImageKey, String birthDate,
                  Boolean serviceAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed) {
         this.name = name;
         this.phoneNum = phoneNum;
         this.nickname = nickname;
         this.profileImageKey = profileImageKey;
+        this.profileCoverImageKey = profileCoverImageKey;
         this.birthDate = birthDate;
         this.isActive = true;
         this.createdAt = LocalDateTime.now();

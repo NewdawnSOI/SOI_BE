@@ -46,6 +46,7 @@ public class UserService {
                 userCreateReqDto.getPhoneNum() == "" ? userCreateReqDto.getNickname() + UUID.randomUUID() :  userCreateReqDto.getPhoneNum(),
                 userCreateReqDto.getNickname(),
                 userCreateReqDto.getProfileImageKey(),
+                userCreateReqDto.getProfileCoverImageKey(),
                 userCreateReqDto.getBirthDate(),
                 userCreateReqDto.getServiceAgreed(),
                 userCreateReqDto.getPrivacyPolicyAgreed(),
