@@ -144,12 +144,25 @@ public class UserService {
     }
 
     private UserRespDto toDto(User user) {
+        String profileUrl = "";
+        String profileCoverUrl = "";
+
+        if (!user.getProfileImageKey().isBlank()) {
+            profileUrl = mediaService.getPresignedUrlByKey(user.getProfileImageKey());
+        }
+
+        if (!user.getProfileCoverImageKey().isBlank()) {
+            profileCoverUrl = mediaService.getPresignedUrlByKey(user.getProfileCoverImageKey());
+        }
+
         return new UserRespDto(
                 user.getId(),
                 user.getNickname(),
                 user.getName(),
                 user.getProfileImageKey(),
+                profileUrl,
                 user.getProfileCoverImageKey(),
+                profileCoverUrl,
                 user.getBirthDate(),
                 user.getPhoneNum());
     }
