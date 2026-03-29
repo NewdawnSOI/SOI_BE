@@ -219,6 +219,7 @@ public class FriendService {
                         user.getName(),
                         user.getNickname(),
                         user.getProfileImageKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(user.getProfileImageKey()),
+                        user.getProfileCoverImageKey().isEmpty() ? "" : mediaService.getPresignedUrlByKey(user.getProfileCoverImageKey()),
                         user.isActive()
                 ))
                 .collect(Collectors.toList());
