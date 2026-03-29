@@ -151,7 +151,7 @@ public class UserService {
             profileUrl = mediaService.getPresignedUrlByKey(user.getProfileImageKey());
         }
 
-        if (!user.getProfileCoverImageKey().isBlank() || !user.getProfileCoverImageKey().isEmpty()) {
+        if (!user.getProfileCoverImageKey().isEmpty() && !user.getProfileCoverImageKey().isBlank()) {
             profileCoverUrl = mediaService.getPresignedUrlByKey(user.getProfileCoverImageKey());
         }
 
@@ -210,7 +210,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
-        if (!user.getProfileCoverImageKey().isEmpty() || !user.getProfileCoverImageKey().isEmpty()) {
+        if (!user.getProfileCoverImageKey().isEmpty() && !user.getProfileCoverImageKey().isEmpty()) {
             mediaService.removeMedia(user.getProfileCoverImageKey());
         }
 
