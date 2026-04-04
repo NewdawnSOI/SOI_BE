@@ -1,5 +1,6 @@
 package com.soi.backend.domain.notification.service;
 
+import com.soi.backend.domain.comment.service.CommentReadService;
 import com.soi.backend.domain.notification.dto.NotificationDataPayloadDto;
 import com.soi.backend.domain.notification.dto.NotificationSendPayloadDto;
 import com.soi.backend.domain.notification.entity.Notification;
@@ -16,6 +17,7 @@ public class NotificationMessageFactory {
 
     private final UserRepository userRepository;
     private final MediaService mediaService;
+    private final CommentReadService commentReadService;
 
     public NotificationSendPayloadDto create(Notification notification) {
         User requester = notification.getRequesterId() == null
@@ -25,11 +27,12 @@ public class NotificationMessageFactory {
         String nickname = requester == null ? null : requester.getNickname();
         String body = notification.getTitle();
         String imageUrl = resolveImageUrl(notification.getImageKey());
+        Long parentCommentId = notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? commentReadService.getParentCommentIdOfReply(notification.getCommentId()) : null;
 
         return NotificationSendPayloadDto.builder()
                 .title(makeTitle(notification.getType()))
                 .body(body)
-                .data(NotificationDataPayloadDto.from(notification, nickname, body, imageUrl).toMap())
+                .data(NotificationDataPayloadDto.from(notification, nickname, body, imageUrl, parentCommentId).toMap())
                 .build();
     }
 

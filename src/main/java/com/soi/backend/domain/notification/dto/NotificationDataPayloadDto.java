@@ -1,6 +1,8 @@
 package com.soi.backend.domain.notification.dto;
 
+import com.soi.backend.domain.comment.service.CommentReadService;
 import com.soi.backend.domain.notification.entity.Notification;
+import com.soi.backend.domain.notification.entity.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,12 +27,15 @@ public class NotificationDataPayloadDto {
     private String nickname;
     private String body;
     private String imageUrl;
+    private Long replyCommentId; // 대댓글
+    private Long parentCommentId; // 원댓글
 
     public static NotificationDataPayloadDto from(
             Notification notification,
             String nickname,
             String body,
-            String imageUrl
+            String imageUrl,
+            Long parentCommentId
     ) {
         return NotificationDataPayloadDto.builder()
                 .notificationId(stringify(notification.getId()))
@@ -43,6 +48,8 @@ public class NotificationDataPayloadDto {
                 .nickname(nickname)
                 .body(body)
                 .imageUrl(imageUrl)
+                .replyCommentId(notification.getType() == NotificationType.COMMENT_REPLY_ADDED ? notification.getCommentId() : null)
+                .parentCommentId(parentCommentId)
                 .build();
     }
 
@@ -58,6 +65,8 @@ public class NotificationDataPayloadDto {
         putIfPresent(data, "nickname", nickname);
         putIfPresent(data, "body", body);
         putIfPresent(data, "imageUrl", imageUrl);
+        putIfPresent(data, "replyCommentId", String.valueOf(replyCommentId));
+        putIfPresent(data, "parentCommentId", String.valueOf(parentCommentId));
         return data;
     }
 
