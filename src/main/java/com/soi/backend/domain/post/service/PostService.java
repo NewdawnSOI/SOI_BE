@@ -55,12 +55,13 @@ public class PostService {
         for (int i=0; i<postCreateReqDto.getCategoryId().size(); i++) {
             Long categoryId = postCreateReqDto.getCategoryId().get(i);
             String fileKey = postCreateReqDto.getPostFileKey().get(i);
+            String thumbnailImageKey = postCreateReqDto.getThumbnailFileKey().get(i);
             String audioFileKey = "";
             if (postCreateReqDto.getPostFileKey().size() == postCreateReqDto.getAudioFileKey().size()) {
                 audioFileKey = postCreateReqDto.getAudioFileKey().get(i);
             }
 
-            Long postId = createPost(postCreateReqDto, categoryId, fileKey, audioFileKey);
+            Long postId = createPost(postCreateReqDto, categoryId, fileKey, audioFileKey, thumbnailImageKey);
 
             List<CategoryUser> categoryUsers =
                     categoryUserRepository.findAllByCategoryIdExceptUser(categoryId, postCreateReqDto.getUserId());
@@ -95,12 +96,13 @@ public class PostService {
     }
 
     @Transactional
-    public Long createPost(PostCreateReqDto postCreateReqDto, Long categoryId, String fileKey, String audioFileKey) {
+    public Long createPost(PostCreateReqDto postCreateReqDto, Long categoryId, String fileKey, String audioFileKey, String thumbnailImageKey) {
         Post post = new Post(
                 postCreateReqDto.getUserId(),
                 postCreateReqDto.getContent(),
                 fileKey,
                 audioFileKey,
+                thumbnailImageKey,
                 categoryId,
                 postCreateReqDto.getWaveformData(),
                 postCreateReqDto.getDuration(),
@@ -218,7 +220,7 @@ public class PostService {
                     Post post = (Post) row[0];
                     User user = (User) row[1];
                     int count = commentCounts.getOrDefault(post.getId(), 0);
-                    return toDto(post, user, count);
+                    return toDto(post, user, count, true);
                 })
                 .toList();
     }
@@ -249,7 +251,7 @@ public class PostService {
                     Post post = (Post) row[0];
                     User postUser = (User) row[1];
                     int count = commentCounts.getOrDefault(post.getId(), 0);
-                    return toDto(post, postUser, count);
+                    return toDto(post, postUser, count, false);
                 })
                 .toList();
     }
@@ -281,7 +283,7 @@ public class PostService {
         User user = (User) row[1];
         Map<Long, Integer> commentCount = commentService.getCommentCountsForPostIds(List.of(postId));
 
-        return toDto(post, user, commentCount.getOrDefault(postId, 0));
+        return toDto(post, user, commentCount.getOrDefault(postId, 0), false);
     }
 
     // 유저 id, 타입에 따라서 게시물 조회
@@ -300,16 +302,22 @@ public class PostService {
             Post post = (Post) row[0];
             User user = (User) row[1];
             int count = commentCounts.getOrDefault(post.getId(), 0);
-            return toDto(post, user, count);
+            return toDto(post, user, count, false);
         });
     }
 
-    private PostRespDto toDto(Post post, User user, int commentCount) {
+    private PostRespDto toDto(Post post, User user, int commentCount, boolean isCategorySearch) {
 //        User user = userRepository.findById(post.getUserId())
 //                .orElseThrow(() -> new CustomException("유저를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         String profileKey = user.getProfileImageKey();
-        String fileKey = post.getFileKey();
+        String fileKey;
+
+        if (isCategorySearch) {
+            fileKey = post.getFileKey();
+        } else {
+            fileKey = post.getThumbnailKey();
+        }
 
         return new PostRespDto(
                 post.getId(),
