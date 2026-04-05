@@ -111,7 +111,7 @@ public class CategorySetService {
 
         // 커스텀 카테고리에 있는것도 삭제
 //        if (post.getFileKey() == null || post.getFileKey().isBlank()) return;
-        if (post.getPostType() != PostType.TEXT_ONLY) {
+        if (post.getPostType() != PostType.TEXT) {
             categoryUserRepository.clearCustomProfileByCategoryIdAndFileKey(category.getId(), post.getFileKey());
         }
     }

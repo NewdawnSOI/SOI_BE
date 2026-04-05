@@ -27,6 +27,9 @@ public class Post {
     @Column(name = "file_url", nullable = false)
     private String fileKey;
 
+    @Column(name = "thumbnail_url")
+    private String thumbnailKey;
+
     @Column(name = "audio_url")
     private String audioKey;
 
@@ -62,11 +65,13 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private PostType postType;
 
-    public Post (Long userId, String content, String fileKey, String audioKey, Long categoryId, String waveformData, int duration, Boolean isFromGallery, Float savedAspectRatio, PostType postType) {
+    public Post (Long userId, String content, String fileKey, String audioKey, String thumbnailKey, Long categoryId, String waveformData,
+                 int duration, Boolean isFromGallery, Float savedAspectRatio, PostType postType) {
         this.userId = userId;
         this.content = content;
         this.fileKey = fileKey;
         this.audioKey = audioKey;
+        this.thumbnailKey = thumbnailKey;
         this.categoryId = categoryId;
         this.waveformData = waveformData;
         this.duration = duration;
