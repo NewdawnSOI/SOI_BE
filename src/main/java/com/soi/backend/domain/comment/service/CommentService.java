@@ -128,6 +128,7 @@ public class CommentService {
             }
         }
 
+        notificationService.deleteCommentNotification(commentId);
         commentRepository.deleteById(commentId);
     }
 
