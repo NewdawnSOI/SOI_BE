@@ -315,7 +315,17 @@ public class NotificationService {
     @Transactional
     public void deleteCommentNotification(Long userId, Long commentId) {
         // 유저 아이디를 받아서 receiver id가 유저인 댓글 알림을 다 삭제함
-        List<Long> notificationIds = notificationRepository.findAllIdByCommentId(userId, commentId);
+        List<Long> notificationIds = notificationRepository.findAllIdByCommentIdAndUserId(userId, commentId);
+
+        for (Long notificationId : notificationIds) {
+            notificationRepository.deleteById(notificationId);
+        }
+    }
+
+    @Transactional
+    public void deleteCommentNotification(Long commentId) {
+        // commentId를 갖고 해당 알림 다 삭제
+        List<Long> notificationIds = notificationRepository.findAllIdByCommentId(commentId);
 
         for (Long notificationId : notificationIds) {
             notificationRepository.deleteById(notificationId);
