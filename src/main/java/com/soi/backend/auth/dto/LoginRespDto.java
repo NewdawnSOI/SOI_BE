@@ -8,4 +8,7 @@ import lombok.Getter;
 
 public class LoginRespDto {
     private String accessToken;
+    private String refreshToken;
+    private long accessTokenExpiresInMs;
+    private long refreshTokenExpiresInMs;
 }
