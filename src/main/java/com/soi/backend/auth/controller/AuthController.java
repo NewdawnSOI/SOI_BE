@@ -2,6 +2,7 @@ package com.soi.backend.auth.controller;
 
 import com.soi.backend.auth.dto.LoginReqDto;
 import com.soi.backend.auth.dto.LoginRespDto;
+import com.soi.backend.auth.dto.RefreshTokenReqDto;
 import com.soi.backend.auth.service.AuthService;
 import com.soi.backend.domain.user.dto.AuthCheckReqDto;
 import com.soi.backend.domain.user.dto.UserCreateReqDto;
@@ -9,6 +10,7 @@ import com.soi.backend.domain.user.dto.UserRespDto;
 import com.soi.backend.domain.user.service.SMSAuthService;
 import com.soi.backend.domain.user.service.UserService;
 import com.soi.backend.global.ApiResponseDto;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,17 @@ public class AuthController {
     @PostMapping("/login")
     public LoginRespDto login(@RequestBody LoginReqDto loginReqDto) {
         return authService.login(loginReqDto);
+    }
+
+    @PostMapping("/refresh")
+    public LoginRespDto refresh(@Valid @RequestBody RefreshTokenReqDto refreshTokenReqDto) {
+        return authService.refresh(refreshTokenReqDto.getRefreshToken());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponseDto<Boolean>> logout(@Valid @RequestBody RefreshTokenReqDto refreshTokenReqDto) {
+        authService.logout(refreshTokenReqDto.getRefreshToken());
+        return ResponseEntity.ok(ApiResponseDto.success(true, "로그아웃 완료"));
     }
 
     @Operation(summary = "사용자 생성", description = "새로운 사용자를 등록합니다.")
