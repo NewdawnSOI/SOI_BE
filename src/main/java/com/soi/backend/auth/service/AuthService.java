@@ -24,12 +24,8 @@ public class AuthService {
 
     @Transactional
     public LoginRespDto login(LoginReqDto loginReqDto) {
-        User user = userRepository.findByNickname(loginReqDto.getNickname())
+        User user = userRepository.findByPhoneNum(loginReqDto.getPhoneNum())
                 .orElseThrow(() -> new CustomException("User Id를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
-
-        if (!user.getPhoneNum().equals(loginReqDto.getPhoneNum())) {
-            throw new CustomException("유저정보가 일치하지 않습니다.", HttpStatus.FORBIDDEN);
-        }
 
         user.setLastLogin(LocalDateTime.now());
 
