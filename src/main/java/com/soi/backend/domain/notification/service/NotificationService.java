@@ -267,23 +267,6 @@ public class NotificationService {
     }
 
     @Transactional
-    public void sendPostCommentNotification(
-            Long requesterId, Long receiverId, Long commentId, Long replyCommentId, Long postId, Long categoryId, String title, NotificationType type) {
-
-        NotificationReqDto dto = NotificationReqDto.builder()
-                .requesterId(requesterId)
-                .receiverId(receiverId)
-                .type(type)
-                .title(title)
-                .postId(postId)
-                .categoryId(categoryId)
-                .commentId(commentId)
-                .imageKey("")
-                .build();
-        createNotification(dto);
-    }
-
-    @Transactional
     public void deleteCategoryNotification(Long userId, Long categoryId) {
         // 유저 아이디를 받아서 receiver id가 유저인 카테고리 알림을 다 삭제함
         List<Long> notificationIds = notificationRepository.findAllIdByCategoryId(userId, categoryId);
