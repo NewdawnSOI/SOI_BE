@@ -78,7 +78,6 @@ topk(
   10,
   sum by (uri, method) (
     rate(http_server_requests_seconds_count{
-      application="backend",
       uri!~"/actuator.*"
     }[5m])
   )
@@ -94,7 +93,6 @@ topk(
   10,
   sum by (uri, method) (
     increase(http_server_requests_seconds_count{
-      application="backend",
       uri!~"/actuator.*"
     }[1d])
   )
@@ -111,7 +109,6 @@ topk(
   10,
   sum by (uri, method, status) (
     increase(http_server_requests_seconds_count{
-      application="backend",
       uri!~"/actuator.*",
       status=~"4..|5.."
     }[1d])
@@ -129,7 +126,6 @@ topk(
   (
     sum by (uri, method) (
       rate(http_server_requests_seconds_sum{
-        application="backend",
         uri!~"/actuator.*"
       }[5m])
     )
@@ -138,7 +134,6 @@ topk(
   (
     sum by (uri, method) (
       rate(http_server_requests_seconds_count{
-        application="backend",
         uri!~"/actuator.*"
       }[5m])
     )

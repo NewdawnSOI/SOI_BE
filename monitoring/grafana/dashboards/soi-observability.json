@@ -106,7 +106,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "topk(10, sum by (uri, method) (rate(http_server_requests_seconds_count{application=\"backend\", uri!~\"/actuator.*\"}[5m])))",
+          "expr": "topk(10, sum by (uri, method) (rate(http_server_requests_seconds_count{uri!~\"/actuator.*\"}[5m])))",
           "legendFormat": "{{method}} {{uri}}",
           "range": true,
           "refId": "A"
@@ -169,7 +169,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "topk(10, sum by (uri, method) (increase(http_server_requests_seconds_count{application=\"backend\", uri!~\"/actuator.*\"}[1d])))",
+          "expr": "topk(10, sum by (uri, method) (increase(http_server_requests_seconds_count{uri!~\"/actuator.*\"}[1d])))",
           "legendFormat": "{{method}} {{uri}}",
           "range": true,
           "refId": "A"
@@ -371,7 +371,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "topk(10, sum by (uri, method, status) (increase(http_server_requests_seconds_count{application=\"backend\", uri!~\"/actuator.*\", status=~\"4..|5..\"}[1d])))",
+          "expr": "topk(10, sum by (uri, method, status) (increase(http_server_requests_seconds_count{uri!~\"/actuator.*\", status=~\"4..|5..\"}[1d])))",
           "format": "table",
           "instant": true,
           "legendFormat": "{{method}} {{uri}} {{status}}",
