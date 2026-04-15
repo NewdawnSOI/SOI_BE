@@ -50,7 +50,7 @@ jobs:
       - name: Save Docker image & compress with env and compose
         run: |
           docker save soi-backend:latest -o soi-backend.tar
-          tar -czvf soi-deploy.tar.gz soi-backend.tar .env docker-compose.yml secrets/firebase-admin.json
+          tar -czvf soi-deploy.tar.gz soi-backend.tar .env docker-compose.yml monitoring secrets/firebase-admin.json
 
       # 8️⃣ EC2 서버로 업로드 (/home/ec2-user/soi)
       - name: Upload to EC2
