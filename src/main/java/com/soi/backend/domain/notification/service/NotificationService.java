@@ -15,6 +15,7 @@ import com.soi.backend.domain.user.dto.NotificationUserRespDto;
 import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
+import com.soi.backend.global.metrics.BusinessMetricsService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ public class NotificationService {
     private final CategoryInviteRepository categoryInviteRepository;
     private final CommentReadService commentReadService;
     private final NotificationOutboxService notificationOutboxService;
+    private final BusinessMetricsService businessMetricsService;
 
     @Transactional
     public Long createNotification(NotificationReqDto dto) {
@@ -59,6 +61,7 @@ public class NotificationService {
 
         notificationRepository.save(notification);
         notificationOutboxService.enqueue(notification.getId(), notification.getReceiverId());
+        businessMetricsService.increment("notification_created", "notification_type", dto.getType().name());
         return notification.getId();
     }
     @Transactional

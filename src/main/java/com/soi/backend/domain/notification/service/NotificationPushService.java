@@ -12,6 +12,7 @@ import com.soi.backend.domain.notification.entity.UserDeviceToken;
 import com.soi.backend.domain.notification.repository.NotificationRepository;
 import com.soi.backend.domain.notification.repository.UserDeviceTokenRepository;
 import com.soi.backend.external.fcm.FcmClient;
+import com.soi.backend.global.metrics.BusinessMetricsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -33,6 +34,7 @@ public class NotificationPushService {
     private final NotificationMessageFactory notificationMessageFactory;
     private final NotificationDeviceTokenService notificationDeviceTokenService;
     private final ObjectProvider<FcmClient> fcmClientProvider;
+    private final BusinessMetricsService businessMetricsService;
 
     public void sendPending(int batchSize) {
         FcmClient fcmClient = fcmClientProvider.getIfAvailable();
@@ -145,6 +147,11 @@ public class NotificationPushService {
             UserDeviceToken deviceToken = deviceTokens.get(i);
 
             if (response.isSuccessful()) {
+                businessMetricsService.increment(
+                        "notification_push",
+                        "platform", deviceToken.getPlatform().name(),
+                        "status", "success"
+                );
                 log.info("FCM token 발송 성공. outboxId={}, platform={}, tokenSuffix={}",
                         outbox.getId(),
                         deviceToken.getPlatform(),
@@ -159,6 +166,12 @@ public class NotificationPushService {
                     ? "unknown error"
                     : response.getException().getMessage();
 
+            businessMetricsService.increment(
+                    "notification_push",
+                    "platform", deviceToken.getPlatform().name(),
+                    "status", "failure",
+                    "error_code", errorCode
+            );
             log.warn("FCM token 발송 실패. outboxId={}, platform={}, tokenSuffix={}, errorCode={}, message={}",
                     outbox.getId(),
                     deviceToken.getPlatform(),

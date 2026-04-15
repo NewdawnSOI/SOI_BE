@@ -15,6 +15,7 @@ import com.soi.backend.domain.post.repository.PostRepository;
 import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
+import com.soi.backend.global.metrics.BusinessMetricsService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +39,7 @@ public class CommentService {
     private final NotificationService notificationService;
     private final PostRepository postRepository;
     private final MediaService mediaService;
+    private final BusinessMetricsService businessMetricsService;
 
     @Transactional
     public void addComment(CommentReqDto commentReqDto) {
@@ -111,6 +113,7 @@ public class CommentService {
         );
 
         commentRepository.save(comment);
+        businessMetricsService.increment("comment_created", "comment_type", comment.getCommentType().name());
         return comment.getId();
     }
 
