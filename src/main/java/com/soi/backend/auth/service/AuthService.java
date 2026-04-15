@@ -5,6 +5,7 @@ import com.soi.backend.auth.dto.LoginRespDto;
 import com.soi.backend.auth.jwt.JwtProvider;
 import com.soi.backend.domain.user.entity.User;
 import com.soi.backend.domain.user.repository.UserRepository;
+import com.soi.backend.global.metrics.BusinessMetricsService;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
     private final RefreshTokenService refreshTokenService;
+    private final BusinessMetricsService businessMetricsService;
 
     @Transactional
     public LoginRespDto login(LoginReqDto loginReqDto) {
@@ -31,6 +33,8 @@ public class AuthService {
 
         String accessToken = jwtProvider.createAccessToken(user.getId());
         String refreshToken = refreshTokenService.issue(user.getId());
+
+        businessMetricsService.increment("auth_login_success");
 
         return new LoginRespDto(
                 accessToken,
@@ -47,6 +51,8 @@ public class AuthService {
         String newAccessToken = jwtProvider.createAccessToken(userId);
         String newRefreshToken = refreshTokenService.issue(userId);
 
+        businessMetricsService.increment("auth_refresh_success");
+
         return new LoginRespDto(
                 newAccessToken,
                 newRefreshToken,
@@ -58,5 +64,6 @@ public class AuthService {
     @Transactional
     public void logout(String refreshToken) {
         refreshTokenService.revoke(refreshToken);
+        businessMetricsService.increment("auth_logout");
     }
 }
