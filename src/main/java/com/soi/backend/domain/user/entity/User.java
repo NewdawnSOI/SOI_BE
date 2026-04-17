@@ -45,6 +45,9 @@ public class User {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+    @Column(name = "session_version", nullable = false)
+    private Integer sessionVersion;
+
     @Column(name = "service_agreed")
     private boolean serviceAgreed;
 
@@ -74,6 +77,7 @@ public class User {
         this.isActive = true;
         this.createdAt = LocalDateTime.now();
         this.lastLogin = LocalDateTime.now();
+        this.sessionVersion = 0;
         this.serviceAgreed = serviceAgreed;
         this.privacyPolicyAgreed = privacyPolicyAgreed;
         this.marketingAgreed = marketingAgreed;
@@ -84,6 +88,13 @@ public class User {
     }
     public void setProfileCoverImageKey(String coverImageKey) {
         this.profileCoverImageKey = coverImageKey;
+    }
+
+    public void rotateSession() {
+        if (this.sessionVersion == null) {
+            this.sessionVersion = 0;
+        }
+        this.sessionVersion++;
     }
 
     public void update(String name, String phoneNum, String nickname,  String profileImageKey, String profileCoverImageKey,

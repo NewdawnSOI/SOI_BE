@@ -1,5 +1,7 @@
 package com.soi.backend.auth.jwt;
 
+import com.soi.backend.domain.user.entity.User;
+import com.soi.backend.domain.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +21,7 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
+    private final UserRepository userRepository;
 
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
@@ -38,6 +41,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (token != null && jwtProvider.validate(token)) {
             Long userId = jwtProvider.getUserId(token);
+            Integer sessionVersion = jwtProvider.getSessionVersionFromAccessToken(token);
+            User user = userRepository.findById(userId).orElse(null);
+
+            if (user == null || !sessionVersion.equals(user.getSessionVersion())) {
+                chain.doFilter(request, response);
+                return;
+            }
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userId, null, List.of()

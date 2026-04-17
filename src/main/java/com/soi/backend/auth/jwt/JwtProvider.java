@@ -14,6 +14,7 @@ import java.util.Date;
 public class JwtProvider {
 
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
+    private static final String SESSION_VERSION_CLAIM = "sessionVersion";
     private static final String ACCESS_TOKEN_TYPE = "ACCESS";
     private static final String REFRESH_TOKEN_TYPE = "REFRESH";
 
@@ -38,15 +39,15 @@ public class JwtProvider {
     }
 
     public String createToken(Long userId) {
-        return createAccessToken(userId);
+        return createAccessToken(userId, 0);
     }
 
-    public String createAccessToken(Long userId) {
-        return createToken(userId, ACCESS_TOKEN_TYPE, accessSecretKey, accessExpirationMs);
+    public String createAccessToken(Long userId, Integer sessionVersion) {
+        return createToken(userId, sessionVersion, ACCESS_TOKEN_TYPE, accessSecretKey, accessExpirationMs);
     }
 
-    public String createRefreshToken(Long userId) {
-        return createToken(userId, REFRESH_TOKEN_TYPE, refreshSecretKey, refreshExpirationMs);
+    public String createRefreshToken(Long userId, Integer sessionVersion) {
+        return createToken(userId, sessionVersion, REFRESH_TOKEN_TYPE, refreshSecretKey, refreshExpirationMs);
     }
 
     public Long getUserId(String token) {
@@ -59,6 +60,14 @@ public class JwtProvider {
 
     public Long getUserIdFromRefreshToken(String token) {
         return getUserId(token, REFRESH_TOKEN_TYPE, refreshSecretKey);
+    }
+
+    public Integer getSessionVersionFromAccessToken(String token) {
+        return getSessionVersion(token, ACCESS_TOKEN_TYPE, accessSecretKey);
+    }
+
+    public Integer getSessionVersionFromRefreshToken(String token) {
+        return getSessionVersion(token, REFRESH_TOKEN_TYPE, refreshSecretKey);
     }
 
     public boolean validate(String token) {
@@ -81,13 +90,14 @@ public class JwtProvider {
         return refreshExpirationMs;
     }
 
-    private String createToken(Long userId, String tokenType, SecretKey secretKey, long expirationMs) {
+    private String createToken(Long userId, Integer sessionVersion, String tokenType, SecretKey secretKey, long expirationMs) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim(TOKEN_TYPE_CLAIM, tokenType)
+                .claim(SESSION_VERSION_CLAIM, sessionVersion)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(secretKey)
@@ -101,6 +111,21 @@ public class JwtProvider {
             throw new IllegalArgumentException("토큰 타입이 일치하지 않습니다.");
         }
         return Long.parseLong(claims.getSubject());
+    }
+
+    private Integer getSessionVersion(String token, String expectedTokenType, SecretKey secretKey) {
+        Claims claims = parseClaims(token, secretKey);
+        String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+        if (!expectedTokenType.equals(tokenType)) {
+            throw new IllegalArgumentException("토큰 타입이 일치하지 않습니다.");
+        }
+
+        Number sessionVersion = claims.get(SESSION_VERSION_CLAIM, Number.class);
+        if (sessionVersion == null) {
+            throw new IllegalArgumentException("sessionVersion claim이 없습니다.");
+        }
+
+        return sessionVersion.intValue();
     }
 
     private boolean validate(String token, String expectedTokenType, SecretKey secretKey) {
