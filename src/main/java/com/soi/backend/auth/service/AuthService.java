@@ -30,9 +30,10 @@ public class AuthService {
                 .orElseThrow(() -> new CustomException("User Id를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         user.setLastLogin(LocalDateTime.now());
+        user.rotateSession();
 
-        String accessToken = jwtProvider.createAccessToken(user.getId());
-        String refreshToken = refreshTokenService.issue(user.getId());
+        String accessToken = jwtProvider.createAccessToken(user.getId(), user.getSessionVersion());
+        String refreshToken = refreshTokenService.issue(user.getId(), user.getSessionVersion());
 
         businessMetricsService.increment("auth_login_success");
 
@@ -47,9 +48,11 @@ public class AuthService {
     @Transactional
     public LoginRespDto refresh(String refreshToken) {
         Long userId = refreshTokenService.validateAndConsume(refreshToken);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException("유저 정보를 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED));
 
-        String newAccessToken = jwtProvider.createAccessToken(userId);
-        String newRefreshToken = refreshTokenService.issue(userId);
+        String newAccessToken = jwtProvider.createAccessToken(userId, user.getSessionVersion());
+        String newRefreshToken = refreshTokenService.issue(userId, user.getSessionVersion());
 
         businessMetricsService.increment("auth_refresh_success");
 

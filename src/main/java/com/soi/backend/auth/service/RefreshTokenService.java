@@ -3,6 +3,8 @@ package com.soi.backend.auth.service;
 import com.soi.backend.auth.entity.RefreshToken;
 import com.soi.backend.auth.jwt.JwtProvider;
 import com.soi.backend.auth.repository.RefreshTokenRepository;
+import com.soi.backend.domain.user.entity.User;
+import com.soi.backend.domain.user.repository.UserRepository;
 import com.soi.backend.global.exception.CustomException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +22,14 @@ import java.time.LocalDateTime;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
 
     @Transactional
-    public String issue(Long userId) {
-        String refreshToken = jwtProvider.createRefreshToken(userId);
+    public String issue(Long userId, Integer sessionVersion) {
+        refreshTokenRepository.deleteAllByUserId(userId);
+
+        String refreshToken = jwtProvider.createRefreshToken(userId, sessionVersion);
         RefreshToken entity = new RefreshToken(
                 userId,
                 hash(refreshToken),
@@ -41,6 +46,14 @@ public class RefreshTokenService {
         }
 
         Long userId = jwtProvider.getUserIdFromRefreshToken(refreshToken);
+        Integer sessionVersion = jwtProvider.getSessionVersionFromRefreshToken(refreshToken);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException("유저 정보를 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED));
+
+        if (!sessionVersion.equals(user.getSessionVersion())) {
+            throw new CustomException("다른 기기에서 다시 로그인되어 세션이 만료되었습니다.", HttpStatus.UNAUTHORIZED);
+        }
+
         RefreshToken savedToken = refreshTokenRepository.findByTokenHash(hash(refreshToken))
                 .orElseThrow(() -> new CustomException("refresh token 정보를 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED));
 
@@ -52,7 +65,7 @@ public class RefreshTokenService {
             throw new CustomException("이미 만료되었거나 폐기된 refresh token 입니다.", HttpStatus.UNAUTHORIZED);
         }
 
-        savedToken.revoke();
+        refreshTokenRepository.deleteById(savedToken.getId());
         return userId;
     }
 
@@ -66,8 +79,8 @@ public class RefreshTokenService {
             return;
         }
 
-        refreshTokenRepository.findByTokenHash(hash(refreshToken))
-                .ifPresent(RefreshToken::revoke);
+        Long userId = jwtProvider.getUserIdFromRefreshToken(refreshToken);
+        refreshTokenRepository.deleteAllByUserId(userId);
     }
 
     private String hash(String rawToken) {
