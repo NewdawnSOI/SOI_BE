@@ -1,11 +1,13 @@
 package com.soi.backend.domain.media.controller;
 
-import com.soi.backend.domain.media.entity.FileType;
-import com.soi.backend.domain.media.entity.UsageType;
+import com.soi.backend.domain.media.dto.MediaPresignReqDto;
+import com.soi.backend.domain.media.dto.MediaPresignRespDto;
+import com.soi.backend.domain.media.dto.MediaRegisterUploadedReqDto;
 import com.soi.backend.domain.media.service.MediaService;
 import com.soi.backend.global.ApiResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +39,24 @@ public class MediaController {
             @RequestPart("files") List<MultipartFile> files) throws IOException {
         List<String> urls = mediaService.uploadMedia(types,useageTypes,userId,refId,files,usageCount);
         return ResponseEntity.ok(ApiResponseDto.success(urls, "파일 저장성공"));
+    }
+
+    @Operation(summary = "미디어 업로드용 presigned URL 발급", description = "프론트가 S3에 직접 업로드할 수 있도록 PUT presigned URL과 저장할 key를 발급합니다.")
+    @PostMapping("/presign-upload")
+    public ResponseEntity<ApiResponseDto<List<MediaPresignRespDto>>> createUploadPresignedUrls(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody MediaPresignReqDto mediaPresignReqDto) {
+        List<MediaPresignRespDto> uploadTargets = mediaService.createUploadPresignedUrls(userId, mediaPresignReqDto);
+        return ResponseEntity.ok(ApiResponseDto.success(uploadTargets, "업로드용 presigned URL 생성 성공"));
+    }
+
+    @Operation(summary = "업로드된 미디어 key 등록", description = "프론트가 S3에 직접 업로드를 마친 뒤, key만 서버에 전달해 media_file 메타데이터를 저장합니다.")
+    @PostMapping("/register-uploaded")
+    public ResponseEntity<ApiResponseDto<List<String>>> registerUploadedMedia(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody MediaRegisterUploadedReqDto mediaRegisterUploadedReqDto) {
+        List<String> savedKeys = mediaService.registerUploadedMedia(userId, mediaRegisterUploadedReqDto);
+        return ResponseEntity.ok(ApiResponseDto.success(savedKeys, "업로드된 미디어 key 저장 성공"));
     }
 
     @Operation(summary = "Presigned URL 요청", description = "DB에 저장된 S3 key를 입력하면 1시간 유효한 접근 URL을 반환합니다.")

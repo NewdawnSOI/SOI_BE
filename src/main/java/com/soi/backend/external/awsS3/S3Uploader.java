@@ -19,13 +19,16 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,6 +46,8 @@ public class S3Uploader {
     private String accessKey;
     @Value("${cloud.aws.credentials.secretKey}")
     private String secretKey;
+    @Value("${cloud.aws.region.static}")
+    private String region;
 
 
     /**
@@ -75,18 +80,7 @@ public class S3Uploader {
      * Presigned URL 생성 (GET)
      */
     public String getPressigneUrl(String key) {
-
-        S3Presigner presigner = S3Presigner.builder()
-                .credentialsProvider(
-                        StaticCredentialsProvider.create(
-                                AwsBasicCredentials.create(
-                                        accessKey,
-                                        secretKey
-                                )
-                        )
-                )
-                .region(Region.AP_NORTHEAST_2)
-                .build();
+        S3Presigner presigner = createPresigner();
 
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucket)
@@ -99,6 +93,23 @@ public class S3Uploader {
                 .build();
 
         return presigner.presignGetObject(presignRequest).url().toString();
+    }
+
+    public String createPutPresignedUrl(String key, String contentType) {
+        S3Presigner presigner = createPresigner();
+
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .contentType(contentType)
+                .build();
+
+        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(15))
+                .putObjectRequest(putObjectRequest)
+                .build();
+
+        return presigner.presignPutObject(presignRequest).url().toString();
     }
 
     /** Temp 파일 삭제 */
@@ -142,6 +153,30 @@ public class S3Uploader {
         }
     }
 
+    public String buildUploadKey(String category, Long id, String originalFilename) {
+        return buildKey(category, id, originalFilename);
+    }
+
+    public String extractFileTypeFromKey(String key) {
+        String[] keyParts = key.split("/");
+        if (keyParts.length < 3) {
+            throw new CustomException("유효하지 않은 media key 형식", HttpStatus.BAD_REQUEST);
+        }
+
+        String fileNamePart = keyParts[2];
+        int separatorIndex = fileNamePart.indexOf('_');
+        if (separatorIndex <= 0) {
+            throw new CustomException("유효하지 않은 media key 형식", HttpStatus.BAD_REQUEST);
+        }
+
+        String category = fileNamePart.substring(0, separatorIndex).toUpperCase(Locale.ROOT);
+        try {
+            return FileType.valueOf(category).name();
+        } catch (IllegalArgumentException e) {
+            throw new CustomException("유효하지 않은 media key의 파일 타입", HttpStatus.BAD_REQUEST);
+        }
+    }
+
     /**
      * Key 생성 규칙:
      * {yyyy/MM/dd}/user_{id}/{category}_{uuid}_{filename}
@@ -153,5 +188,19 @@ public class S3Uploader {
         String safeName = originalFilename == null ? "" : originalFilename.replaceAll("[^a-zA-Z0-9.\\-_]", "_");
 
         return String.format("%s/user_%d/%s_%s_%s", datePath, id, category, uuid, safeName);
+    }
+
+    private S3Presigner createPresigner() {
+        return S3Presigner.builder()
+                .credentialsProvider(
+                        StaticCredentialsProvider.create(
+                                AwsBasicCredentials.create(
+                                        accessKey,
+                                        secretKey
+                                )
+                        )
+                )
+                .region(Region.of(region))
+                .build();
     }
 }
