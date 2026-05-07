@@ -159,11 +159,11 @@ public class S3Uploader {
 
     public String extractFileTypeFromKey(String key) {
         String[] keyParts = key.split("/");
-        if (keyParts.length < 3) {
+        if (keyParts.length < 5) {
             throw new CustomException("유효하지 않은 media key 형식", HttpStatus.BAD_REQUEST);
         }
 
-        String fileNamePart = keyParts[2];
+        String fileNamePart = keyParts[keyParts.length - 1];
         int separatorIndex = fileNamePart.indexOf('_');
         if (separatorIndex <= 0) {
             throw new CustomException("유효하지 않은 media key 형식", HttpStatus.BAD_REQUEST);
